@@ -1,0 +1,171 @@
+"""
+Pydantic схемы для валидации запросов и ответов API.
+"""
+
+from enum import Enum
+
+from pydantic import BaseModel, Field
+
+
+class ExperienceLevel(str, Enum):
+    """
+    Уровень опыта для фильтрации вакансий.
+    Значения соответствуют API hh.ru.
+    """
+    NO_EXPERIENCE = "noExperience"      # Нет опыта
+    BETWEEN_1_AND_3 = "between1And3"    # От 1 до 3 лет (Junior+)
+    BETWEEN_3_AND_6 = "between3And6"    # От 3 до 6 лет (Middle)
+    MORE_THAN_6 = "moreThan6"           # Более 6 лет (Senior)
+
+
+class ParseRequest(BaseModel):
+    """Запрос на парсинг вакансий."""
+    query: str = Field(..., min_length=1, max_length=200, description="Ключевое слово для поиска")
+    count: int = Field(default=50, ge=1, le=100, description="Количество вакансий для парсинга")
+    experience: ExperienceLevel | None = Field(
+        default=None, 
+        description="Фильтр по опыту работы (опционально)"
+    )
+
+
+class TagCount(BaseModel):
+    """Информация о теге и его частоте."""
+    name: str
+    count: int
+
+
+class ParseResponse(BaseModel):
+    """Ответ после парсинга вакансий."""
+    total_parsed: int = Field(..., description="Всего распаршено вакансий")
+    tags: list[TagCount] = Field(default_factory=list, description="Теги с количеством")
+    average_salary: float | None = Field(None, description="Средняя зарплата (если указана)")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "total_parsed": 50,
+                "tags": [
+                    {"name": "Python", "count": 45},
+                    {"name": "SQL", "count": 30},
+                    {"name": "Docker", "count": 25},
+                ],
+                "average_salary": 150000.0
+            }
+        }
+
+
+class VacancyResponse(BaseModel):
+    """Информация о вакансии."""
+    id: int
+    hh_id: str
+    url: str
+    title: str
+    salary_from: int | None
+    salary_to: int | None
+    salary_currency: str | None
+    tags: list[str]
+    
+    class Config:
+        from_attributes = True
+
+
+class HealthResponse(BaseModel):
+    """Ответ эндпоинта проверки здоровья."""
+    status: str = "ok"
+
+
+class VacanciesWithStatsResponse(BaseModel):
+    """Ответ GET /vacancies со статистикой."""
+    total_count: int = Field(..., description="Общее количество вакансий")
+    vacancies: list[VacancyResponse] = Field(default_factory=list, description="Список вакансий")
+    tags: list[TagCount] = Field(default_factory=list, description="Теги с количеством упоминаний")
+    average_salary: float | None = Field(None, description="Средняя зарплата")
+
+
+# --- Схемы оценки стоимости студента ---
+
+
+class SkillMatchResponse(BaseModel):
+    """Сопоставление дисциплины с навыком hh.ru."""
+    discipline: str = Field(..., description="Название дисциплины студента")
+    skill_name: str = Field(..., description="Название навыка hh.ru")
+    similarity: float = Field(..., description="Косинусное сходство (0..1)")
+    avg_salary: float | None = Field(None, description="Средняя ЗП вакансий с этим навыком")
+    vacancy_count: int = Field(0, description="Количество вакансий с этим навыком")
+    grade: int = Field(default=5, description="Оценка студента по дисциплине")
+    grade_coeff: float = Field(default=1.0, description="Коэффициент оценки")
+
+
+class EvaluationResponse(BaseModel):
+    """Результат оценки потенциальной стоимости студента."""
+    student_id: int
+    student_name: str
+    specialty: str = Field(..., description="Специальность для оценки")
+    experience_filter: str | None = Field(None, description="Фильтр по опыту")
+    estimated_salary: float | None = Field(None, description="Оценочная ЗП (RUB)")
+    confidence: float = Field(..., description="Уверенность оценки (0..1)")
+    total_disciplines: int = Field(..., description="Всего дисциплин у студента")
+    matched_disciplines: int = Field(..., description="Дисциплин с найденными навыками")
+    skill_matches: list[SkillMatchResponse] = Field(
+        default_factory=list, description="Детальная разбивка по навыкам"
+    )
+
+
+class StudentSkillsResponse(BaseModel):
+    """Навыки студента в терминах hh.ru."""
+    student_id: int
+    student_name: str
+    skills_by_discipline: dict[str, list[SkillMatchResponse]] = Field(
+        default_factory=dict,
+        description="Маппинг: дисциплина → список ближайших навыков hh.ru",
+    )
+
+
+class DisciplineBase(BaseModel):
+    """Базовая схема дисциплины."""
+    name: str = Field(..., min_length=1, max_length=200, description="Название дисциплины")
+
+
+class DisciplineCreate(DisciplineBase):
+    """Схема для создания дисциплины."""
+    pass
+
+
+class DisciplineWithGrade(BaseModel):
+    """Дисциплина с оценкой для создания/добавления."""
+    name: str = Field(..., min_length=1, max_length=200, description="Название дисциплины")
+    grade: int = Field(default=5, ge=3, le=5, description="Оценка: 3, 4 или 5")
+
+
+class DisciplineResponse(DisciplineBase):
+    """Схема для ответа с данными дисциплины."""
+    id: int
+    grade: int = Field(default=5, description="Оценка: 3, 4 или 5")
+    
+    class Config:
+        from_attributes = True
+
+
+class StudentBase(BaseModel):
+    """Базовая схема студента."""
+    full_name: str = Field(..., min_length=1, max_length=200, description="ФИО студента")
+    group_name: str | None = Field(None, max_length=50, description="Номер группы")
+
+
+class StudentCreate(StudentBase):
+    """Схема для создания студента."""
+    disciplines: list[DisciplineWithGrade] = Field(default_factory=list, description="Список дисциплин с оценками")
+
+
+class StudentResponse(StudentBase):
+    """Схема для ответа с данными студента."""
+    id: int
+    disciplines: list[DisciplineResponse] = Field(default_factory=list, description="Список дисциплин")
+    
+    class Config:
+        from_attributes = True
+
+
+class AddDisciplinesRequest(BaseModel):
+    """Запрос на добавление дисциплин студенту."""
+    disciplines: list[DisciplineWithGrade] = Field(..., description="Список дисциплин с оценками")

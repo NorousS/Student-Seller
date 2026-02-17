@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HH.ru Student Evaluator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0f1117;
+            color: #e1e4e8;
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .header {
+            background: linear-gradient(135deg, #1a1e2e 0%, #252a3a 100%);
+            border-bottom: 1px solid #30363d;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #58a6ff, #bc8cff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header .status {
+            margin-left: auto;
+            font-size: 13px;
+            color: #8b949e;
+        }
+        .header .status .dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #3fb950;
+            margin-right: 6px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            padding: 0 32px;
+        }
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #8b949e;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab:hover { color: #e1e4e8; }
+        .tab.active {
+            color: #58a6ff;
+            border-bottom-color: #58a6ff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 32px;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* Cards */
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #c9d1d9;
+        }
+        .card h3 {
+            font-size: 14px;
+            color: #8b949e;
+            margin-bottom: 12px;
+        }
+
+        /* Grid */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+        /* Form elements */
+        select, input, button {
+            font-family: inherit;
+            font-size: 14px;
+        }
+        select, input[type="text"], input[type="number"] {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: #e1e4e8;
+            padding: 10px 14px;
+            border-radius: 8px;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        select:focus, input:focus {
+            border-color: #58a6ff;
+        }
+        select { cursor: pointer; }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+            color: #fff;
+        }
+        .btn-primary:hover { background: linear-gradient(135deg, #2ea043 0%, #3fb950 100%); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-blue {
+            background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+            color: #fff;
+        }
+        .btn-blue:hover { background: linear-gradient(135deg, #388bfd 0%, #58a6ff 100%); }
+
+        /* Stat cards */
+        .stat-card {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .salary-value { color: #3fb950; }
+        .confidence-value { color: #58a6ff; }
+        .match-value { color: #bc8cff; }
+
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 380px;
+            margin-top: 12px;
+        }
+
+        /* Tags table */
+        .tags-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .tags-table th, .tags-table td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid #21262d;
+            font-size: 14px;
+        }
+        .tags-table th {
+            color: #8b949e;
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .tags-table tr:hover td { background: #1c2129; }
+        .tag-badge {
+            display: inline-block;
+            background: #1f6feb22;
+            color: #58a6ff;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+        .tag-bar {
+            height: 6px;
+            background: linear-gradient(90deg, #58a6ff, #bc8cff);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        .tag-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: #21262d;
+            border-radius: 3px;
+        }
+
+        /* Parse log */
+        .parse-log {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 13px;
+            color: #8b949e;
+            line-height: 1.6;
+        }
+        .parse-log .success { color: #3fb950; }
+        .parse-log .info { color: #58a6ff; }
+        .parse-log .error { color: #f85149; }
+        .parse-log .warn { color: #d29922; }
+
+        /* Form row */
+        .form-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            margin-bottom: 16px;
+        }
+        .form-group { flex: 1; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #8b949e;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2px solid #30363d;
+            border-top-color: #58a6ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Empty state */
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #484f58;
+        }
+        .empty .icon { font-size: 48px; margin-bottom: 12px; }
+
+        /* Student cards */
+        .student-item {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+        }
+        .student-item:hover { border-color: #58a6ff44; }
+        .student-item .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .student-item .student-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #e1e4e8;
+        }
+        .student-item .student-group {
+            font-size: 12px;
+            color: #8b949e;
+            background: #21262d;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+        .student-item .student-discs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .student-item .student-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+            border: 1px solid #30363d;
+            background: #21262d;
+            color: #c9d1d9;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-sm:hover { border-color: #58a6ff; color: #58a6ff; }
+        .btn-sm.danger:hover { border-color: #f85149; color: #f85149; }
+        .form-msg-success { color: #3fb950; font-size: 13px; }
+        .form-msg-error { color: #f85149; font-size: 13px; }
+
+        /* Grade buttons */
+        .grade-group {
+            display: inline-flex;
+            gap: 0;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .grade-btn {
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #30363d;
+            background: #21262d;
+            color: #8b949e;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .grade-btn:first-child { border-radius: 6px 0 0 6px; }
+        .grade-btn:last-child { border-radius: 0 6px 6px 0; }
+        .grade-btn.active-3 { background: #da3633; color: #fff; border-color: #da3633; }
+        .grade-btn.active-4 { background: #d29922; color: #fff; border-color: #d29922; }
+        .grade-btn.active-5 { background: #238636; color: #fff; border-color: #238636; }
+        .grade-btn:hover { opacity: 0.85; }
+
+        /* Grade badge */
+        .grade-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 6px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+        .grade-badge.g5 { background: #238636; color: #fff; }
+        .grade-badge.g4 { background: #d29922; color: #fff; }
+        .grade-badge.g3 { background: #da3633; color: #fff; }
+
+        /* Discipline input row with grades */
+        .disc-input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #21262d;
+        }
+        .disc-input-row .disc-name {
+            flex: 1;
+            font-size: 14px;
+            color: #e1e4e8;
+        }
+        .disc-remove {
+            background: none;
+            border: none;
+            color: #484f58;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+        }
+        .disc-remove:hover { color: #f85149; }
+
+        /* Filtered tag indicator */
+        .filtered-tag { opacity: 0.4; }
+        .filtered-tag td::after { content: ' (< 3 вакансий)'; color: #d29922; font-size: 11px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .container { padding: 16px; }
+            .form-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>⚡ HH Student Evaluator</h1>
+    <div class="status"><span class="dot"></span>API Connected</div>
+</div>
+
+<div class="tabs">
+    <div class="tab active" onclick="switchTab('evaluation')">📊 Оценка студента</div>
+    <div class="tab" onclick="switchTab('students')">👩‍🎓 Студенты</div>
+    <div class="tab" onclick="switchTab('parsing')">🔍 Парсинг вакансий</div>
+    <div class="tab" onclick="switchTab('tags')">🏷️ Навыки и теги</div>
+</div>
+
+<div class="container">
+
+    <!-- ===== PAGE: EVALUATION ===== -->
+    <div id="page-evaluation" class="page active">
+        <div class="card">
+            <h2>Выберите студента</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Студент</label>
+                    <select id="student-select" onchange="onStudentChange()">
+                        <option value="">— Выберите студента —</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Специальность</label>
+                    <input type="text" id="eval-specialty" placeholder="Например: Python разработчик">
+                </div>
+                <div class="form-group" style="max-width:200px;">
+                    <label>Опыт работы</label>
+                    <select id="eval-experience">
+                        <option value="">Любой</option>
+                        <option value="noExperience">Без опыта</option>
+                        <option value="between1And3">1-3 года</option>
+                        <option value="between3And6">3-6 лет</option>
+                        <option value="moreThan6">6+ лет</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="evaluateStudent()" id="btn-evaluate" disabled>
+                    Оценить стоимость
+                </button>
+            </div>
+            <div id="student-info" style="display:none;">
+                <h3>Дисциплины студента:</h3>
+                <div id="student-disciplines" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+            </div>
+        </div>
+
+        <div id="evaluation-results" style="display:none;">
+            <div class="grid-3" id="stat-cards"></div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h2>Влияние навыков на стоимость</h2>
+                    <div class="chart-container">
+                        <canvas id="chart-impact"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>Сходство дисциплин с навыками</h2>
+                    <div class="chart-container">
+                        <canvas id="chart-similarity"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Детальная разбивка</h2>
+                <table class="tags-table" id="eval-details-table">
+                    <thead>
+                        <tr>
+                            <th>Дисциплина</th>
+                            <th>Оценка</th>
+                            <th>Навык HH.ru</th>
+                            <th>Сходство</th>
+                            <th>Средняя ЗП</th>
+                            <th>Вакансий</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="evaluation-empty" class="empty">
+            <div class="icon">🎓</div>
+            <p>Выберите студента и нажмите «Оценить стоимость»</p>
+        </div>
+    </div>
+
+    <!-- ===== PAGE: STUDENTS ===== -->
+    <div id="page-students" class="page">
+        <div class="grid-2">
+            <!-- Left: create / edit form -->
+            <div>
+                <div class="card" id="student-form-card">
+                    <h2 id="form-title">➕ Новый студент</h2>
+                    <input type="hidden" id="edit-student-id" value="">
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>ФИО</label>
+                        <input type="text" id="input-fullname" placeholder="Иванов Иван Иванович">
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Группа</label>
+                        <input type="text" id="input-group" placeholder="CS-101">
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Добавить дисциплину</label>
+                        <div class="form-row" style="margin-bottom:0;">
+                            <input type="text" id="input-new-disc" placeholder="Название дисциплины" style="flex:1;" onkeydown="if(event.key==='Enter')addDiscToForm()">
+                            <button class="btn btn-blue" onclick="addDiscToForm()" style="white-space:nowrap;">+ Добавить</button>
+                        </div>
+                    </div>
+                    <div id="form-disciplines-list" style="margin-bottom:12px;"></div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-primary" onclick="saveStudent()" id="btn-save-student">💾 Создать</button>
+                        <button class="btn btn-blue" onclick="resetStudentForm()" style="display:none;" id="btn-cancel-edit">Отмена</button>
+                    </div>
+                    <div id="form-message" style="margin-top:12px;display:none;"></div>
+                </div>
+
+                <div class="card">
+                    <h2>📝 Добавить дисциплины</h2>
+                    <div class="form-row">
+                        <div class="form-group" style="max-width:200px;">
+                            <label>Студент</label>
+                            <select id="add-disc-student">
+                                <option value="">— Выбрать —</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Дисциплина</label>
+                            <input type="text" id="add-disc-name" placeholder="Название дисциплины" onkeydown="if(event.key==='Enter')addDiscToAddList()">
+                        </div>
+                        <button class="btn btn-blue" onclick="addDiscToAddList()" style="white-space:nowrap;">+ Добавить</button>
+                    </div>
+                    <div id="add-disc-list" style="margin-bottom:12px;"></div>
+                    <button class="btn btn-primary" onclick="addDisciplines()" id="btn-add-discs" style="display:none;">💾 Сохранить дисциплины</button>
+                </div>
+            </div>
+
+            <!-- Right: students list -->
+            <div class="card">
+                <h2>📋 Список студентов</h2>
+                <div id="students-list" style="max-height:520px;overflow-y:auto;">
+                    <div class="empty"><div class="icon">⏳</div><p>Загрузка...</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== PAGE: PARSING ===== -->
+    <div id="page-parsing" class="page">
+        <div class="card">
+            <h2>Парсинг вакансий с HH.ru</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Поисковый запрос</label>
+                    <input type="text" id="parse-query" placeholder="python, java, devops..." value="python">
+                </div>
+                <div class="form-group" style="max-width:120px;">
+                    <label>Кол-во</label>
+                    <input type="number" id="parse-count" value="20" min="1" max="100">
+                </div>
+                <div class="form-group" style="max-width:200px;">
+                    <label>Опыт</label>
+                    <select id="parse-experience">
+                        <option value="">Любой</option>
+                        <option value="noExperience">Без опыта</option>
+                        <option value="between1And3">1-3 года</option>
+                        <option value="between3And6">3-6 лет</option>
+                        <option value="moreThan6">6+ лет</option>
+                    </select>
+                </div>
+                <button class="btn btn-blue" onclick="startParsing()" id="btn-parse">
+                    🚀 Начать парсинг
+                </button>
+            </div>
+        </div>
+
+        <div id="parse-results" style="display:none;">
+            <div class="grid-3" id="parse-stat-cards"></div>
+            <div class="grid-2">
+                <div class="card">
+                    <h2>Топ навыков</h2>
+                    <div class="chart-container">
+                        <canvas id="chart-parse-tags"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>Лог парсинга</h2>
+                    <div class="parse-log" id="parse-log"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="parse-empty" class="empty">
+            <div class="icon">🔍</div>
+            <p>Введите запрос и запустите парсинг вакансий</p>
+        </div>
+    </div>
+
+    <!-- ===== PAGE: TAGS ===== -->
+    <div id="page-tags" class="page">
+        <div class="card">
+            <h2>Статистика по навыкам</h2>
+            <div class="form-row">
+                <div class="form-group" style="max-width:300px;">
+                    <label>Поиск по названию вакансии</label>
+                    <input type="text" id="tags-query" placeholder="Оставьте пустым для всех">
+                </div>
+                <button class="btn btn-blue" onclick="loadTags()">Загрузить</button>
+            </div>
+        </div>
+
+        <div id="tags-results" style="display:none;">
+            <div class="grid-3" id="tags-stat-cards"></div>
+            <div class="grid-2">
+                <div class="card">
+                    <h2>Распределение навыков</h2>
+                    <div class="chart-container">
+                        <canvas id="chart-tags-pie"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>Все навыки</h2>
+                    <div style="max-height:380px;overflow-y:auto;">
+                        <table class="tags-table" id="tags-full-table">
+                            <thead>
+                                <tr>
+                                    <th>Навык</th>
+                                    <th>Кол-во</th>
+                                    <th>Доля</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tags-empty" class="empty">
+            <div class="icon">🏷️</div>
+            <p>Нажмите «Загрузить» для получения статистики</p>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = '';  // same origin
+
+// ============ TABS ============
+function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('page-' + name).classList.add('active');
+    if (name === 'students') refreshStudentsList();
+}
+
+// ============ CHARTS STORAGE ============
+let charts = {};
+function destroyChart(id) {
+    if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+// ============ STUDENTS ============
+let allStudents = [];
+
+async function loadStudents() {
+    try {
+        const res = await fetch(API + '/api/v1/students/');
+        allStudents = await res.json();
+        // Populate evaluation dropdown
+        const sel = document.getElementById('student-select');
+        sel.innerHTML = '<option value="">— Выберите студента —</option>';
+        allStudents.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = `${s.full_name} (${s.group_name || 'б/г'})`;
+            opt.dataset.disciplines = JSON.stringify(s.disciplines || []);
+            sel.appendChild(opt);
+        });
+        // Populate add-disciplines dropdown
+        const sel2 = document.getElementById('add-disc-student');
+        sel2.innerHTML = '<option value="">— Выбрать —</option>';
+        allStudents.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = `${s.full_name}`;
+            sel2.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('Failed to load students:', e);
+    }
+}
+
+function refreshStudentsList() {
+    const container = document.getElementById('students-list');
+    if (!allStudents.length) {
+        container.innerHTML = '<div class="empty"><div class="icon">📭</div><p>Нет студентов</p></div>';
+        return;
+    }
+    container.innerHTML = allStudents.map(s => `
+        <div class="student-item">
+            <div class="student-header">
+                <span class="student-name">${s.full_name}</span>
+                <span class="student-group">${s.group_name || '—'}</span>
+            </div>
+            <div class="student-discs">
+                ${(s.disciplines || []).map(d => {
+                    const gc = d.grade === 5 ? 'g5' : d.grade === 4 ? 'g4' : 'g3';
+                    return `<span class="tag-badge">${d.name}<span class="grade-badge ${gc}">${d.grade}</span></span>`;
+                }).join('')}
+                ${(!s.disciplines || !s.disciplines.length) ? '<span style="color:#484f58;font-size:13px;">Нет дисциплин</span>' : ''}
+            </div>
+            <div class="student-actions">
+                <button class="btn-sm" onclick="editStudent(${s.id})">✏️ Редактировать</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function editStudent(id) {
+    const s = allStudents.find(st => st.id === id);
+    if (!s) return;
+    document.getElementById('edit-student-id').value = s.id;
+    document.getElementById('input-fullname').value = s.full_name;
+    document.getElementById('input-group').value = s.group_name || '';
+    // Load disciplines with grades
+    formDisciplines = (s.disciplines || []).map(d => ({ name: d.name, grade: d.grade || 5 }));
+    renderFormDisciplines();
+    document.getElementById('form-title').textContent = '✏️ Редактировать студента';
+    document.getElementById('btn-save-student').textContent = '💾 Сохранить';
+    document.getElementById('btn-cancel-edit').style.display = 'inline-block';
+    showFormMsg('', '');
+}
+
+function resetStudentForm() {
+    document.getElementById('edit-student-id').value = '';
+    document.getElementById('input-fullname').value = '';
+    document.getElementById('input-group').value = '';
+    formDisciplines = [];
+    renderFormDisciplines();
+    document.getElementById('form-title').textContent = '➕ Новый студент';
+    document.getElementById('btn-save-student').textContent = '💾 Создать';
+    document.getElementById('btn-cancel-edit').style.display = 'none';
+    showFormMsg('', '');
+}
+
+function showFormMsg(text, type) {
+    const el = document.getElementById('form-message');
+    if (!text) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.className = type === 'error' ? 'form-msg-error' : 'form-msg-success';
+    el.textContent = text;
+}
+
+async function saveStudent() {
+    const editId = document.getElementById('edit-student-id').value;
+    const fullName = document.getElementById('input-fullname').value.trim();
+    const groupName = document.getElementById('input-group').value.trim();
+
+    if (!fullName) { showFormMsg('Введите ФИО', 'error'); return; }
+
+    const btn = document.getElementById('btn-save-student');
+    btn.disabled = true;
+
+    try {
+        if (editId) {
+            // Update: send disciplines with grades
+            if (formDisciplines.length) {
+                const res = await fetch(API + `/api/v1/students/${editId}/disciplines`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ disciplines: formDisciplines })
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    showFormMsg(err.detail || 'Ошибка обновления', 'error');
+                    return;
+                }
+            }
+            showFormMsg('✓ Дисциплины обновлены', 'success');
+        } else {
+            // Create new student
+            const body = { full_name: fullName, disciplines: formDisciplines };
+            if (groupName) body.group_name = groupName;
+
+            const res = await fetch(API + '/api/v1/students/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                showFormMsg(err.detail || 'Ошибка создания', 'error');
+                return;
+            }
+            showFormMsg('✓ Студент создан', 'success');
+            resetStudentForm();
+        }
+
+        await loadStudents();
+        refreshStudentsList();
+    } catch (e) {
+        showFormMsg('Ошибка сети: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function addDisciplines() {
+    const studentId = document.getElementById('add-disc-student').value;
+
+    if (!studentId) { alert('Выберите студента'); return; }
+    if (!addDiscList.length) { alert('Добавьте хотя бы одну дисциплину'); return; }
+
+    try {
+        const res = await fetch(API + `/api/v1/students/${studentId}/disciplines`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ disciplines: addDiscList })
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            alert(err.detail || 'Ошибка');
+            return;
+        }
+        addDiscList = [];
+        renderAddDiscList();
+        await loadStudents();
+        refreshStudentsList();
+        alert('✓ Дисциплины добавлены');
+    } catch (e) {
+        alert('Ошибка: ' + e.message);
+    }
+}
+
+function onStudentChange() {
+    const sel = document.getElementById('student-select');
+    const btn = document.getElementById('btn-evaluate');
+    const info = document.getElementById('student-info');
+    const discs = document.getElementById('student-disciplines');
+
+    if (!sel.value) {
+        btn.disabled = true;
+        info.style.display = 'none';
+        return;
+    }
+
+    btn.disabled = false;
+    const opt = sel.options[sel.selectedIndex];
+    const disciplines = JSON.parse(opt.dataset.disciplines || '[]');
+
+    discs.innerHTML = disciplines.map(d => {
+        const gc = d.grade === 5 ? 'g5' : d.grade === 4 ? 'g4' : 'g3';
+        return `<span class="tag-badge">${d.name}<span class="grade-badge ${gc}">${d.grade}</span></span>`;
+    }).join('');
+    info.style.display = 'block';
+}
+
+// ============ EVALUATION ============
+async function evaluateStudent() {
+    const studentId = document.getElementById('student-select').value;
+    const specialty = document.getElementById('eval-specialty').value.trim();
+    const experience = document.getElementById('eval-experience').value;
+
+    if (!studentId) return;
+    if (!specialty) { alert('Введите специальность для оценки'); return; }
+
+    const btn = document.getElementById('btn-evaluate');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Оцениваем...';
+
+    try {
+        const params = new URLSearchParams({ specialty });
+        if (experience) params.set('experience', experience);
+
+        const res = await fetch(API + `/api/v1/students/${studentId}/evaluate?${params}`, {
+            method: 'POST'
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.detail || 'Ошибка оценки');
+            return;
+        }
+
+        renderEvaluation(data);
+    } catch (e) {
+        alert('Ошибка: ' + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Оценить стоимость';
+    }
+}
+
+function renderEvaluation(data) {
+    document.getElementById('evaluation-empty').style.display = 'none';
+    document.getElementById('evaluation-results').style.display = 'block';
+
+    const expLabels = {
+        'noExperience': 'Без опыта', 'between1And3': '1-3 года',
+        'between3And6': '3-6 лет', 'moreThan6': '6+ лет'
+    };
+
+    // Stat cards
+    const salary = data.estimated_salary
+        ? Math.round(data.estimated_salary).toLocaleString('ru-RU') + ' ₽'
+        : 'Н/Д';
+    const expText = data.experience_filter ? expLabels[data.experience_filter] || data.experience_filter : 'Любой';
+    document.getElementById('stat-cards').innerHTML = `
+        <div class="stat-card">
+            <div class="value salary-value">${salary}</div>
+            <div class="label">Оценочная зарплата</div>
+            <div style="font-size:11px;color:#8b949e;margin-top:4px;">📌 ${data.specialty} · ${expText}</div>
+        </div>
+        <div class="stat-card">
+            <div class="value confidence-value">${Math.round(data.confidence * 100)}%</div>
+            <div class="label">Уверенность оценки</div>
+        </div>
+        <div class="stat-card">
+            <div class="value match-value">${data.matched_disciplines}/${data.total_disciplines}</div>
+            <div class="label">Совпавших дисциплин</div>
+        </div>
+    `;
+
+    // Impact chart
+    const matches = data.skill_matches || [];
+    const impactMap = {};
+    matches.forEach(m => {
+        if (m.avg_salary) {
+            const impact = m.similarity * m.avg_salary;
+            impactMap[m.skill_name] = (impactMap[m.skill_name] || 0) + impact;
+        }
+    });
+    const impactEntries = Object.entries(impactMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 12);
+
+    const colors = [
+        '#58a6ff', '#bc8cff', '#3fb950', '#d29922', '#f85149',
+        '#79c0ff', '#d2a8ff', '#56d364', '#e3b341', '#ff7b72',
+        '#a5d6ff', '#e8d4ff'
+    ];
+
+    destroyChart('chart-impact');
+    charts['chart-impact'] = new Chart(document.getElementById('chart-impact'), {
+        type: 'bar',
+        data: {
+            labels: impactEntries.map(e => e[0]),
+            datasets: [{
+                label: 'Влияние на ЗП (similarity × avg_salary)',
+                data: impactEntries.map(e => Math.round(e[1])),
+                backgroundColor: colors.slice(0, impactEntries.length),
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ctx.raw.toLocaleString('ru-RU') + ' ₽'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: '#21262d' },
+                    ticks: { color: '#8b949e', callback: v => (v/1000) + 'k' }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: '#c9d1d9', font: { size: 12 } }
+                }
+            }
+        }
+    });
+
+    // Similarity radar
+    const discGroups = {};
+    matches.forEach(m => {
+        if (!discGroups[m.discipline]) discGroups[m.discipline] = [];
+        discGroups[m.discipline].push(m);
+    });
+
+    const radarLabels = Object.keys(discGroups);
+    const radarData = radarLabels.map(d => {
+        const maxSim = Math.max(...discGroups[d].map(m => m.similarity));
+        return Math.round(maxSim * 100) / 100;
+    });
+
+    destroyChart('chart-similarity');
+    charts['chart-similarity'] = new Chart(document.getElementById('chart-similarity'), {
+        type: 'radar',
+        data: {
+            labels: radarLabels,
+            datasets: [{
+                label: 'Макс. сходство',
+                data: radarData,
+                backgroundColor: 'rgba(88,166,255,0.15)',
+                borderColor: '#58a6ff',
+                pointBackgroundColor: '#58a6ff',
+                pointBorderColor: '#0d1117',
+                pointBorderWidth: 2,
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 1,
+                    grid: { color: '#21262d' },
+                    angleLines: { color: '#21262d' },
+                    pointLabels: { color: '#c9d1d9', font: { size: 11 } },
+                    ticks: { color: '#8b949e', backdropColor: 'transparent' }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // Detail table
+    const tbody = document.querySelector('#eval-details-table tbody');
+    tbody.innerHTML = matches.map(m => {
+        const isFiltered = m.vacancy_count < 3;
+        const gc = m.grade === 5 ? 'g5' : m.grade === 4 ? 'g4' : 'g3';
+        return `
+        <tr${isFiltered ? ' class="filtered-tag"' : ''}>
+            <td><span class="tag-badge">${m.discipline}</span></td>
+            <td><span class="grade-badge ${gc}">${m.grade}</span> <span style="color:#8b949e;font-size:12px;">×${m.grade_coeff}</span></td>
+            <td>${m.skill_name}</td>
+            <td>
+                <div class="tag-bar-bg"><div class="tag-bar" style="width:${m.similarity*100}%"></div></div>
+                ${(m.similarity * 100).toFixed(1)}%
+            </td>
+            <td>${m.avg_salary ? Math.round(m.avg_salary).toLocaleString('ru-RU') + ' ₽' : '—'}</td>
+            <td>${m.vacancy_count}${isFiltered ? ' ⚠️' : ''}</td>
+        </tr>
+    `}).join('');
+}
+
+// ============ PARSING ============
+async function startParsing() {
+    const query = document.getElementById('parse-query').value.trim();
+    const count = parseInt(document.getElementById('parse-count').value) || 20;
+    const experience = document.getElementById('parse-experience').value;
+
+    if (!query) { alert('Введите поисковый запрос'); return; }
+
+    const btn = document.getElementById('btn-parse');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Парсинг...';
+
+    const log = document.getElementById('parse-log');
+    document.getElementById('parse-results').style.display = 'block';
+    document.getElementById('parse-empty').style.display = 'none';
+    log.innerHTML = `<div class="info">[${time()}] Начинаем парсинг "${query}" (${count} вакансий)...</div>`;
+
+    try {
+        const body = { query, count };
+        if (experience) body.experience = experience;
+
+        const res = await fetch(API + '/api/v1/parse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            log.innerHTML += `<div class="error">[${time()}] Ошибка: ${data.detail || JSON.stringify(data)}</div>`;
+            return;
+        }
+
+        log.innerHTML += `<div class="success">[${time()}] ✓ Спарсено ${data.total_parsed} вакансий</div>`;
+        log.innerHTML += `<div class="info">[${time()}] Найдено ${data.tags.length} уникальных навыков</div>`;
+        if (data.average_salary) {
+            log.innerHTML += `<div class="warn">[${time()}] Средняя ЗП: ${Math.round(data.average_salary).toLocaleString('ru-RU')} ₽</div>`;
+        }
+
+        renderParseResults(data);
+    } catch (e) {
+        log.innerHTML += `<div class="error">[${time()}] Ошибка сети: ${e.message}</div>`;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '🚀 Начать парсинг';
+    }
+}
+
+function renderParseResults(data) {
+    const salary = data.average_salary
+        ? Math.round(data.average_salary).toLocaleString('ru-RU') + ' ₽'
+        : 'Н/Д';
+
+    document.getElementById('parse-stat-cards').innerHTML = `
+        <div class="stat-card">
+            <div class="value salary-value">${data.total_parsed}</div>
+            <div class="label">Вакансий спарсено</div>
+        </div>
+        <div class="stat-card">
+            <div class="value confidence-value">${data.tags.length}</div>
+            <div class="label">Уникальных навыков</div>
+        </div>
+        <div class="stat-card">
+            <div class="value match-value">${salary}</div>
+            <div class="label">Средняя зарплата</div>
+        </div>
+    `;
+
+    // Tags bar chart — filter out count=1 for chart only
+    const significantTags = data.tags.filter(t => t.count > 1);
+    const topTags = significantTags.slice(0, 15);
+    destroyChart('chart-parse-tags');
+    charts['chart-parse-tags'] = new Chart(document.getElementById('chart-parse-tags'), {
+        type: 'bar',
+        data: {
+            labels: topTags.map(t => t.name),
+            datasets: [{
+                label: 'Упоминаний',
+                data: topTags.map(t => t.count),
+                backgroundColor: topTags.map((_, i) =>
+                    `hsl(${210 + i * 10}, 70%, ${55 + i}%)`
+                ),
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: '#21262d' }, ticks: { color: '#8b949e' } },
+                y: { grid: { display: false }, ticks: { color: '#c9d1d9', font: { size: 12 } } }
+            }
+        }
+    });
+}
+
+// ============ TAGS ============
+async function loadTags() {
+    const query = document.getElementById('tags-query').value.trim();
+    const params = new URLSearchParams();
+    if (query) params.set('query', query);
+    params.set('limit', '500');
+
+    try {
+        const res = await fetch(API + '/api/v1/vacancies?' + params);
+        const data = await res.json();
+
+        document.getElementById('tags-empty').style.display = 'none';
+        document.getElementById('tags-results').style.display = 'block';
+
+        // Filter: only tags with count > 1 for charts and average salary
+        const significantTags = data.tags.filter(t => t.count > 1);
+        const allTags = data.tags;
+
+        const salary = data.average_salary
+            ? Math.round(data.average_salary).toLocaleString('ru-RU') + ' ₽'
+            : 'Н/Д';
+
+        document.getElementById('tags-stat-cards').innerHTML = `
+            <div class="stat-card">
+                <div class="value salary-value">${data.total_count}</div>
+                <div class="label">Всего вакансий</div>
+            </div>
+            <div class="stat-card">
+                <div class="value confidence-value">${significantTags.length}</div>
+                <div class="label">Значимых навыков (>1)</div>
+            </div>
+            <div class="stat-card">
+                <div class="value match-value">${salary}</div>
+                <div class="label">Средняя зарплата</div>
+            </div>
+        `;
+
+        // Pie chart — show all significant tags (count > 1), no "other" bucket
+        const pieLabels = significantTags.map(t => t.name);
+        const pieData = significantTags.map(t => t.count);
+
+        const pieColorPalette = [
+            '#58a6ff', '#bc8cff', '#3fb950', '#d29922', '#f85149',
+            '#79c0ff', '#d2a8ff', '#56d364', '#e3b341', '#ff7b72',
+            '#8b949e', '#f0883e', '#a5d6ff', '#7ee787', '#ffa657',
+            '#ff9bce', '#76e4f7', '#cbccd1', '#b392f0', '#fddf68'
+        ];
+        const pieColors = pieData.map((_, i) => pieColorPalette[i % pieColorPalette.length]);
+
+        destroyChart('chart-tags-pie');
+        const showLegend = pieData.length <= 15;
+        charts['chart-tags-pie'] = new Chart(document.getElementById('chart-tags-pie'), {
+            type: 'doughnut',
+            data: {
+                labels: pieLabels,
+                datasets: [{
+                    data: pieData,
+                    backgroundColor: pieColors,
+                    borderColor: '#161b22',
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: showLegend,
+                        position: 'right',
+                        labels: { color: '#c9d1d9', padding: 8, font: { size: 11 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ` ${ctx.label}: ${ctx.parsed} вакансий`
+                        }
+                    }
+                }
+            }
+        });
+
+        // Full table — show ALL tags, but mark count=1 as dimmed
+        const totalCount = allTags.reduce((s, t) => s + t.count, 0);
+        const tbody = document.querySelector('#tags-full-table tbody');
+        tbody.innerHTML = allTags.map(t => {
+            const pct = totalCount > 0 ? ((t.count / totalCount) * 100).toFixed(1) : 0;
+            const dim = t.count <= 1 ? 'style="opacity:0.45;"' : '';
+            return `
+                <tr ${dim}>
+                    <td><span class="tag-badge">${t.name}</span></td>
+                    <td>${t.count}</td>
+                    <td>
+                        <div class="tag-bar-bg"><div class="tag-bar" style="width:${pct}%"></div></div>
+                        ${pct}%
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    } catch (e) {
+        alert('Ошибка: ' + e.message);
+    }
+}
+
+// ============ DISCIPLINE MANAGEMENT (Form) ============
+let formDisciplines = []; // [{name, grade}]
+
+function addDiscToForm() {
+    const input = document.getElementById('input-new-disc');
+    const name = input.value.trim();
+    if (!name) return;
+    if (formDisciplines.some(d => d.name.toLowerCase() === name.toLowerCase())) {
+        input.value = '';
+        return;
+    }
+    formDisciplines.push({ name, grade: 5 });
+    input.value = '';
+    renderFormDisciplines();
+}
+
+function setFormDiscGrade(idx, grade) {
+    formDisciplines[idx].grade = grade;
+    renderFormDisciplines();
+}
+
+function removeFormDisc(idx) {
+    formDisciplines.splice(idx, 1);
+    renderFormDisciplines();
+}
+
+function renderFormDisciplines() {
+    const container = document.getElementById('form-disciplines-list');
+    if (!formDisciplines.length) {
+        container.innerHTML = '';
+        return;
+    }
+    container.innerHTML = formDisciplines.map((d, i) => `
+        <div class="disc-input-row">
+            <span class="disc-name">${d.name}</span>
+            <div class="grade-group">
+                <button class="grade-btn${d.grade===3?' active-3':''}" onclick="setFormDiscGrade(${i},3)">3</button>
+                <button class="grade-btn${d.grade===4?' active-4':''}" onclick="setFormDiscGrade(${i},4)">4</button>
+                <button class="grade-btn${d.grade===5?' active-5':''}" onclick="setFormDiscGrade(${i},5)">5</button>
+            </div>
+            <button class="disc-remove" onclick="removeFormDisc(${i})">✕</button>
+        </div>
+    `).join('');
+}
+
+// ============ ADD DISCIPLINES LIST ============
+let addDiscList = []; // [{name, grade}]
+
+function addDiscToAddList() {
+    const input = document.getElementById('add-disc-name');
+    const name = input.value.trim();
+    if (!name) return;
+    if (addDiscList.some(d => d.name.toLowerCase() === name.toLowerCase())) {
+        input.value = '';
+        return;
+    }
+    addDiscList.push({ name, grade: 5 });
+    input.value = '';
+    renderAddDiscList();
+}
+
+function setAddDiscGrade(idx, grade) {
+    addDiscList[idx].grade = grade;
+    renderAddDiscList();
+}
+
+function removeAddDisc(idx) {
+    addDiscList.splice(idx, 1);
+    renderAddDiscList();
+}
+
+function renderAddDiscList() {
+    const container = document.getElementById('add-disc-list');
+    const btn = document.getElementById('btn-add-discs');
+    if (!addDiscList.length) {
+        container.innerHTML = '';
+        btn.style.display = 'none';
+        return;
+    }
+    btn.style.display = 'inline-block';
+    container.innerHTML = addDiscList.map((d, i) => `
+        <div class="disc-input-row">
+            <span class="disc-name">${d.name}</span>
+            <div class="grade-group">
+                <button class="grade-btn${d.grade===3?' active-3':''}" onclick="setAddDiscGrade(${i},3)">3</button>
+                <button class="grade-btn${d.grade===4?' active-4':''}" onclick="setAddDiscGrade(${i},4)">4</button>
+                <button class="grade-btn${d.grade===5?' active-5':''}" onclick="setAddDiscGrade(${i},5)">5</button>
+            </div>
+            <button class="disc-remove" onclick="removeAddDisc(${i})">✕</button>
+        </div>
+    `).join('');
+}
+
+// ============ UTILS ============
+function time() {
+    return new Date().toLocaleTimeString('ru-RU');
+}
+
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded', loadStudents);
+</script>
+
+</body>
+</html>
