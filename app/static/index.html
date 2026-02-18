@@ -381,6 +381,94 @@
         .filtered-tag { opacity: 0.4; }
         .filtered-tag td::after { content: ' (< 3 вакансий)'; color: #d29922; font-size: 11px; }
 
+        /* Excluded skill row */
+        .excluded-row { opacity: 0.35; text-decoration: line-through; }
+        .excluded-row td { text-decoration: line-through; }
+
+        /* Skill action button (trash/restore) */
+        .btn-skill-action {
+            background: none;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 3px 6px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+        .btn-skill-action:hover {
+            background: #da363322;
+            border-color: #f8514944;
+        }
+        .btn-skill-action.restore:hover {
+            background: #23863622;
+            border-color: #3fb95044;
+        }
+
+        /* Excluded skills chips */
+        .excluded-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .excluded-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #da363622;
+            color: #f85149;
+            border: 1px solid #f8514944;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .excluded-chip button {
+            background: none;
+            border: none;
+            color: #f85149;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 0 2px;
+            line-height: 1;
+        }
+        .excluded-chip button:hover { color: #fff; }
+
+        /* Top-K slider container */
+        .topk-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .topk-control input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #21262d;
+            border-radius: 3px;
+            outline: none;
+        }
+        .topk-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #58a6ff;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #0d1117;
+        }
+        .topk-value {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: #58a6ff;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 36px;
+            text-align: center;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .grid-2, .grid-3 { grid-template-columns: 1fr; }
@@ -430,6 +518,13 @@
                         <option value="moreThan6">6+ лет</option>
                     </select>
                 </div>
+                <div class="form-group" style="max-width:180px;">
+                    <label>Навыков на дисциплину (top-k)</label>
+                    <div class="topk-control">
+                        <input type="range" id="eval-topk" min="1" max="20" value="5" oninput="document.getElementById('topk-display').textContent=this.value">
+                        <span class="topk-value" id="topk-display">5</span>
+                    </div>
+                </div>
                 <button class="btn btn-primary" onclick="evaluateStudent()" id="btn-evaluate" disabled>
                     Оценить стоимость
                 </button>
@@ -460,6 +555,10 @@
 
             <div class="card">
                 <h2>Детальная разбивка</h2>
+                <div id="excluded-chips-container" style="display:none;">
+                    <h3 style="margin-bottom:8px;">🚫 Исключённые навыки:</h3>
+                    <div id="excluded-chips" class="excluded-chips"></div>
+                </div>
                 <table class="tags-table" id="eval-details-table">
                     <thead>
                         <tr>
@@ -469,6 +568,7 @@
                             <th>Сходство</th>
                             <th>Средняя ЗП</th>
                             <th>Вакансий</th>
+                            <th style="width:40px;"></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -856,21 +956,30 @@ function onStudentChange() {
 }
 
 // ============ EVALUATION ============
+let excludedSkills = [];  // Список исключённых навыков
+let lastEvalParams = {};  // Сохраняем параметры для пересчёта
+
 async function evaluateStudent() {
     const studentId = document.getElementById('student-select').value;
     const specialty = document.getElementById('eval-specialty').value.trim();
     const experience = document.getElementById('eval-experience').value;
+    const topK = parseInt(document.getElementById('eval-topk').value) || 5;
 
     if (!studentId) return;
     if (!specialty) { alert('Введите специальность для оценки'); return; }
+
+    // Сохраняем параметры для пересчёта при изменении excluded
+    lastEvalParams = { studentId, specialty, experience, topK };
 
     const btn = document.getElementById('btn-evaluate');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>Оцениваем...';
 
     try {
-        const params = new URLSearchParams({ specialty });
+        const params = new URLSearchParams({ specialty, top_k: topK });
         if (experience) params.set('experience', experience);
+        // Добавляем исключённые навыки
+        excludedSkills.forEach(s => params.append('excluded_skills', s));
 
         const res = await fetch(API + `/api/v1/students/${studentId}/evaluate?${params}`, {
             method: 'POST'
@@ -889,6 +998,20 @@ async function evaluateStudent() {
         btn.disabled = false;
         btn.innerHTML = 'Оценить стоимость';
     }
+}
+
+function excludeSkill(skillName) {
+    if (!excludedSkills.includes(skillName)) {
+        excludedSkills.push(skillName);
+    }
+    // Автоматический пересчёт
+    evaluateStudent();
+}
+
+function restoreSkill(skillName) {
+    excludedSkills = excludedSkills.filter(s => s !== skillName);
+    // Автоматический пересчёт
+    evaluateStudent();
 }
 
 function renderEvaluation(data) {
@@ -1026,13 +1149,29 @@ function renderEvaluation(data) {
         }
     });
 
+    // Excluded chips
+    const chipsContainer = document.getElementById('excluded-chips-container');
+    const chipsEl = document.getElementById('excluded-chips');
+    if (excludedSkills.length > 0) {
+        chipsContainer.style.display = 'block';
+        chipsEl.innerHTML = excludedSkills.map(s =>
+            `<span class="excluded-chip">${s} <button onclick="restoreSkill('${s.replace(/'/g, '\\\'')}')" title="Вернуть навык">✕</button></span>`
+        ).join('');
+    } else {
+        chipsContainer.style.display = 'none';
+    }
+
     // Detail table
     const tbody = document.querySelector('#eval-details-table tbody');
     tbody.innerHTML = matches.map(m => {
         const isFiltered = m.vacancy_count < 3;
+        const isExcluded = m.excluded;
         const gc = m.grade === 5 ? 'g5' : m.grade === 4 ? 'g4' : 'g3';
+        let rowClass = '';
+        if (isExcluded) rowClass = 'excluded-row';
+        else if (isFiltered) rowClass = 'filtered-tag';
         return `
-        <tr${isFiltered ? ' class="filtered-tag"' : ''}>
+        <tr${rowClass ? ` class="${rowClass}"` : ''}>
             <td><span class="tag-badge">${m.discipline}</span></td>
             <td><span class="grade-badge ${gc}">${m.grade}</span> <span style="color:#8b949e;font-size:12px;">×${m.grade_coeff}</span></td>
             <td>${m.skill_name}</td>
@@ -1041,7 +1180,13 @@ function renderEvaluation(data) {
                 ${(m.similarity * 100).toFixed(1)}%
             </td>
             <td>${m.avg_salary ? Math.round(m.avg_salary).toLocaleString('ru-RU') + ' ₽' : '—'}</td>
-            <td>${m.vacancy_count}${isFiltered ? ' ⚠️' : ''}</td>
+            <td>${m.vacancy_count}${isFiltered && !isExcluded ? ' ⚠️' : ''}</td>
+            <td>
+                ${isExcluded
+                    ? `<button class="btn-skill-action restore" onclick="restoreSkill('${m.skill_name.replace(/'/g, '\\\'')}')" title="Вернуть навык">♻️</button>`
+                    : `<button class="btn-skill-action" onclick="excludeSkill('${m.skill_name.replace(/'/g, '\\\'')}')" title="Исключить навык">🗑️</button>`
+                }
+            </td>
         </tr>
     `}).join('');
 }

@@ -94,6 +94,7 @@ class SkillMatchResponse(BaseModel):
     vacancy_count: int = Field(0, description="Количество вакансий с этим навыком")
     grade: int = Field(default=5, description="Оценка студента по дисциплине")
     grade_coeff: float = Field(default=1.0, description="Коэффициент оценки")
+    excluded: bool = Field(default=False, description="Навык исключён из расчёта пользователем")
 
 
 class EvaluationResponse(BaseModel):
@@ -102,6 +103,8 @@ class EvaluationResponse(BaseModel):
     student_name: str
     specialty: str = Field(..., description="Специальность для оценки")
     experience_filter: str | None = Field(None, description="Фильтр по опыту")
+    top_k: int = Field(default=5, description="Кол-во навыков на дисциплину")
+    excluded_skills: list[str] = Field(default_factory=list, description="Исключённые навыки")
     estimated_salary: float | None = Field(None, description="Оценочная ЗП (RUB)")
     confidence: float = Field(..., description="Уверенность оценки (0..1)")
     total_disciplines: int = Field(..., description="Всего дисциплин у студента")

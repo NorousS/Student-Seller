@@ -108,6 +108,24 @@ python seed_students.py
 }
 ```
 
+### POST /api/v1/students/{id}/evaluate
+Оценка рыночной стоимости студента.
+
+**Параметры:**
+- `specialty` (обязательный) — специальность для фильтрации
+- `top_k` (1–20, по умолчанию 5) — навыков на дисциплину
+- `experience` — фильтр опыта: `noExperience`, `between1And3`, `between3And6`, `moreThan6`
+- `excluded_skills` — навыки для исключения из расчёта
+
+**Пример:**
+```powershell
+# Базовая оценка
+Invoke-RestMethod -Method POST -Uri "http://localhost:8000/api/v1/students/1/evaluate?specialty=Python%20разработчик&top_k=3"
+
+# С исключением навыков
+Invoke-RestMethod -Method POST -Uri "http://localhost:8000/api/v1/students/1/evaluate?specialty=Python&top_k=5&excluded_skills=Django&excluded_skills=Flask"
+```
+
 ## Технологии
 
 - **FastAPI** — веб-фреймворк
@@ -117,3 +135,4 @@ python seed_students.py
 - **httpx** — асинхронный HTTP-клиент
 - **uv** — менеджер зависимостей
 - **Docker** — контейнеризация
+

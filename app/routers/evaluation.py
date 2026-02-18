@@ -26,7 +26,8 @@ async def evaluate_student_endpoint(
     student_id: int,
     specialty: str = Query(..., min_length=1, description="Специальность для оценки"),
     experience: ExperienceLevel | None = Query(None, description="Фильтр по опыту работы"),
-    top_k: int = 5,
+    top_k: int = Query(default=5, ge=1, le=20, description="Кол-во навыков на дисциплину"),
+    excluded_skills: list[str] = Query(default=[], description="Навыки для исключения из расчёта"),
     db: AsyncSession = Depends(get_db),
 ) -> EvaluationResponse:
     """
@@ -59,6 +60,7 @@ async def evaluate_student_endpoint(
     valuation = await evaluate_student(
         db, disciplines, specialty=specialty,
         experience=experience_value, top_k=top_k,
+        excluded_skills=excluded_skills if excluded_skills else None,
     )
 
     # Формируем ответ
@@ -71,6 +73,7 @@ async def evaluate_student_endpoint(
             vacancy_count=m.vacancy_count,
             grade=m.grade,
             grade_coeff=m.grade_coeff,
+            excluded=m.excluded,
         )
         for m in valuation.skill_matches
     ]
@@ -80,6 +83,8 @@ async def evaluate_student_endpoint(
         student_name=student.full_name,
         specialty=specialty,
         experience_filter=experience_value,
+        top_k=top_k,
+        excluded_skills=excluded_skills or [],
         estimated_salary=valuation.estimated_salary,
         confidence=valuation.confidence,
         total_disciplines=valuation.total_disciplines,

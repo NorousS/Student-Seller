@@ -48,6 +48,7 @@ class SkillMatch:
     vacancy_count: int
     grade: int
     grade_coeff: float
+    excluded: bool = False
 
 
 @dataclass
@@ -146,6 +147,7 @@ async def evaluate_student(
     specialty: str,
     experience: str | None = None,
     top_k: int = 5,
+    excluded_skills: list[str] | None = None,
 ) -> ValuationResult:
     """
     Оценивает потенциальную рыночную стоимость студента.
@@ -156,7 +158,13 @@ async def evaluate_student(
         specialty: Специальность для фильтрации вакансий
         experience: Фильтр по опыту работы
         top_k: Сколько ближайших навыков искать на дисциплину
+        excluded_skills: Навыки, которые нужно исключить из расчёта
     """
+    # Нормализуем excluded_skills для быстрого поиска
+    excluded_set = set(
+        s.lower() for s in (excluded_skills or [])
+    )
+
     # Шаг 1: Семантическая фильтрация вакансий по специальности
     matching_queries = await get_matching_search_queries(db, specialty)
 
@@ -188,6 +196,8 @@ async def evaluate_student(
                 experience=experience,
             )
 
+            is_excluded = skill_name.lower() in excluded_set
+
             match = SkillMatch(
                 discipline=disc.name,
                 skill_name=skill_name,
@@ -196,11 +206,13 @@ async def evaluate_student(
                 vacancy_count=vacancy_count,
                 grade=disc.grade,
                 grade_coeff=grade_coeff,
+                excluded=is_excluded,
             )
             all_matches.append(match)
 
             # Фильтр: тег валиден только если >= MIN_TAG_COUNT вакансий
-            if avg_salary and vacancy_count >= MIN_TAG_COUNT:
+            # и навык не в списке исключённых
+            if avg_salary and vacancy_count >= MIN_TAG_COUNT and not is_excluded:
                 discipline_has_match = True
                 weight = similarity * math.log1p(vacancy_count) * grade_coeff
                 weighted_salary_sum += avg_salary * weight
