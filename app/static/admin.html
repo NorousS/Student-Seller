@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -379,7 +379,7 @@
 
         /* Filtered tag indicator */
         .filtered-tag { opacity: 0.4; }
-        .filtered-tag td::after { content: ' (< 3 ╨▓╨░╨║╨░╨╜╤Б╨╕╨╣)'; color: #d29922; font-size: 11px; }
+        .filtered-tag td::after { content: ' (< 3 вакансий)'; color: #d29922; font-size: 11px; }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -391,7 +391,7 @@
 </head>
 <body>
 
-<div id="login-overlay" style="display:none; position:fixed; inset:0; z-index:9999; background:#0f1117; display:flex; align-items:center; justify-content:center;">
+<div id="login-overlay" style="position:fixed; inset:0; z-index:9999; background:#0f1117; display:flex; align-items:center; justify-content:center;">
     <div style="background:#161b22; border:1px solid #30363d; border-radius:12px; padding:32px; width:360px;">
         <h2 style="margin-bottom:16px; text-align:center;">🔐 Вход в админ-панель</h2>
         <div id="login-error" style="display:none; color:#f85149; margin-bottom:12px; font-size:14px;"></div>
@@ -408,16 +408,16 @@
 </div>
 
 <div class="header">
-    <h1>тЪб HH Student Evaluator</h1>
+    <h1>⚡ HH Student Evaluator</h1>
     <div class="status"><span class="dot"></span>API Connected</div>
-    <button onclick="adminLogout()" style="margin-left:12px; padding:4px 12px; background:#da3633; border:none; border-radius:6px; color:#fff; font-size:12px; cursor:pointer;">Выйти</button>
+        <button onclick="adminLogout()" style="margin-left:12px; padding:4px 12px; background:#da3633; border:none; border-radius:6px; color:#fff; font-size:12px; cursor:pointer;">Выйти</button>
 </div>
 
 <div class="tabs">
-    <div class="tab active" onclick="switchTab('evaluation')">ЁЯУК ╨Ю╤Ж╨╡╨╜╨║╨░ ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░</div>
-    <div class="tab" onclick="switchTab('students')">ЁЯСйтАНЁЯОУ ╨б╤В╤Г╨┤╨╡╨╜╤В╤Л</div>
-    <div class="tab" onclick="switchTab('parsing')">ЁЯФН ╨Я╨░╤А╤Б╨╕╨╜╨│ ╨▓╨░╨║╨░╨╜╤Б╨╕╨╣</div>
-    <div class="tab" onclick="switchTab('tags')">ЁЯП╖я╕П ╨Э╨░╨▓╤Л╨║╨╕ ╨╕ ╤В╨╡╨│╨╕</div>
+    <div class="tab active" onclick="switchTab('evaluation')">📊 Оценка студента</div>
+    <div class="tab" onclick="switchTab('students')">👩‍🎓 Студенты</div>
+    <div class="tab" onclick="switchTab('parsing')">🔍 Парсинг вакансий</div>
+    <div class="tab" onclick="switchTab('tags')">🏷️ Навыки и теги</div>
 </div>
 
 <div class="container">
@@ -425,34 +425,34 @@
     <!-- ===== PAGE: EVALUATION ===== -->
     <div id="page-evaluation" class="page active">
         <div class="card">
-            <h2>╨Т╤Л╨▒╨╡╤А╨╕╤В╨╡ ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░</h2>
+            <h2>Выберите студента</h2>
             <div class="form-row">
                 <div class="form-group">
-                    <label>╨б╤В╤Г╨┤╨╡╨╜╤В</label>
+                    <label>Студент</label>
                     <select id="student-select" onchange="onStudentChange()">
-                        <option value="">тАФ ╨Т╤Л╨▒╨╡╤А╨╕╤В╨╡ ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░ тАФ</option>
+                        <option value="">— Выберите студента —</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>╨б╨┐╨╡╤Ж╨╕╨░╨╗╤М╨╜╨╛╤Б╤В╤М</label>
-                    <input type="text" id="eval-specialty" placeholder="╨Э╨░╨┐╤А╨╕╨╝╨╡╤А: Python ╤А╨░╨╖╤А╨░╨▒╨╛╤В╤З╨╕╨║">
+                    <label>Специальность</label>
+                    <input type="text" id="eval-specialty" placeholder="Например: Python разработчик">
                 </div>
                 <div class="form-group" style="max-width:200px;">
-                    <label>╨Ю╨┐╤Л╤В ╤А╨░╨▒╨╛╤В╤Л</label>
+                    <label>Опыт работы</label>
                     <select id="eval-experience">
-                        <option value="">╨Ы╤О╨▒╨╛╨╣</option>
-                        <option value="noExperience">╨С╨╡╨╖ ╨╛╨┐╤Л╤В╨░</option>
-                        <option value="between1And3">1-3 ╨│╨╛╨┤╨░</option>
-                        <option value="between3And6">3-6 ╨╗╨╡╤В</option>
-                        <option value="moreThan6">6+ ╨╗╨╡╤В</option>
+                        <option value="">Любой</option>
+                        <option value="noExperience">Без опыта</option>
+                        <option value="between1And3">1-3 года</option>
+                        <option value="between3And6">3-6 лет</option>
+                        <option value="moreThan6">6+ лет</option>
                     </select>
                 </div>
                 <button class="btn btn-primary" onclick="evaluateStudent()" id="btn-evaluate" disabled>
-                    ╨Ю╤Ж╨╡╨╜╨╕╤В╤М ╤Б╤В╨╛╨╕╨╝╨╛╤Б╤В╤М
+                    Оценить стоимость
                 </button>
             </div>
             <div id="student-info" style="display:none;">
-                <h3>╨Ф╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜╤Л ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░:</h3>
+                <h3>Дисциплины студента:</h3>
                 <div id="student-disciplines" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
             </div>
         </div>
@@ -462,13 +462,13 @@
 
             <div class="grid-2">
                 <div class="card">
-                    <h2>╨Т╨╗╨╕╤П╨╜╨╕╨╡ ╨╜╨░╨▓╤Л╨║╨╛╨▓ ╨╜╨░ ╤Б╤В╨╛╨╕╨╝╨╛╤Б╤В╤М</h2>
+                    <h2>Влияние навыков на стоимость</h2>
                     <div class="chart-container">
                         <canvas id="chart-impact"></canvas>
                     </div>
                 </div>
                 <div class="card">
-                    <h2>╨б╤Е╨╛╨┤╤Б╤В╨▓╨╛ ╨┤╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜ ╤Б ╨╜╨░╨▓╤Л╨║╨░╨╝╨╕</h2>
+                    <h2>Сходство дисциплин с навыками</h2>
                     <div class="chart-container">
                         <canvas id="chart-similarity"></canvas>
                     </div>
@@ -476,16 +476,16 @@
             </div>
 
             <div class="card">
-                <h2>╨Ф╨╡╤В╨░╨╗╤М╨╜╨░╤П ╤А╨░╨╖╨▒╨╕╨▓╨║╨░</h2>
+                <h2>Детальная разбивка</h2>
                 <table class="tags-table" id="eval-details-table">
                     <thead>
                         <tr>
-                            <th>╨Ф╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜╨░</th>
-                            <th>╨Ю╤Ж╨╡╨╜╨║╨░</th>
-                            <th>╨Э╨░╨▓╤Л╨║ HH.ru</th>
-                            <th>╨б╤Е╨╛╨┤╤Б╤В╨▓╨╛</th>
-                            <th>╨б╤А╨╡╨┤╨╜╤П╤П ╨Ч╨Я</th>
-                            <th>╨Т╨░╨║╨░╨╜╤Б╨╕╨╣</th>
+                            <th>Дисциплина</th>
+                            <th>Оценка</th>
+                            <th>Навык HH.ru</th>
+                            <th>Сходство</th>
+                            <th>Средняя ЗП</th>
+                            <th>Вакансий</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -494,8 +494,8 @@
         </div>
 
         <div id="evaluation-empty" class="empty">
-            <div class="icon">ЁЯОУ</div>
-            <p>╨Т╤Л╨▒╨╡╤А╨╕╤В╨╡ ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░ ╨╕ ╨╜╨░╨╢╨╝╨╕╤В╨╡ ┬л╨Ю╤Ж╨╡╨╜╨╕╤В╤М ╤Б╤В╨╛╨╕╨╝╨╛╤Б╤В╤М┬╗</p>
+            <div class="icon">🎓</div>
+            <p>Выберите студента и нажмите «Оценить стоимость»</p>
         </div>
     </div>
 
@@ -505,56 +505,56 @@
             <!-- Left: create / edit form -->
             <div>
                 <div class="card" id="student-form-card">
-                    <h2 id="form-title">тЮХ ╨Э╨╛╨▓╤Л╨╣ ╤Б╤В╤Г╨┤╨╡╨╜╤В</h2>
+                    <h2 id="form-title">➕ Новый студент</h2>
                     <input type="hidden" id="edit-student-id" value="">
                     <div class="form-group" style="margin-bottom:12px;">
-                        <label>╨д╨Ш╨Ю</label>
-                        <input type="text" id="input-fullname" placeholder="╨Ш╨▓╨░╨╜╨╛╨▓ ╨Ш╨▓╨░╨╜ ╨Ш╨▓╨░╨╜╨╛╨▓╨╕╤З">
+                        <label>ФИО</label>
+                        <input type="text" id="input-fullname" placeholder="Иванов Иван Иванович">
                     </div>
                     <div class="form-group" style="margin-bottom:12px;">
-                        <label>╨У╤А╤Г╨┐╨┐╨░</label>
+                        <label>Группа</label>
                         <input type="text" id="input-group" placeholder="CS-101">
                     </div>
                     <div class="form-group" style="margin-bottom:12px;">
-                        <label>╨Ф╨╛╨▒╨░╨▓╨╕╤В╤М ╨┤╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜╤Г</label>
+                        <label>Добавить дисциплину</label>
                         <div class="form-row" style="margin-bottom:0;">
-                            <input type="text" id="input-new-disc" placeholder="╨Э╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨┤╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜╤Л" style="flex:1;" onkeydown="if(event.key==='Enter')addDiscToForm()">
-                            <button class="btn btn-blue" onclick="addDiscToForm()" style="white-space:nowrap;">+ ╨Ф╨╛╨▒╨░╨▓╨╕╤В╤М</button>
+                            <input type="text" id="input-new-disc" placeholder="Название дисциплины" style="flex:1;" onkeydown="if(event.key==='Enter')addDiscToForm()">
+                            <button class="btn btn-blue" onclick="addDiscToForm()" style="white-space:nowrap;">+ Добавить</button>
                         </div>
                     </div>
                     <div id="form-disciplines-list" style="margin-bottom:12px;"></div>
                     <div style="display:flex;gap:8px;">
-                        <button class="btn btn-primary" onclick="saveStudent()" id="btn-save-student">ЁЯТ╛ ╨б╨╛╨╖╨┤╨░╤В╤М</button>
-                        <button class="btn btn-blue" onclick="resetStudentForm()" style="display:none;" id="btn-cancel-edit">╨Ю╤В╨╝╨╡╨╜╨░</button>
+                        <button class="btn btn-primary" onclick="saveStudent()" id="btn-save-student">💾 Создать</button>
+                        <button class="btn btn-blue" onclick="resetStudentForm()" style="display:none;" id="btn-cancel-edit">Отмена</button>
                     </div>
                     <div id="form-message" style="margin-top:12px;display:none;"></div>
                 </div>
 
                 <div class="card">
-                    <h2>ЁЯУЭ ╨Ф╨╛╨▒╨░╨▓╨╕╤В╤М ╨┤╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜╤Л</h2>
+                    <h2>📝 Добавить дисциплины</h2>
                     <div class="form-row">
                         <div class="form-group" style="max-width:200px;">
-                            <label>╨б╤В╤Г╨┤╨╡╨╜╤В</label>
+                            <label>Студент</label>
                             <select id="add-disc-student">
-                                <option value="">тАФ ╨Т╤Л╨▒╤А╨░╤В╤М тАФ</option>
+                                <option value="">— Выбрать —</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>╨Ф╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜╨░</label>
-                            <input type="text" id="add-disc-name" placeholder="╨Э╨░╨╖╨▓╨░╨╜╨╕╨╡ ╨┤╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜╤Л" onkeydown="if(event.key==='Enter')addDiscToAddList()">
+                            <label>Дисциплина</label>
+                            <input type="text" id="add-disc-name" placeholder="Название дисциплины" onkeydown="if(event.key==='Enter')addDiscToAddList()">
                         </div>
-                        <button class="btn btn-blue" onclick="addDiscToAddList()" style="white-space:nowrap;">+ ╨Ф╨╛╨▒╨░╨▓╨╕╤В╤М</button>
+                        <button class="btn btn-blue" onclick="addDiscToAddList()" style="white-space:nowrap;">+ Добавить</button>
                     </div>
                     <div id="add-disc-list" style="margin-bottom:12px;"></div>
-                    <button class="btn btn-primary" onclick="addDisciplines()" id="btn-add-discs" style="display:none;">ЁЯТ╛ ╨б╨╛╤Е╤А╨░╨╜╨╕╤В╤М ╨┤╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜╤Л</button>
+                    <button class="btn btn-primary" onclick="addDisciplines()" id="btn-add-discs" style="display:none;">💾 Сохранить дисциплины</button>
                 </div>
             </div>
 
             <!-- Right: students list -->
             <div class="card">
-                <h2>ЁЯУЛ ╨б╨┐╨╕╤Б╨╛╨║ ╤Б╤В╤Г╨┤╨╡╨╜╤В╨╛╨▓</h2>
+                <h2>📋 Список студентов</h2>
                 <div id="students-list" style="max-height:520px;overflow-y:auto;">
-                    <div class="empty"><div class="icon">тП│</div><p>╨Ч╨░╨│╤А╤Г╨╖╨║╨░...</p></div>
+                    <div class="empty"><div class="icon">⏳</div><p>Загрузка...</p></div>
                 </div>
             </div>
         </div>
@@ -563,28 +563,28 @@
     <!-- ===== PAGE: PARSING ===== -->
     <div id="page-parsing" class="page">
         <div class="card">
-            <h2>╨Я╨░╤А╤Б╨╕╨╜╨│ ╨▓╨░╨║╨░╨╜╤Б╨╕╨╣ ╤Б HH.ru</h2>
+            <h2>Парсинг вакансий с HH.ru</h2>
             <div class="form-row">
                 <div class="form-group">
-                    <label>╨Я╨╛╨╕╤Б╨║╨╛╨▓╤Л╨╣ ╨╖╨░╨┐╤А╨╛╤Б</label>
+                    <label>Поисковый запрос</label>
                     <input type="text" id="parse-query" placeholder="python, java, devops..." value="python">
                 </div>
                 <div class="form-group" style="max-width:120px;">
-                    <label>╨Ъ╨╛╨╗-╨▓╨╛</label>
+                    <label>Кол-во</label>
                     <input type="number" id="parse-count" value="20" min="1" max="100">
                 </div>
                 <div class="form-group" style="max-width:200px;">
-                    <label>╨Ю╨┐╤Л╤В</label>
+                    <label>Опыт</label>
                     <select id="parse-experience">
-                        <option value="">╨Ы╤О╨▒╨╛╨╣</option>
-                        <option value="noExperience">╨С╨╡╨╖ ╨╛╨┐╤Л╤В╨░</option>
-                        <option value="between1And3">1-3 ╨│╨╛╨┤╨░</option>
-                        <option value="between3And6">3-6 ╨╗╨╡╤В</option>
-                        <option value="moreThan6">6+ ╨╗╨╡╤В</option>
+                        <option value="">Любой</option>
+                        <option value="noExperience">Без опыта</option>
+                        <option value="between1And3">1-3 года</option>
+                        <option value="between3And6">3-6 лет</option>
+                        <option value="moreThan6">6+ лет</option>
                     </select>
                 </div>
                 <button class="btn btn-blue" onclick="startParsing()" id="btn-parse">
-                    ЁЯЪА ╨Э╨░╤З╨░╤В╤М ╨┐╨░╤А╤Б╨╕╨╜╨│
+                    🚀 Начать парсинг
                 </button>
             </div>
         </div>
@@ -593,34 +593,34 @@
             <div class="grid-3" id="parse-stat-cards"></div>
             <div class="grid-2">
                 <div class="card">
-                    <h2>╨в╨╛╨┐ ╨╜╨░╨▓╤Л╨║╨╛╨▓</h2>
+                    <h2>Топ навыков</h2>
                     <div class="chart-container">
                         <canvas id="chart-parse-tags"></canvas>
                     </div>
                 </div>
                 <div class="card">
-                    <h2>╨Ы╨╛╨│ ╨┐╨░╤А╤Б╨╕╨╜╨│╨░</h2>
+                    <h2>Лог парсинга</h2>
                     <div class="parse-log" id="parse-log"></div>
                 </div>
             </div>
         </div>
 
         <div id="parse-empty" class="empty">
-            <div class="icon">ЁЯФН</div>
-            <p>╨Т╨▓╨╡╨┤╨╕╤В╨╡ ╨╖╨░╨┐╤А╨╛╤Б ╨╕ ╨╖╨░╨┐╤Г╤Б╤В╨╕╤В╨╡ ╨┐╨░╤А╤Б╨╕╨╜╨│ ╨▓╨░╨║╨░╨╜╤Б╨╕╨╣</p>
+            <div class="icon">🔍</div>
+            <p>Введите запрос и запустите парсинг вакансий</p>
         </div>
     </div>
 
     <!-- ===== PAGE: TAGS ===== -->
     <div id="page-tags" class="page">
         <div class="card">
-            <h2>╨б╤В╨░╤В╨╕╤Б╤В╨╕╨║╨░ ╨┐╨╛ ╨╜╨░╨▓╤Л╨║╨░╨╝</h2>
+            <h2>Статистика по навыкам</h2>
             <div class="form-row">
                 <div class="form-group" style="max-width:300px;">
-                    <label>╨Я╨╛╨╕╤Б╨║ ╨┐╨╛ ╨╜╨░╨╖╨▓╨░╨╜╨╕╤О ╨▓╨░╨║╨░╨╜╤Б╨╕╨╕</label>
-                    <input type="text" id="tags-query" placeholder="╨Ю╤Б╤В╨░╨▓╤М╤В╨╡ ╨┐╤Г╤Б╤В╤Л╨╝ ╨┤╨╗╤П ╨▓╤Б╨╡╤Е">
+                    <label>Поиск по названию вакансии</label>
+                    <input type="text" id="tags-query" placeholder="Оставьте пустым для всех">
                 </div>
-                <button class="btn btn-blue" onclick="loadTags()">╨Ч╨░╨│╤А╤Г╨╖╨╕╤В╤М</button>
+                <button class="btn btn-blue" onclick="loadTags()">Загрузить</button>
             </div>
         </div>
 
@@ -628,20 +628,20 @@
             <div class="grid-3" id="tags-stat-cards"></div>
             <div class="grid-2">
                 <div class="card">
-                    <h2>╨а╨░╤Б╨┐╤А╨╡╨┤╨╡╨╗╨╡╨╜╨╕╨╡ ╨╜╨░╨▓╤Л╨║╨╛╨▓</h2>
+                    <h2>Распределение навыков</h2>
                     <div class="chart-container">
                         <canvas id="chart-tags-pie"></canvas>
                     </div>
                 </div>
                 <div class="card">
-                    <h2>╨Т╤Б╨╡ ╨╜╨░╨▓╤Л╨║╨╕</h2>
+                    <h2>Все навыки</h2>
                     <div style="max-height:380px;overflow-y:auto;">
                         <table class="tags-table" id="tags-full-table">
                             <thead>
                                 <tr>
-                                    <th>╨Э╨░╨▓╤Л╨║</th>
-                                    <th>╨Ъ╨╛╨╗-╨▓╨╛</th>
-                                    <th>╨Ф╨╛╨╗╤П</th>
+                                    <th>Навык</th>
+                                    <th>Кол-во</th>
+                                    <th>Доля</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -652,8 +652,8 @@
         </div>
 
         <div id="tags-empty" class="empty">
-            <div class="icon">ЁЯП╖я╕П</div>
-            <p>╨Э╨░╨╢╨╝╨╕╤В╨╡ ┬л╨Ч╨░╨│╤А╤Г╨╖╨╕╤В╤М┬╗ ╨┤╨╗╤П ╨┐╨╛╨╗╤Г╤З╨╡╨╜╨╕╤П ╤Б╤В╨░╤В╨╕╤Б╤В╨╕╨║╨╕</p>
+            <div class="icon">🏷️</div>
+            <p>Нажмите «Загрузить» для получения статистики</p>
         </div>
     </div>
 </div>
@@ -683,9 +683,7 @@ async function adminLogin(email, password) {
         headers: { 'Authorization': 'Bearer ' + data.access_token }
     });
     const me = await meRes.json();
-    if (me.role !== 'admin') {
-        throw new Error('Доступ только для администраторов');
-    }
+    if (me.role !== 'admin') throw new Error('Доступ только для администраторов');
     token = data.access_token;
     localStorage.setItem('admin_token', token);
     return me;
@@ -700,14 +698,17 @@ function adminLogout() {
 function showLogin() {
     document.getElementById('login-overlay').style.display = 'flex';
     document.querySelector('.header').style.display = 'none';
-    document.querySelectorAll('.tabs, .page').forEach(el => el.style.display = 'none');
+    document.querySelector('.tabs').style.display = 'none';
+    document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
 }
 
 function showApp() {
     document.getElementById('login-overlay').style.display = 'none';
     document.querySelector('.header').style.display = '';
-    document.querySelectorAll('.tabs').forEach(el => el.style.display = '');
-    document.querySelectorAll('.page.active').forEach(el => el.style.display = '');
+    document.querySelector('.tabs').style.display = '';
+    document.querySelectorAll('.page').forEach(el => {
+        if (el.classList.contains('active')) el.style.display = '';
+    });
 }
 
 async function handleLogin() {
@@ -765,17 +766,17 @@ async function loadStudents() {
         allStudents = await res.json();
         // Populate evaluation dropdown
         const sel = document.getElementById('student-select');
-        sel.innerHTML = '<option value="">тАФ ╨Т╤Л╨▒╨╡╤А╨╕╤В╨╡ ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░ тАФ</option>';
+        sel.innerHTML = '<option value="">— Выберите студента —</option>';
         allStudents.forEach(s => {
             const opt = document.createElement('option');
             opt.value = s.id;
-            opt.textContent = `${s.full_name} (${s.group_name || '╨▒/╨│'})`;
+            opt.textContent = `${s.full_name} (${s.group_name || 'б/г'})`;
             opt.dataset.disciplines = JSON.stringify(s.disciplines || []);
             sel.appendChild(opt);
         });
         // Populate add-disciplines dropdown
         const sel2 = document.getElementById('add-disc-student');
-        sel2.innerHTML = '<option value="">тАФ ╨Т╤Л╨▒╤А╨░╤В╤М тАФ</option>';
+        sel2.innerHTML = '<option value="">— Выбрать —</option>';
         allStudents.forEach(s => {
             const opt = document.createElement('option');
             opt.value = s.id;
@@ -790,24 +791,24 @@ async function loadStudents() {
 function refreshStudentsList() {
     const container = document.getElementById('students-list');
     if (!allStudents.length) {
-        container.innerHTML = '<div class="empty"><div class="icon">ЁЯУн</div><p>╨Э╨╡╤В ╤Б╤В╤Г╨┤╨╡╨╜╤В╨╛╨▓</p></div>';
+        container.innerHTML = '<div class="empty"><div class="icon">📭</div><p>Нет студентов</p></div>';
         return;
     }
     container.innerHTML = allStudents.map(s => `
         <div class="student-item">
             <div class="student-header">
                 <span class="student-name">${s.full_name}</span>
-                <span class="student-group">${s.group_name || 'тАФ'}</span>
+                <span class="student-group">${s.group_name || '—'}</span>
             </div>
             <div class="student-discs">
                 ${(s.disciplines || []).map(d => {
                     const gc = d.grade === 5 ? 'g5' : d.grade === 4 ? 'g4' : 'g3';
                     return `<span class="tag-badge">${d.name}<span class="grade-badge ${gc}">${d.grade}</span></span>`;
                 }).join('')}
-                ${(!s.disciplines || !s.disciplines.length) ? '<span style="color:#484f58;font-size:13px;">╨Э╨╡╤В ╨┤╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜</span>' : ''}
+                ${(!s.disciplines || !s.disciplines.length) ? '<span style="color:#484f58;font-size:13px;">Нет дисциплин</span>' : ''}
             </div>
             <div class="student-actions">
-                <button class="btn-sm" onclick="editStudent(${s.id})">тЬПя╕П ╨а╨╡╨┤╨░╨║╤В╨╕╤А╨╛╨▓╨░╤В╤М</button>
+                <button class="btn-sm" onclick="editStudent(${s.id})">✏️ Редактировать</button>
             </div>
         </div>
     `).join('');
@@ -822,8 +823,8 @@ function editStudent(id) {
     // Load disciplines with grades
     formDisciplines = (s.disciplines || []).map(d => ({ name: d.name, grade: d.grade || 5 }));
     renderFormDisciplines();
-    document.getElementById('form-title').textContent = 'тЬПя╕П ╨а╨╡╨┤╨░╨║╤В╨╕╤А╨╛╨▓╨░╤В╤М ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░';
-    document.getElementById('btn-save-student').textContent = 'ЁЯТ╛ ╨б╨╛╤Е╤А╨░╨╜╨╕╤В╤М';
+    document.getElementById('form-title').textContent = '✏️ Редактировать студента';
+    document.getElementById('btn-save-student').textContent = '💾 Сохранить';
     document.getElementById('btn-cancel-edit').style.display = 'inline-block';
     showFormMsg('', '');
 }
@@ -834,8 +835,8 @@ function resetStudentForm() {
     document.getElementById('input-group').value = '';
     formDisciplines = [];
     renderFormDisciplines();
-    document.getElementById('form-title').textContent = 'тЮХ ╨Э╨╛╨▓╤Л╨╣ ╤Б╤В╤Г╨┤╨╡╨╜╤В';
-    document.getElementById('btn-save-student').textContent = 'ЁЯТ╛ ╨б╨╛╨╖╨┤╨░╤В╤М';
+    document.getElementById('form-title').textContent = '➕ Новый студент';
+    document.getElementById('btn-save-student').textContent = '💾 Создать';
     document.getElementById('btn-cancel-edit').style.display = 'none';
     showFormMsg('', '');
 }
@@ -853,7 +854,7 @@ async function saveStudent() {
     const fullName = document.getElementById('input-fullname').value.trim();
     const groupName = document.getElementById('input-group').value.trim();
 
-    if (!fullName) { showFormMsg('╨Т╨▓╨╡╨┤╨╕╤В╨╡ ╨д╨Ш╨Ю', 'error'); return; }
+    if (!fullName) { showFormMsg('Введите ФИО', 'error'); return; }
 
     const btn = document.getElementById('btn-save-student');
     btn.disabled = true;
@@ -869,11 +870,11 @@ async function saveStudent() {
                 });
                 if (!res.ok) {
                     const err = await res.json();
-                    showFormMsg(err.detail || '╨Ю╤И╨╕╨▒╨║╨░ ╨╛╨▒╨╜╨╛╨▓╨╗╨╡╨╜╨╕╤П', 'error');
+                    showFormMsg(err.detail || 'Ошибка обновления', 'error');
                     return;
                 }
             }
-            showFormMsg('тЬУ ╨Ф╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜╤Л ╨╛╨▒╨╜╨╛╨▓╨╗╨╡╨╜╤Л', 'success');
+            showFormMsg('✓ Дисциплины обновлены', 'success');
         } else {
             // Create new student
             const body = { full_name: fullName, disciplines: formDisciplines };
@@ -886,17 +887,17 @@ async function saveStudent() {
             });
             if (!res.ok) {
                 const err = await res.json();
-                showFormMsg(err.detail || '╨Ю╤И╨╕╨▒╨║╨░ ╤Б╨╛╨╖╨┤╨░╨╜╨╕╤П', 'error');
+                showFormMsg(err.detail || 'Ошибка создания', 'error');
                 return;
             }
-            showFormMsg('тЬУ ╨б╤В╤Г╨┤╨╡╨╜╤В ╤Б╨╛╨╖╨┤╨░╨╜', 'success');
+            showFormMsg('✓ Студент создан', 'success');
             resetStudentForm();
         }
 
         await loadStudents();
         refreshStudentsList();
     } catch (e) {
-        showFormMsg('╨Ю╤И╨╕╨▒╨║╨░ ╤Б╨╡╤В╨╕: ' + e.message, 'error');
+        showFormMsg('Ошибка сети: ' + e.message, 'error');
     } finally {
         btn.disabled = false;
     }
@@ -905,8 +906,8 @@ async function saveStudent() {
 async function addDisciplines() {
     const studentId = document.getElementById('add-disc-student').value;
 
-    if (!studentId) { alert('╨Т╤Л╨▒╨╡╤А╨╕╤В╨╡ ╤Б╤В╤Г╨┤╨╡╨╜╤В╨░'); return; }
-    if (!addDiscList.length) { alert('╨Ф╨╛╨▒╨░╨▓╤М╤В╨╡ ╤Е╨╛╤В╤П ╨▒╤Л ╨╛╨┤╨╜╤Г ╨┤╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜╤Г'); return; }
+    if (!studentId) { alert('Выберите студента'); return; }
+    if (!addDiscList.length) { alert('Добавьте хотя бы одну дисциплину'); return; }
 
     try {
         const res = await fetch(API + `/api/v1/students/${studentId}/disciplines`, {
@@ -916,16 +917,16 @@ async function addDisciplines() {
         });
         if (!res.ok) {
             const err = await res.json();
-            alert(err.detail || '╨Ю╤И╨╕╨▒╨║╨░');
+            alert(err.detail || 'Ошибка');
             return;
         }
         addDiscList = [];
         renderAddDiscList();
         await loadStudents();
         refreshStudentsList();
-        alert('тЬУ ╨Ф╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜╤Л ╨┤╨╛╨▒╨░╨▓╨╗╨╡╨╜╤Л');
+        alert('✓ Дисциплины добавлены');
     } catch (e) {
-        alert('╨Ю╤И╨╕╨▒╨║╨░: ' + e.message);
+        alert('Ошибка: ' + e.message);
     }
 }
 
@@ -959,11 +960,11 @@ async function evaluateStudent() {
     const experience = document.getElementById('eval-experience').value;
 
     if (!studentId) return;
-    if (!specialty) { alert('╨Т╨▓╨╡╨┤╨╕╤В╨╡ ╤Б╨┐╨╡╤Ж╨╕╨░╨╗╤М╨╜╨╛╤Б╤В╤М ╨┤╨╗╤П ╨╛╤Ж╨╡╨╜╨║╨╕'); return; }
+    if (!specialty) { alert('Введите специальность для оценки'); return; }
 
     const btn = document.getElementById('btn-evaluate');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>╨Ю╤Ж╨╡╨╜╨╕╨▓╨░╨╡╨╝...';
+    btn.innerHTML = '<span class="spinner"></span>Оцениваем...';
 
     try {
         const params = new URLSearchParams({ specialty });
@@ -976,16 +977,16 @@ async function evaluateStudent() {
         const data = await res.json();
 
         if (!res.ok) {
-            alert(data.detail || '╨Ю╤И╨╕╨▒╨║╨░ ╨╛╤Ж╨╡╨╜╨║╨╕');
+            alert(data.detail || 'Ошибка оценки');
             return;
         }
 
         renderEvaluation(data);
     } catch (e) {
-        alert('╨Ю╤И╨╕╨▒╨║╨░: ' + e.message);
+        alert('Ошибка: ' + e.message);
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '╨Ю╤Ж╨╡╨╜╨╕╤В╤М ╤Б╤В╨╛╨╕╨╝╨╛╤Б╤В╤М';
+        btn.innerHTML = 'Оценить стоимость';
     }
 }
 
@@ -994,28 +995,28 @@ function renderEvaluation(data) {
     document.getElementById('evaluation-results').style.display = 'block';
 
     const expLabels = {
-        'noExperience': '╨С╨╡╨╖ ╨╛╨┐╤Л╤В╨░', 'between1And3': '1-3 ╨│╨╛╨┤╨░',
-        'between3And6': '3-6 ╨╗╨╡╤В', 'moreThan6': '6+ ╨╗╨╡╤В'
+        'noExperience': 'Без опыта', 'between1And3': '1-3 года',
+        'between3And6': '3-6 лет', 'moreThan6': '6+ лет'
     };
 
     // Stat cards
     const salary = data.estimated_salary
-        ? Math.round(data.estimated_salary).toLocaleString('ru-RU') + ' тВ╜'
-        : '╨Э/╨Ф';
-    const expText = data.experience_filter ? expLabels[data.experience_filter] || data.experience_filter : '╨Ы╤О╨▒╨╛╨╣';
+        ? Math.round(data.estimated_salary).toLocaleString('ru-RU') + ' ₽'
+        : 'Н/Д';
+    const expText = data.experience_filter ? expLabels[data.experience_filter] || data.experience_filter : 'Любой';
     document.getElementById('stat-cards').innerHTML = `
         <div class="stat-card">
             <div class="value salary-value">${salary}</div>
-            <div class="label">╨Ю╤Ж╨╡╨╜╨╛╤З╨╜╨░╤П ╨╖╨░╤А╨┐╨╗╨░╤В╨░</div>
-            <div style="font-size:11px;color:#8b949e;margin-top:4px;">ЁЯУМ ${data.specialty} ┬╖ ${expText}</div>
+            <div class="label">Оценочная зарплата</div>
+            <div style="font-size:11px;color:#8b949e;margin-top:4px;">📌 ${data.specialty} · ${expText}</div>
         </div>
         <div class="stat-card">
             <div class="value confidence-value">${Math.round(data.confidence * 100)}%</div>
-            <div class="label">╨г╨▓╨╡╤А╨╡╨╜╨╜╨╛╤Б╤В╤М ╨╛╤Ж╨╡╨╜╨║╨╕</div>
+            <div class="label">Уверенность оценки</div>
         </div>
         <div class="stat-card">
             <div class="value match-value">${data.matched_disciplines}/${data.total_disciplines}</div>
-            <div class="label">╨б╨╛╨▓╨┐╨░╨▓╤И╨╕╤Е ╨┤╨╕╤Б╤Ж╨╕╨┐╨╗╨╕╨╜</div>
+            <div class="label">Совпавших дисциплин</div>
         </div>
     `;
 
@@ -1044,7 +1045,7 @@ function renderEvaluation(data) {
         data: {
             labels: impactEntries.map(e => e[0]),
             datasets: [{
-                label: '╨Т╨╗╨╕╤П╨╜╨╕╨╡ ╨╜╨░ ╨Ч╨Я (similarity ├Ч avg_salary)',
+                label: 'Влияние на ЗП (similarity × avg_salary)',
                 data: impactEntries.map(e => Math.round(e[1])),
                 backgroundColor: colors.slice(0, impactEntries.length),
                 borderRadius: 6,
@@ -1059,7 +1060,7 @@ function renderEvaluation(data) {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: ctx => ctx.raw.toLocaleString('ru-RU') + ' тВ╜'
+                        label: ctx => ctx.raw.toLocaleString('ru-RU') + ' ₽'
                     }
                 }
             },
@@ -1095,7 +1096,7 @@ function renderEvaluation(data) {
         data: {
             labels: radarLabels,
             datasets: [{
-                label: '╨Ь╨░╨║╤Б. ╤Б╤Е╨╛╨┤╤Б╤В╨▓╨╛',
+                label: 'Макс. сходство',
                 data: radarData,
                 backgroundColor: 'rgba(88,166,255,0.15)',
                 borderColor: '#58a6ff',
@@ -1132,14 +1133,14 @@ function renderEvaluation(data) {
         return `
         <tr${isFiltered ? ' class="filtered-tag"' : ''}>
             <td><span class="tag-badge">${m.discipline}</span></td>
-            <td><span class="grade-badge ${gc}">${m.grade}</span> <span style="color:#8b949e;font-size:12px;">├Ч${m.grade_coeff}</span></td>
+            <td><span class="grade-badge ${gc}">${m.grade}</span> <span style="color:#8b949e;font-size:12px;">×${m.grade_coeff}</span></td>
             <td>${m.skill_name}</td>
             <td>
                 <div class="tag-bar-bg"><div class="tag-bar" style="width:${m.similarity*100}%"></div></div>
                 ${(m.similarity * 100).toFixed(1)}%
             </td>
-            <td>${m.avg_salary ? Math.round(m.avg_salary).toLocaleString('ru-RU') + ' тВ╜' : 'тАФ'}</td>
-            <td>${m.vacancy_count}${isFiltered ? ' тЪая╕П' : ''}</td>
+            <td>${m.avg_salary ? Math.round(m.avg_salary).toLocaleString('ru-RU') + ' ₽' : '—'}</td>
+            <td>${m.vacancy_count}${isFiltered ? ' ⚠️' : ''}</td>
         </tr>
     `}).join('');
 }
@@ -1150,16 +1151,16 @@ async function startParsing() {
     const count = parseInt(document.getElementById('parse-count').value) || 20;
     const experience = document.getElementById('parse-experience').value;
 
-    if (!query) { alert('╨Т╨▓╨╡╨┤╨╕╤В╨╡ ╨┐╨╛╨╕╤Б╨║╨╛╨▓╤Л╨╣ ╨╖╨░╨┐╤А╨╛╤Б'); return; }
+    if (!query) { alert('Введите поисковый запрос'); return; }
 
     const btn = document.getElementById('btn-parse');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>╨Я╨░╤А╤Б╨╕╨╜╨│...';
+    btn.innerHTML = '<span class="spinner"></span>Парсинг...';
 
     const log = document.getElementById('parse-log');
     document.getElementById('parse-results').style.display = 'block';
     document.getElementById('parse-empty').style.display = 'none';
-    log.innerHTML = `<div class="info">[${time()}] ╨Э╨░╤З╨╕╨╜╨░╨╡╨╝ ╨┐╨░╤А╤Б╨╕╨╜╨│ "${query}" (${count} ╨▓╨░╨║╨░╨╜╤Б╨╕╨╣)...</div>`;
+    log.innerHTML = `<div class="info">[${time()}] Начинаем парсинг "${query}" (${count} вакансий)...</div>`;
 
     try {
         const body = { query, count };
@@ -1173,46 +1174,46 @@ async function startParsing() {
         const data = await res.json();
 
         if (!res.ok) {
-            log.innerHTML += `<div class="error">[${time()}] ╨Ю╤И╨╕╨▒╨║╨░: ${data.detail || JSON.stringify(data)}</div>`;
+            log.innerHTML += `<div class="error">[${time()}] Ошибка: ${data.detail || JSON.stringify(data)}</div>`;
             return;
         }
 
-        log.innerHTML += `<div class="success">[${time()}] тЬУ ╨б╨┐╨░╤А╤Б╨╡╨╜╨╛ ${data.total_parsed} ╨▓╨░╨║╨░╨╜╤Б╨╕╨╣</div>`;
-        log.innerHTML += `<div class="info">[${time()}] ╨Э╨░╨╣╨┤╨╡╨╜╨╛ ${data.tags.length} ╤Г╨╜╨╕╨║╨░╨╗╤М╨╜╤Л╤Е ╨╜╨░╨▓╤Л╨║╨╛╨▓</div>`;
+        log.innerHTML += `<div class="success">[${time()}] ✓ Спарсено ${data.total_parsed} вакансий</div>`;
+        log.innerHTML += `<div class="info">[${time()}] Найдено ${data.tags.length} уникальных навыков</div>`;
         if (data.average_salary) {
-            log.innerHTML += `<div class="warn">[${time()}] ╨б╤А╨╡╨┤╨╜╤П╤П ╨Ч╨Я: ${Math.round(data.average_salary).toLocaleString('ru-RU')} тВ╜</div>`;
+            log.innerHTML += `<div class="warn">[${time()}] Средняя ЗП: ${Math.round(data.average_salary).toLocaleString('ru-RU')} ₽</div>`;
         }
 
         renderParseResults(data);
     } catch (e) {
-        log.innerHTML += `<div class="error">[${time()}] ╨Ю╤И╨╕╨▒╨║╨░ ╤Б╨╡╤В╨╕: ${e.message}</div>`;
+        log.innerHTML += `<div class="error">[${time()}] Ошибка сети: ${e.message}</div>`;
     } finally {
         btn.disabled = false;
-        btn.innerHTML = 'ЁЯЪА ╨Э╨░╤З╨░╤В╤М ╨┐╨░╤А╤Б╨╕╨╜╨│';
+        btn.innerHTML = '🚀 Начать парсинг';
     }
 }
 
 function renderParseResults(data) {
     const salary = data.average_salary
-        ? Math.round(data.average_salary).toLocaleString('ru-RU') + ' тВ╜'
-        : '╨Э/╨Ф';
+        ? Math.round(data.average_salary).toLocaleString('ru-RU') + ' ₽'
+        : 'Н/Д';
 
     document.getElementById('parse-stat-cards').innerHTML = `
         <div class="stat-card">
             <div class="value salary-value">${data.total_parsed}</div>
-            <div class="label">╨Т╨░╨║╨░╨╜╤Б╨╕╨╣ ╤Б╨┐╨░╤А╤Б╨╡╨╜╨╛</div>
+            <div class="label">Вакансий спарсено</div>
         </div>
         <div class="stat-card">
             <div class="value confidence-value">${data.tags.length}</div>
-            <div class="label">╨г╨╜╨╕╨║╨░╨╗╤М╨╜╤Л╤Е ╨╜╨░╨▓╤Л╨║╨╛╨▓</div>
+            <div class="label">Уникальных навыков</div>
         </div>
         <div class="stat-card">
             <div class="value match-value">${salary}</div>
-            <div class="label">╨б╤А╨╡╨┤╨╜╤П╤П ╨╖╨░╤А╨┐╨╗╨░╤В╨░</div>
+            <div class="label">Средняя зарплата</div>
         </div>
     `;
 
-    // Tags bar chart тАФ filter out count=1 for chart only
+    // Tags bar chart — filter out count=1 for chart only
     const significantTags = data.tags.filter(t => t.count > 1);
     const topTags = significantTags.slice(0, 15);
     destroyChart('chart-parse-tags');
@@ -1221,7 +1222,7 @@ function renderParseResults(data) {
         data: {
             labels: topTags.map(t => t.name),
             datasets: [{
-                label: '╨г╨┐╨╛╨╝╨╕╨╜╨░╨╜╨╕╨╣',
+                label: 'Упоминаний',
                 data: topTags.map(t => t.count),
                 backgroundColor: topTags.map((_, i) =>
                     `hsl(${210 + i * 10}, 70%, ${55 + i}%)`
@@ -1262,25 +1263,25 @@ async function loadTags() {
         const allTags = data.tags;
 
         const salary = data.average_salary
-            ? Math.round(data.average_salary).toLocaleString('ru-RU') + ' тВ╜'
-            : '╨Э/╨Ф';
+            ? Math.round(data.average_salary).toLocaleString('ru-RU') + ' ₽'
+            : 'Н/Д';
 
         document.getElementById('tags-stat-cards').innerHTML = `
             <div class="stat-card">
                 <div class="value salary-value">${data.total_count}</div>
-                <div class="label">╨Т╤Б╨╡╨│╨╛ ╨▓╨░╨║╨░╨╜╤Б╨╕╨╣</div>
+                <div class="label">Всего вакансий</div>
             </div>
             <div class="stat-card">
                 <div class="value confidence-value">${significantTags.length}</div>
-                <div class="label">╨Ч╨╜╨░╤З╨╕╨╝╤Л╤Е ╨╜╨░╨▓╤Л╨║╨╛╨▓ (>1)</div>
+                <div class="label">Значимых навыков (>1)</div>
             </div>
             <div class="stat-card">
                 <div class="value match-value">${salary}</div>
-                <div class="label">╨б╤А╨╡╨┤╨╜╤П╤П ╨╖╨░╤А╨┐╨╗╨░╤В╨░</div>
+                <div class="label">Средняя зарплата</div>
             </div>
         `;
 
-        // Pie chart тАФ show all significant tags (count > 1), no "other" bucket
+        // Pie chart — show all significant tags (count > 1), no "other" bucket
         const pieLabels = significantTags.map(t => t.name);
         const pieData = significantTags.map(t => t.count);
 
@@ -1316,14 +1317,14 @@ async function loadTags() {
                     },
                     tooltip: {
                         callbacks: {
-                            label: ctx => ` ${ctx.label}: ${ctx.parsed} ╨▓╨░╨║╨░╨╜╤Б╨╕╨╣`
+                            label: ctx => ` ${ctx.label}: ${ctx.parsed} вакансий`
                         }
                     }
                 }
             }
         });
 
-        // Full table тАФ show ALL tags, but mark count=1 as dimmed
+        // Full table — show ALL tags, but mark count=1 as dimmed
         const totalCount = allTags.reduce((s, t) => s + t.count, 0);
         const tbody = document.querySelector('#tags-full-table tbody');
         tbody.innerHTML = allTags.map(t => {
@@ -1341,7 +1342,7 @@ async function loadTags() {
             `;
         }).join('');
     } catch (e) {
-        alert('╨Ю╤И╨╕╨▒╨║╨░: ' + e.message);
+        alert('Ошибка: ' + e.message);
     }
 }
 
@@ -1385,7 +1386,7 @@ function renderFormDisciplines() {
                 <button class="grade-btn${d.grade===4?' active-4':''}" onclick="setFormDiscGrade(${i},4)">4</button>
                 <button class="grade-btn${d.grade===5?' active-5':''}" onclick="setFormDiscGrade(${i},5)">5</button>
             </div>
-            <button class="disc-remove" onclick="removeFormDisc(${i})">тЬХ</button>
+            <button class="disc-remove" onclick="removeFormDisc(${i})">✕</button>
         </div>
     `).join('');
 }
@@ -1433,7 +1434,7 @@ function renderAddDiscList() {
                 <button class="grade-btn${d.grade===4?' active-4':''}" onclick="setAddDiscGrade(${i},4)">4</button>
                 <button class="grade-btn${d.grade===5?' active-5':''}" onclick="setAddDiscGrade(${i},5)">5</button>
             </div>
-            <button class="disc-remove" onclick="removeAddDisc(${i})">тЬХ</button>
+            <button class="disc-remove" onclick="removeAddDisc(${i})">✕</button>
         </div>
     `).join('');
 }
