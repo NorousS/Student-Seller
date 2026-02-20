@@ -98,3 +98,75 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
         yield ac
     
     app.dependency_overrides.clear()
+
+
+# --- Auth helper fixtures ---
+
+
+@pytest.fixture
+async def admin_token(client: AsyncClient) -> str:
+    """Создаёт admin-пользователя и возвращает access_token."""
+    resp = await client.post("/api/v1/auth/register", json={
+        "email": "admin@test.com",
+        "password": "admin123",
+        "role": "admin",
+    })
+    assert resp.status_code == 201
+    resp = await client.post("/api/v1/auth/login", json={
+        "email": "admin@test.com",
+        "password": "admin123",
+    })
+    return resp.json()["access_token"]
+
+
+@pytest.fixture
+async def admin_headers(admin_token: str) -> dict:
+    """Authorization headers для admin."""
+    return {"Authorization": f"Bearer {admin_token}"}
+
+
+@pytest.fixture
+async def student_token(client: AsyncClient) -> str:
+    """Создаёт student-пользователя и возвращает access_token."""
+    resp = await client.post("/api/v1/auth/register", json={
+        "email": "student@test.com",
+        "password": "student123",
+        "role": "student",
+        "full_name": "Test Student",
+        "group_name": "TEST-1",
+    })
+    assert resp.status_code == 201
+    resp = await client.post("/api/v1/auth/login", json={
+        "email": "student@test.com",
+        "password": "student123",
+    })
+    return resp.json()["access_token"]
+
+
+@pytest.fixture
+async def student_headers(student_token: str) -> dict:
+    """Authorization headers для student."""
+    return {"Authorization": f"Bearer {student_token}"}
+
+
+@pytest.fixture
+async def employer_token(client: AsyncClient) -> str:
+    """Создаёт employer-пользователя и возвращает access_token."""
+    resp = await client.post("/api/v1/auth/register", json={
+        "email": "employer@test.com",
+        "password": "employer123",
+        "role": "employer",
+        "company_name": "Test Corp",
+    })
+    assert resp.status_code == 201
+    resp = await client.post("/api/v1/auth/login", json={
+        "email": "employer@test.com",
+        "password": "employer123",
+    })
+    return resp.json()["access_token"]
+
+
+@pytest.fixture
+async def employer_headers(employer_token: str) -> dict:
+    """Authorization headers для employer."""
+    return {"Authorization": f"Bearer {employer_token}"}

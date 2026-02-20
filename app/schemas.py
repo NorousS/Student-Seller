@@ -4,7 +4,57 @@ Pydantic схемы для валидации запросов и ответов
 
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
+
+
+# --- Auth ---
+
+class UserRoleEnum(str, Enum):
+    """Роли пользователей для API."""
+    admin = "admin"
+    student = "student"
+    employer = "employer"
+
+
+class RegisterRequest(BaseModel):
+    """Запрос на регистрацию."""
+    email: str = Field(..., min_length=5, max_length=255, description="Email пользователя")
+    password: str = Field(..., min_length=6, max_length=128, description="Пароль")
+    role: UserRoleEnum = Field(..., description="Роль: admin, student, employer")
+    # Для студента
+    full_name: str | None = Field(None, max_length=200, description="ФИО (обязательно для student)")
+    group_name: str | None = Field(None, max_length=50, description="Группа (для student)")
+    # Для работодателя
+    company_name: str | None = Field(None, max_length=200, description="Название компании (для employer)")
+
+
+class LoginRequest(BaseModel):
+    """Запрос на вход."""
+    email: str = Field(..., description="Email")
+    password: str = Field(..., description="Пароль")
+
+
+class TokenResponse(BaseModel):
+    """Ответ с JWT токенами."""
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class RefreshRequest(BaseModel):
+    """Запрос на обновление токена."""
+    refresh_token: str
+
+
+class UserResponse(BaseModel):
+    """Информация о пользователе."""
+    id: int
+    email: str
+    role: UserRoleEnum
+    is_active: bool
+
+    class Config:
+        from_attributes = True
 
 
 class ExperienceLevel(str, Enum):
@@ -169,6 +219,90 @@ class StudentResponse(StudentBase):
         from_attributes = True
 
 
+class StudentProfileResponse(StudentResponse):
+    """Расширенная схема профиля студента (включает about_me, photo_url)."""
+    about_me: str | None = None
+    photo_url: str | None = None
+
+
 class AddDisciplinesRequest(BaseModel):
     """Запрос на добавление дисциплин студенту."""
     disciplines: list[DisciplineWithGrade] = Field(..., description="Список дисциплин с оценками")
+
+
+# --- Employer schemas ---
+
+
+class EmployerProfileResponse(BaseModel):
+    """Профиль работодателя."""
+    id: int
+    user_id: int
+    company_name: str | None
+    position: str | None
+
+    class Config:
+        from_attributes = True
+
+
+class EmployerProfileUpdate(BaseModel):
+    """Обновление профиля работодателя."""
+    company_name: str | None = Field(None, max_length=200)
+    position: str | None = Field(None, max_length=200)
+
+
+class EmployerSearchRequest(BaseModel):
+    """Запрос на поиск студентов по должности."""
+    job_title: str = Field(..., min_length=1, description="Название должности")
+    experience: ExperienceLevel | None = Field(None, description="Фильтр по опыту")
+    top_k: int = Field(default=5, ge=1, le=20, description="Навыков на дисциплину")
+
+
+class AnonymizedStudentResult(BaseModel):
+    """Анонимизированный результат поиска студента."""
+    student_id: int
+    photo_url: str | None
+    disciplines: list[DisciplineResponse]
+    estimated_salary: float | None
+    confidence: float
+    matched_disciplines: int
+    total_disciplines: int
+
+
+class AnonymizedStudentProfile(BaseModel):
+    """Анонимизированный профиль студента (для работодателя)."""
+    student_id: int
+    photo_url: str | None
+    disciplines: list[DisciplineResponse]
+    about_me: str | None = None  # Только если контакт accepted
+    contact_status: str | None = None  # pending/accepted/rejected/null
+
+
+class ContactRequestCreate(BaseModel):
+    """Ответ при создании запроса на контакт."""
+    id: int
+    employer_id: int
+    student_id: int
+    status: str
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+
+class ContactRequestResponse(BaseModel):
+    """Ответ с данными запроса на контакт."""
+    id: int
+    employer_id: int
+    student_id: int
+    status: str
+    created_at: str
+    responded_at: str | None = None
+    employer_company: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class ContactRequestRespondRequest(BaseModel):
+    """Запрос на ответ на запрос контакта."""
+    accept: bool = Field(..., description="True = принять, False = отклонить")

@@ -1,5 +1,14 @@
 # syntax=docker/dockerfile:1
 
+# --- Stage 1: Build React frontend ---
+FROM node:20-slim AS frontend-build
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# --- Stage 2: Python backend ---
 FROM python:3.12-slim
 
 # Устанавливаем uv
@@ -12,13 +21,14 @@ WORKDIR /app
 COPY pyproject.toml uv.lock* README.md ./
 
 # Устанавливаем зависимости через uv
-# --frozen: использует uv.lock если есть
-# --no-cache: не кэшируем для уменьшения размера образа
 RUN uv sync --no-dev --no-cache
 
 # Копируем код приложения
 COPY app ./app
 COPY .env* ./
+
+# Копируем собранный фронтенд (Vite builds to ../app/static/dist relative to frontend/)
+COPY --from=frontend-build /app/static/dist ./app/static/dist
 
 # Указываем порт
 EXPOSE 8000

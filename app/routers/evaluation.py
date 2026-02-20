@@ -7,8 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth import require_role
 from app.database import get_db
-from app.models import Student
+from app.models import Student, User, UserRole
 from app.valuation import evaluate_student, DisciplineWithGrade
 from app.vector_store import vector_store
 from app.schemas import (
@@ -18,7 +19,11 @@ from app.schemas import (
     StudentSkillsResponse,
 )
 
-router = APIRouter(prefix="/api/v1/students", tags=["evaluation"])
+router = APIRouter(
+    prefix="/api/v1/students",
+    tags=["evaluation"],
+    dependencies=[Depends(require_role(UserRole.admin, UserRole.employer))],
+)
 
 
 @router.post("/{student_id}/evaluate", response_model=EvaluationResponse)

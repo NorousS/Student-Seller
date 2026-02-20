@@ -30,6 +30,16 @@ class Settings(BaseSettings):
     # Оценка стоимости
     similarity_threshold: float = 0.6
     
+    # JWT
+    jwt_secret: str = "change-me-in-production-secret-key"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7
+    
+    # Uploads
+    upload_dir: str = "app/static/uploads"
+    max_photo_size_mb: int = 5
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

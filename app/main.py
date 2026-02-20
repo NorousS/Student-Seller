@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 
 from app.database import create_tables
-from app.routers import vacancies, students, evaluation
+from app.routers import vacancies, students, evaluation, auth, student_profile, employer, chat
 from app.vector_store import vector_store
 from app.embeddings import embedding_service
 from app.schemas import HealthResponse
@@ -48,9 +48,13 @@ app = FastAPI(
 )
 
 # Подключаем роутеры
+app.include_router(auth.router)
 app.include_router(vacancies.router)
 app.include_router(evaluation.router)
 app.include_router(students.router)
+app.include_router(student_profile.router)
+app.include_router(employer.router)
+app.include_router(chat.router)
 
 
 @app.get("/health", response_model=HealthResponse, tags=["health"])
@@ -62,8 +66,11 @@ async def health_check() -> HealthResponse:
 @app.get("/", include_in_schema=False)
 async def root():
     """Редирект на фронтенд."""
+    dist_index = STATIC_DIR / "dist" / "index.html"
+    if dist_index.exists():
+        return RedirectResponse(url="/static/dist/index.html")
     return RedirectResponse(url="/static/index.html")
 
 
-# Статические файлы (фронтенд)
+# Статические файлы (фронтенд + загрузки)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
