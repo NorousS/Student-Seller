@@ -5,12 +5,13 @@
 
 from collections import Counter
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth import require_role
 from app.database import get_db
-from app.models import Tag, Vacancy
+from app.models import Tag, Vacancy, User, UserRole
 from app.parser import hh_parser
 from app.vector_store import vector_store
 from app.schemas import (
@@ -29,6 +30,7 @@ router = APIRouter(prefix="/api/v1", tags=["vacancies"])
 async def parse_vacancies(
     request: ParseRequest,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.admin)),
 ) -> ParseResponse:
     """
     Парсит вакансии по ключевому слову и сохраняет в БД.
@@ -132,7 +134,7 @@ async def parse_vacancies(
 async def get_vacancies(
     query: str | None = None,
     experience: ExperienceLevel | None = None,
-    limit: int = 100,
+    limit: int = Query(default=100, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
 ) -> VacanciesWithStatsResponse:
     """

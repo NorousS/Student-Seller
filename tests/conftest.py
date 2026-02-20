@@ -13,9 +13,15 @@ from app.config import settings
 
 # --- Database Setup for Tests ---
 
-# Use a separate test database to avoid messing with production/dev data
-# Override settings for tests
-TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/hh_parser_test"
+import os
+
+# Derive test DB connection from DATABASE_URL env var or fall back to localhost
+_app_db_url = os.environ.get(
+    "DATABASE_URL",
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/hh_parser"
+)
+_base_url = _app_db_url.rsplit("/", 1)[0]
+TEST_DATABASE_URL = f"{_base_url}/hh_parser_test"
 
 # Engine for the test database
 # Use NullPool to avoid binding connections to a specific event loop, 
@@ -42,7 +48,7 @@ async def setup_test_db():
     # But for this environment, let's assume the user can run this against a test DB they created or we try to create it.
     
     # Let's try to connect to the default 'postgres' database to create 'hh_parser_test'
-    default_db_url = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
+    default_db_url = f"{_base_url}/postgres"
     default_engine = create_async_engine(default_db_url, isolation_level="AUTOCOMMIT")
     
     async with default_engine.connect() as conn:
@@ -98,3 +104,75 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
         yield ac
     
     app.dependency_overrides.clear()
+
+
+# --- Auth helper fixtures ---
+
+
+@pytest.fixture
+async def admin_token(client: AsyncClient) -> str:
+    """Создаёт admin-пользователя и возвращает access_token."""
+    resp = await client.post("/api/v1/auth/register", json={
+        "email": "admin@test.com",
+        "password": "admin123",
+        "role": "admin",
+    })
+    assert resp.status_code == 201
+    resp = await client.post("/api/v1/auth/login", json={
+        "email": "admin@test.com",
+        "password": "admin123",
+    })
+    return resp.json()["access_token"]
+
+
+@pytest.fixture
+async def admin_headers(admin_token: str) -> dict:
+    """Authorization headers для admin."""
+    return {"Authorization": f"Bearer {admin_token}"}
+
+
+@pytest.fixture
+async def student_token(client: AsyncClient) -> str:
+    """Создаёт student-пользователя и возвращает access_token."""
+    resp = await client.post("/api/v1/auth/register", json={
+        "email": "student@test.com",
+        "password": "student123",
+        "role": "student",
+        "full_name": "Test Student",
+        "group_name": "TEST-1",
+    })
+    assert resp.status_code == 201
+    resp = await client.post("/api/v1/auth/login", json={
+        "email": "student@test.com",
+        "password": "student123",
+    })
+    return resp.json()["access_token"]
+
+
+@pytest.fixture
+async def student_headers(student_token: str) -> dict:
+    """Authorization headers для student."""
+    return {"Authorization": f"Bearer {student_token}"}
+
+
+@pytest.fixture
+async def employer_token(client: AsyncClient) -> str:
+    """Создаёт employer-пользователя и возвращает access_token."""
+    resp = await client.post("/api/v1/auth/register", json={
+        "email": "employer@test.com",
+        "password": "employer123",
+        "role": "employer",
+        "company_name": "Test Corp",
+    })
+    assert resp.status_code == 201
+    resp = await client.post("/api/v1/auth/login", json={
+        "email": "employer@test.com",
+        "password": "employer123",
+    })
+    return resp.json()["access_token"]
+
+
+@pytest.fixture
+async def employer_headers(employer_token: str) -> dict:
+    """Authorization headers для employer."""
+    return {"Authorization": f"Bearer {employer_token}"}

@@ -3,13 +3,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
+from app.auth import require_role
 from app.database import get_db
-from app.models import Student, Discipline, StudentDiscipline
+from app.models import Student, Discipline, StudentDiscipline, User, UserRole
 from app.schemas import StudentCreate, StudentResponse, DisciplineResponse, AddDisciplinesRequest
 
 router = APIRouter(
     prefix="/api/v1/students",
-    tags=["Students"]
+    tags=["Students"],
+    dependencies=[Depends(require_role(UserRole.admin))],
 )
 
 
@@ -148,7 +150,8 @@ async def add_disciplines_to_student(
             new_link = StudentDiscipline(student_id=student_id, discipline_id=discipline.id, grade=disc.grade)
             db.add(new_link)
             
-    await db.commit()
+    await db.flush()
+    db.expire_all()
     
     # Reload and return
     stmt = select(Student).options(

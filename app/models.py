@@ -1,13 +1,57 @@
 """
-SQLAlchemy модели для хранения вакансий и тегов.
+SQLAlchemy модели для хранения вакансий, тегов, пользователей и чатов.
 """
 
+import enum
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Table, Column
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, Table, Column, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+
+class UserRole(str, enum.Enum):
+    """Роли пользователей."""
+    admin = "admin"
+    student = "student"
+    employer = "employer"
+
+
+class ContactRequestStatus(str, enum.Enum):
+    """Статусы запросов на контакт."""
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+
+
+class User(Base):
+    """Модель пользователя (аутентификация и авторизация)."""
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    role: Mapped[UserRole] = mapped_column(Enum(UserRole), index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    # Связи
+    student: Mapped["Student | None"] = relationship(back_populates="user", uselist=False)
+    employer_profile: Mapped["EmployerProfile | None"] = relationship(back_populates="user", uselist=False)
+
+
+class EmployerProfile(Base):
+    """Профиль работодателя."""
+    __tablename__ = "employer_profiles"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    company_name: Mapped[str | None] = mapped_column(String(200))
+    position: Mapped[str | None] = mapped_column(String(200))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped["User"] = relationship(back_populates="employer_profile")
 
 
 # Таблица связи Many-to-Many между вакансиями и тегами
@@ -96,9 +140,14 @@ class Student(Base):
     __tablename__ = "students"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), unique=True, nullable=True)
     full_name: Mapped[str] = mapped_column(String(200), index=True)
     group_name: Mapped[str | None] = mapped_column(String(50)) # Номер группы
+    about_me: Mapped[str | None] = mapped_column(Text, nullable=True)
+    photo_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped["User | None"] = relationship(back_populates="student")
     
     # Связь с дисциплинами через модель-ассоциацию
     student_disciplines: Mapped[list["StudentDiscipline"]] = relationship(
@@ -133,3 +182,36 @@ class Discipline(Base):
         secondary="student_disciplines",
         viewonly=True
     )
+
+
+class ContactRequest(Base):
+    """Запрос работодателя на контакт со студентом."""
+    __tablename__ = "contact_requests"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    employer_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    student_id: Mapped[int] = mapped_column(ForeignKey("students.id", ondelete="CASCADE"), index=True)
+    status: Mapped[ContactRequestStatus] = mapped_column(
+        Enum(ContactRequestStatus), default=ContactRequestStatus.pending
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    employer: Mapped["User"] = relationship(foreign_keys=[employer_id])
+    student: Mapped["Student"] = relationship(foreign_keys=[student_id])
+    messages: Mapped[list["Message"]] = relationship(back_populates="contact_request", cascade="all, delete-orphan")
+
+
+class Message(Base):
+    """Сообщение в чате между работодателем и студентом."""
+    __tablename__ = "messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    contact_request_id: Mapped[int] = mapped_column(ForeignKey("contact_requests.id", ondelete="CASCADE"), index=True)
+    sender_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    text: Mapped[str] = mapped_column(Text)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    contact_request: Mapped["ContactRequest"] = relationship(back_populates="messages")
+    sender: Mapped["User"] = relationship(foreign_keys=[sender_id])

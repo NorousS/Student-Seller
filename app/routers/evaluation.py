@@ -7,8 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth import require_role
 from app.database import get_db
-from app.models import Student
+from app.models import Student, User, UserRole
 from app.valuation import evaluate_student, DisciplineWithGrade
 from app.vector_store import vector_store
 from app.schemas import (
@@ -18,7 +19,11 @@ from app.schemas import (
     StudentSkillsResponse,
 )
 
-router = APIRouter(prefix="/api/v1/students", tags=["evaluation"])
+router = APIRouter(
+    prefix="/api/v1/students",
+    tags=["evaluation"],
+    dependencies=[Depends(require_role(UserRole.admin, UserRole.employer))],
+)
 
 
 @router.post("/{student_id}/evaluate", response_model=EvaluationResponse)
@@ -26,7 +31,8 @@ async def evaluate_student_endpoint(
     student_id: int,
     specialty: str = Query(..., min_length=1, description="Специальность для оценки"),
     experience: ExperienceLevel | None = Query(None, description="Фильтр по опыту работы"),
-    top_k: int = 5,
+    top_k: int = Query(default=5, ge=1, le=20, description="Кол-во навыков на дисциплину"),
+    excluded_skills: list[str] = Query(default=[], description="Навыки для исключения из расчёта"),
     db: AsyncSession = Depends(get_db),
 ) -> EvaluationResponse:
     """
@@ -59,6 +65,7 @@ async def evaluate_student_endpoint(
     valuation = await evaluate_student(
         db, disciplines, specialty=specialty,
         experience=experience_value, top_k=top_k,
+        excluded_skills=excluded_skills if excluded_skills else None,
     )
 
     # Формируем ответ
@@ -71,6 +78,7 @@ async def evaluate_student_endpoint(
             vacancy_count=m.vacancy_count,
             grade=m.grade,
             grade_coeff=m.grade_coeff,
+            excluded=m.excluded,
         )
         for m in valuation.skill_matches
     ]
@@ -80,6 +88,8 @@ async def evaluate_student_endpoint(
         student_name=student.full_name,
         specialty=specialty,
         experience_filter=experience_value,
+        top_k=top_k,
+        excluded_skills=excluded_skills or [],
         estimated_salary=valuation.estimated_salary,
         confidence=valuation.confidence,
         total_disciplines=valuation.total_disciplines,
@@ -91,7 +101,7 @@ async def evaluate_student_endpoint(
 @router.get("/{student_id}/skills", response_model=StudentSkillsResponse)
 async def get_student_skills(
     student_id: int,
-    top_k: int = 3,
+    top_k: int = Query(default=3, ge=1, le=20),
     db: AsyncSession = Depends(get_db),
 ) -> StudentSkillsResponse:
     """
