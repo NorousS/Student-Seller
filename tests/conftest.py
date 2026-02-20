@@ -13,9 +13,9 @@ from app.config import settings
 
 # --- Database Setup for Tests ---
 
-# Use a separate test database to avoid messing with production/dev data
-# Override settings for tests
-TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/hh_parser_test"
+# Derive test DB URL from app settings so it works both locally and in Docker
+_base_url = settings.database_url.rsplit("/", 1)[0]  # strip DB name
+TEST_DATABASE_URL = f"{_base_url}/hh_parser_test"
 
 # Engine for the test database
 # Use NullPool to avoid binding connections to a specific event loop, 
@@ -42,7 +42,7 @@ async def setup_test_db():
     # But for this environment, let's assume the user can run this against a test DB they created or we try to create it.
     
     # Let's try to connect to the default 'postgres' database to create 'hh_parser_test'
-    default_db_url = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
+    default_db_url = f"{_base_url}/postgres"
     default_engine = create_async_engine(default_db_url, isolation_level="AUTOCOMMIT")
     
     async with default_engine.connect() as conn:
