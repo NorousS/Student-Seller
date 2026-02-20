@@ -94,8 +94,8 @@
 #### Legacy Admin Panel (app\\static\\admin.html)
 - **Технология**: Standalone HTML + Vanilla JS + Chart.js
 - **Аутентификация**: JWT token в localStorage
-- **Функции**: Управление студентами, парсинг вакансий, статистика тегов
-- **Доступ**: http://localhost:8000/admin-panel
+- **Функции**: Управление студентами, парсинг вакансий, статистика тегов, оценка студентов
+- **Доступ**: http://localhost:8000/admin
 
 ### 2. Backend Layer (FastAPI)
 

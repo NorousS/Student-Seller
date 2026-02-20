@@ -706,9 +706,7 @@ function showApp() {
     document.getElementById('login-overlay').style.display = 'none';
     document.querySelector('.header').style.display = '';
     document.querySelector('.tabs').style.display = '';
-    document.querySelectorAll('.page').forEach(el => {
-        if (el.classList.contains('active')) el.style.display = '';
-    });
+    document.querySelectorAll('.page').forEach(el => el.style.display = '');
 }
 
 async function handleLogin() {

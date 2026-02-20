@@ -13,7 +13,7 @@
 ✅ **Система контактов** — отправка запросов на контакт от работодателей к студентам  
 ✅ **Real-time чат** — WebSocket-чат между студентом и работодателем после принятия запроса  
 ✅ **React-фронтенд** — современный SPA на React 18 + TypeScript + Vite с роутингом  
-✅ **Legacy admin-панель** — отдельная админ-панель `/admin-panel` (HTML + JWT)
+✅ **Админ-панель** — standalone HTML панель по адресу `/admin` с JWT-аутентификацией
 
 ---
 
@@ -39,7 +39,7 @@ start http://localhost:8000
 После запуска доступны:
 - **Веб-интерфейс**: http://localhost:8000
 - **API документация**: http://localhost:8000/docs
-- **Legacy admin**: http://localhost:8000/admin-panel
+- **Админ-панель**: http://localhost:8000/admin
 - **Qdrant UI**: http://localhost:6333/dashboard
 - **PostgreSQL**: localhost:5432
 

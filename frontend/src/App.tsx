@@ -2,9 +2,11 @@ import { Routes, Route, Navigate, Link } from 'react-router-dom'
 import { useAuth } from './store/AuthContext'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
-import AdminDashboard from './pages/admin/AdminDashboard'
 import StudentPanel from './pages/student/StudentPanel'
 import EmployerPanel from './pages/employer/EmployerPanel'
+
+// Note: /admin is served as static HTML by the backend (app/static/admin.html)
+// It is NOT part of the React SPA
 
 function Header() {
   const { user, logout } = useAuth()
@@ -48,7 +50,6 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/" element={<HomeRedirect />} />
-        <Route path="/admin/*" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/student/*" element={<ProtectedRoute roles={['student']}><StudentPanel /></ProtectedRoute>} />
         <Route path="/employer/*" element={<ProtectedRoute roles={['employer']}><EmployerPanel /></ProtectedRoute>} />
       </Routes>
