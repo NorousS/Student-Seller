@@ -4,17 +4,19 @@ import { useAuth } from '../../store/AuthContext'
 import type { StudentProfile, ContactRequest, ChatMessage } from '../../api/types'
 
 export default function StudentPanel() {
-  const [tab, setTab] = useState<'profile' | 'skills' | 'requests' | 'chat'>('profile')
+  const [tab, setTab] = useState<'profile' | 'skills' | 'evaluation' | 'requests' | 'chat'>('profile')
   return (
     <div className="container">
       <div className="tabs">
         <div className={`tab ${tab === 'profile' ? 'active' : ''}`} onClick={() => setTab('profile')} role="tab" tabIndex={0}>👤 Профиль</div>
         <div className={`tab ${tab === 'skills' ? 'active' : ''}`} onClick={() => setTab('skills')} role="tab" tabIndex={0}>📚 Навыки</div>
+        <div className={`tab ${tab === 'evaluation' ? 'active' : ''}`} onClick={() => setTab('evaluation')} role="tab" tabIndex={0}>💰 Оценка</div>
         <div className={`tab ${tab === 'requests' ? 'active' : ''}`} onClick={() => setTab('requests')} role="tab" tabIndex={0}>📩 Запросы</div>
         <div className={`tab ${tab === 'chat' ? 'active' : ''}`} onClick={() => setTab('chat')} role="tab" tabIndex={0}>💬 Чат</div>
       </div>
       {tab === 'profile' && <ProfileTab />}
       {tab === 'skills' && <SkillsTab />}
+      {tab === 'evaluation' && <EvaluationTab />}
       {tab === 'requests' && <RequestsTab />}
       {tab === 'chat' && <ChatTab />}
     </div>
@@ -116,6 +118,277 @@ function SkillsTab() {
         </tbody>
       </table>
     </div>
+  )
+}
+
+interface SkillMatch {
+  discipline: string
+  skill_name: string
+  similarity: number
+  avg_salary: number | null
+  vacancy_count: number
+  grade: number | null
+  grade_coeff: number | null
+  excluded: boolean
+}
+
+interface EvaluationResult {
+  student_id: number
+  student_name: string
+  specialty: string
+  estimated_salary: number
+  confidence: number
+  total_disciplines: number
+  matched_disciplines: number
+  skill_matches: SkillMatch[]
+}
+
+function EvaluationTab() {
+  const [specialty, setSpecialty] = useState('')
+  const [experience, setExperience] = useState('Любой')
+  const [topK, setTopK] = useState(5)
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<EvaluationResult | null>(null)
+  const [excludedSkills, setExcludedSkills] = useState<Set<string>>(new Set())
+
+  const experienceMap: Record<string, string | null> = {
+    'Любой': null,
+    'Без опыта': 'noExperience',
+    '1-3 года': 'between1And3',
+    '3-6 лет': 'between3And6',
+    '6+ лет': 'moreThan6'
+  }
+
+  const evaluate = async () => {
+    if (!specialty.trim()) {
+      alert('Введите специальность')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      params.set('specialty', specialty)
+      const expValue = experienceMap[experience]
+      if (expValue) params.set('experience', expValue)
+      params.set('top_k', String(topK))
+      excludedSkills.forEach(s => {
+        const skillName = s.substring(s.indexOf(':') + 1)
+        params.append('excluded_skills', skillName)
+      })
+
+      const { data } = await api.post(`/profile/student/evaluate?${params.toString()}`)
+      setResult(data)
+      
+      // Update excluded skills from result
+      const newExcluded = new Set<string>()
+      data.skill_matches.forEach((sm: SkillMatch) => {
+        if (sm.excluded) {
+          newExcluded.add(`${sm.discipline}:${sm.skill_name}`)
+        }
+      })
+      setExcludedSkills(newExcluded)
+    } catch (err: any) {
+      alert(`Ошибка: ${err.response?.data?.detail || err.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleExcluded = (discipline: string, skillName: string) => {
+    const key = `${discipline}:${skillName}`
+    const newExcluded = new Set(excludedSkills)
+    if (newExcluded.has(key)) {
+      newExcluded.delete(key)
+    } else {
+      newExcluded.add(key)
+    }
+    setExcludedSkills(newExcluded)
+  }
+
+  const formatSalary = (salary: number) => {
+    return new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: 'RUB',
+      maximumFractionDigits: 0
+    }).format(salary)
+  }
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence > 70) return 'badge-green'
+    if (confidence > 40) return 'badge-yellow'
+    return 'badge-red'
+  }
+
+  return (
+    <>
+      <div className="card">
+        <h3 style={{ marginBottom: 16 }}>Параметры оценки</h3>
+        
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Специальность *</label>
+          <input
+            type="text"
+            value={specialty}
+            onChange={e => setSpecialty(e.target.value)}
+            placeholder="Например: Python разработчик"
+            style={{ width: '100%' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Опыт работы</label>
+          <select
+            value={experience}
+            onChange={e => setExperience(e.target.value)}
+            style={{ width: '100%' }}
+          >
+            <option value="Любой">Любой</option>
+            <option value="Без опыта">Без опыта</option>
+            <option value="1-3 года">1-3 года</option>
+            <option value="3-6 лет">3-6 лет</option>
+            <option value="6+ лет">6+ лет</option>
+          </select>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+            Кол-во навыков на дисциплину: {topK}
+          </label>
+          <input
+            type="range"
+            min="1"
+            max="20"
+            value={topK}
+            onChange={e => setTopK(+e.target.value)}
+            style={{ width: '100%' }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
+            <span>1</span>
+            <span>20</span>
+          </div>
+        </div>
+
+        <button
+          className="btn btn-primary"
+          onClick={evaluate}
+          disabled={loading || !specialty.trim()}
+          style={{ width: '100%' }}
+        >
+          {loading ? 'Оценка...' : '💰 Оценить стоимость'}
+        </button>
+      </div>
+
+      {loading && (
+        <div className="card" style={{ textAlign: 'center', padding: 40 }}>
+          <div className="spinner" />
+          <p style={{ marginTop: 16, color: 'var(--text-muted)' }}>Анализируем навыки...</p>
+        </div>
+      )}
+
+      {result && !loading && (
+        <>
+          <div className="grid-2">
+            <div className="card">
+              <h4 style={{ marginBottom: 8, color: 'var(--text-muted)', fontSize: 14 }}>Оценочная зарплата</h4>
+              <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)' }}>
+                {formatSalary(result.estimated_salary)}
+              </div>
+            </div>
+
+            <div className="card">
+              <h4 style={{ marginBottom: 8, color: 'var(--text-muted)', fontSize: 14 }}>Уверенность оценки</h4>
+              <div style={{ fontSize: 32, fontWeight: 700 }}>
+                <span className={`badge ${getConfidenceColor(result.confidence * 100)}`} style={{ fontSize: 24, padding: '8px 16px' }}>
+                  {(result.confidence * 100).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid-2">
+            <div className="card">
+              <h4 style={{ marginBottom: 8, color: 'var(--text-muted)', fontSize: 14 }}>Всего дисциплин</h4>
+              <div style={{ fontSize: 28, fontWeight: 600 }}>{result.total_disciplines}</div>
+            </div>
+
+            <div className="card">
+              <h4 style={{ marginBottom: 8, color: 'var(--text-muted)', fontSize: 14 }}>Совпало дисциплин</h4>
+              <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--success)' }}>{result.matched_disciplines}</div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3>Детализация по навыкам</h3>
+              <button
+                className="btn btn-primary"
+                onClick={evaluate}
+                disabled={loading}
+                style={{ fontSize: 14 }}
+              >
+                🔄 Пересчитать
+              </button>
+            </div>
+
+            {result.skill_matches.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)' }}>Навыки не найдены</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Дисциплина</th>
+                      <th>Навык hh.ru</th>
+                      <th>Сходство</th>
+                      <th>Ср. ЗП</th>
+                      <th>Вакансий</th>
+                      <th>Оценка</th>
+                      <th>Исключить</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.skill_matches.map((sm, idx) => {
+                      const isExcluded = excludedSkills.has(`${sm.discipline}:${sm.skill_name}`)
+                      return (
+                        <tr
+                          key={idx}
+                          style={{
+                            textDecoration: isExcluded ? 'line-through' : 'none',
+                            backgroundColor: isExcluded ? 'rgba(239, 68, 68, 0.1)' : 'transparent'
+                          }}
+                        >
+                          <td>{sm.discipline}</td>
+                          <td>{sm.skill_name}</td>
+                          <td>{(sm.similarity * 100).toFixed(1)}%</td>
+                          <td>{sm.avg_salary ? formatSalary(sm.avg_salary) : '—'}</td>
+                          <td>{sm.vacancy_count}</td>
+                          <td>
+                            {sm.grade !== null && sm.grade !== undefined ? (
+                              <span className={`badge ${sm.grade === 5 ? 'badge-green' : sm.grade === 4 ? 'badge-yellow' : 'badge-red'}`}>
+                                {sm.grade}
+                              </span>
+                            ) : '—'}
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <input
+                              type="checkbox"
+                              checked={isExcluded}
+                              onChange={() => toggleExcluded(sm.discipline, sm.skill_name)}
+                              style={{ cursor: 'pointer', width: 18, height: 18 }}
+                            />
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </>
   )
 }
 
