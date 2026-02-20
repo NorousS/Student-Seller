@@ -13,8 +13,14 @@ from app.config import settings
 
 # --- Database Setup for Tests ---
 
-# Derive test DB URL from app settings so it works both locally and in Docker
-_base_url = settings.database_url.rsplit("/", 1)[0]  # strip DB name
+import os
+
+# Derive test DB connection from DATABASE_URL env var or fall back to localhost
+_app_db_url = os.environ.get(
+    "DATABASE_URL",
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/hh_parser"
+)
+_base_url = _app_db_url.rsplit("/", 1)[0]
 TEST_DATABASE_URL = f"{_base_url}/hh_parser_test"
 
 # Engine for the test database
