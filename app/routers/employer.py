@@ -25,7 +25,6 @@ from app.schemas import (
     AnonymizedStudentProfile,
     AnonymizedStudentResult,
     ContactRequestCreate,
-    ContactRequestRespondRequest,
     ContactRequestResponse,
     DisciplineResponse,
     EmployerProfileResponse,

@@ -5,7 +5,7 @@
 
 from collections import Counter
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -134,7 +134,7 @@ async def parse_vacancies(
 async def get_vacancies(
     query: str | None = None,
     experience: ExperienceLevel | None = None,
-    limit: int = 100,
+    limit: int = Query(default=100, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
 ) -> VacanciesWithStatsResponse:
     """

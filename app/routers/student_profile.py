@@ -51,7 +51,7 @@ async def _get_student_for_user(db: AsyncSession, user: User) -> Student:
 def _build_profile_response(student: Student) -> dict:
     """Построить ответ профиля с about_me и photo_url."""
     base = build_student_response(student)
-    photo_url = f"/static/uploads/{student.photo_path}" if student.photo_path else None
+    photo_url = student.photo_path if student.photo_path else None
     return {**base.model_dump(), "about_me": student.about_me, "photo_url": photo_url}
 
 

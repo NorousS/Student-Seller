@@ -172,6 +172,17 @@ async def get_chat_messages(
     if cr.status != ContactRequestStatus.accepted:
         raise HTTPException(status_code=403, detail="Contact request not accepted")
 
+    # Verify current user is a participant
+    is_employer = cr.employer_id == current_user.id
+    if not is_employer:
+        from app.models import Student as StudentModel
+        student_result = await db.execute(
+            select(StudentModel).where(StudentModel.id == cr.student_id)
+        )
+        student = student_result.scalar_one_or_none()
+        if not student or student.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not a participant")
+
     # Get messages
     stmt = (
         select(Message)

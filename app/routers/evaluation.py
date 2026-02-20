@@ -101,7 +101,7 @@ async def evaluate_student_endpoint(
 @router.get("/{student_id}/skills", response_model=StudentSkillsResponse)
 async def get_student_skills(
     student_id: int,
-    top_k: int = 3,
+    top_k: int = Query(default=3, ge=1, le=20),
     db: AsyncSession = Depends(get_db),
 ) -> StudentSkillsResponse:
     """

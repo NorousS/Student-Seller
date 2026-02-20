@@ -4,7 +4,7 @@ Pydantic схемы для валидации запросов и ответов
 
 from enum import Enum
 
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field
 
 
 # --- Auth ---
