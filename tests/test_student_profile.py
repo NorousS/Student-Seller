@@ -81,3 +81,68 @@ async def test_employer_cannot_access_student_profile(client: AsyncClient, emplo
     """Работодатель НЕ может получить профиль студента через этот эндпоинт (403)."""
     response = await client.get("/api/v1/profile/student/", headers=employer_headers)
     assert response.status_code == 403
+
+
+# === NEW TESTS: Extended coverage ===
+
+
+@pytest.mark.asyncio
+async def test_update_about_me_long_text(client: AsyncClient, student_headers: dict):
+    """Обновление about_me длинным текстом — успех."""
+    long_text = "А" * 5000
+    response = await client.put(
+        "/api/v1/profile/student/",
+        params={"about_me": long_text},
+        headers=student_headers,
+    )
+    assert response.status_code == 200
+
+    # Verify it was saved
+    profile = await client.get("/api/v1/profile/student/", headers=student_headers)
+    assert profile.json()["about_me"] == long_text
+
+
+@pytest.mark.asyncio
+async def test_add_duplicate_discipline_updates_grade(client: AsyncClient, student_headers: dict):
+    """Добавление дисциплины с тем же именем обновляет оценку."""
+    # Add discipline
+    await client.post("/api/v1/profile/student/disciplines", json={
+        "disciplines": [{"name": "Algorithms", "grade": 3}]
+    }, headers=student_headers)
+
+    # Add same discipline with different grade
+    response = await client.post("/api/v1/profile/student/disciplines", json={
+        "disciplines": [{"name": "Algorithms", "grade": 5}]
+    }, headers=student_headers)
+    assert response.status_code == 200
+
+    # Verify only one entry with updated grade
+    disc_resp = await client.get("/api/v1/profile/student/disciplines", headers=student_headers)
+    disciplines = disc_resp.json()
+    algo_discs = [d for d in disciplines if d["name"] == "Algorithms"]
+    assert len(algo_discs) == 1
+    assert algo_discs[0]["grade"] == 5
+
+
+@pytest.mark.asyncio
+async def test_profile_photo_url_null_when_no_photo(client: AsyncClient, student_headers: dict):
+    """photo_url = null если фото не загружено."""
+    response = await client.get("/api/v1/profile/student/", headers=student_headers)
+    assert response.status_code == 200
+    assert response.json()["photo_url"] is None
+
+
+@pytest.mark.asyncio
+async def test_add_disciplines_in_same_request_deduplicates(client: AsyncClient, student_headers: dict):
+    """Дублирующие дисциплины в одном запросе дедуплицируются."""
+    response = await client.post("/api/v1/profile/student/disciplines", json={
+        "disciplines": [
+            {"name": "Physics", "grade": 4},
+            {"name": "Physics", "grade": 5},
+        ]
+    }, headers=student_headers)
+    assert response.status_code == 200
+
+    disc_resp = await client.get("/api/v1/profile/student/disciplines", headers=student_headers)
+    physics_discs = [d for d in disc_resp.json() if d["name"] == "Physics"]
+    assert len(physics_discs) == 1
