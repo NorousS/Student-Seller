@@ -6,7 +6,7 @@
 import os
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -22,8 +22,12 @@ from app.schemas import (
     DisciplineResponse,
     StudentProfileResponse,
     StudentResponse,
+    EvaluationResponse,
+    ExperienceLevel,
+    SkillMatchResponse,
 )
 from app.routers.students import build_student_response, get_or_create_discipline
+from app.valuation import evaluate_student, DisciplineWithGrade
 
 router = APIRouter(
     prefix="/api/v1/profile/student",
@@ -263,4 +267,69 @@ async def respond_to_contact_request(
         status=cr.status.value,
         created_at=cr.created_at.isoformat(),
         responded_at=cr.responded_at.isoformat() if cr.responded_at else None,
+    )
+
+
+# --- Self-evaluation ---
+
+
+@router.post("/evaluate", response_model=EvaluationResponse)
+async def evaluate_self(
+    specialty: str = Query(..., min_length=1, description="Специальность для оценки"),
+    experience: ExperienceLevel | None = Query(None, description="Фильтр по опыту работы"),
+    top_k: int = Query(default=5, ge=1, le=20, description="Кол-во навыков на дисциплину"),
+    excluded_skills: list[str] = Query(default=[], description="Навыки для исключения из расчёта"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.student)),
+) -> EvaluationResponse:
+    """Оценить свою рыночную стоимость как студент."""
+    # Получаем студента через helper
+    student = await _get_student_for_user(db, current_user)
+    
+    # Собираем дисциплины с оценками
+    disciplines = [
+        DisciplineWithGrade(name=sd.discipline.name, grade=sd.grade)
+        for sd in student.student_disciplines
+    ]
+    if not disciplines:
+        raise HTTPException(
+            status_code=400,
+            detail="У студента нет пройденных дисциплин",
+        )
+
+    # Оцениваем
+    experience_value = experience.value if experience else None
+    valuation = await evaluate_student(
+        db, disciplines, specialty=specialty,
+        experience=experience_value, top_k=top_k,
+        excluded_skills=excluded_skills if excluded_skills else None,
+    )
+
+    # Формируем ответ
+    skill_matches = [
+        SkillMatchResponse(
+            discipline=m.discipline,
+            skill_name=m.skill_name,
+            similarity=round(m.similarity, 4),
+            avg_salary=m.avg_salary,
+            vacancy_count=m.vacancy_count,
+            grade=m.grade,
+            grade_coeff=m.grade_coeff,
+            excluded=m.excluded,
+        )
+        for m in valuation.skill_matches
+    ]
+
+    return EvaluationResponse(
+        student_id=student.id,
+        student_name=student.full_name,
+        specialty=specialty,
+        experience_filter=experience_value,
+        top_k=top_k,
+        excluded_skills=excluded_skills or [],
+        estimated_salary=valuation.estimated_salary,
+        confidence=valuation.confidence,
+        total_disciplines=valuation.total_disciplines,
+        matched_disciplines=valuation.matched_disciplines,
+        skill_matches=skill_matches,
     )
