@@ -8,10 +8,10 @@ export default function EmployerPanel() {
   return (
     <div className="container">
       <div className="tabs">
-        <div className={`tab ${tab === 'search' ? 'active' : ''}`} onClick={() => setTab('search')}>🔍 Поиск</div>
-        <div className={`tab ${tab === 'requests' ? 'active' : ''}`} onClick={() => setTab('requests')}>📩 Запросы</div>
-        <div className={`tab ${tab === 'chat' ? 'active' : ''}`} onClick={() => setTab('chat')}>💬 Чат</div>
-        <div className={`tab ${tab === 'profile' ? 'active' : ''}`} onClick={() => setTab('profile')}>🏢 Профиль</div>
+        <div className={`tab ${tab === 'search' ? 'active' : ''}`} onClick={() => setTab('search')} role="tab" tabIndex={0}>🔍 Поиск</div>
+        <div className={`tab ${tab === 'requests' ? 'active' : ''}`} onClick={() => setTab('requests')} role="tab" tabIndex={0}>📩 Запросы</div>
+        <div className={`tab ${tab === 'chat' ? 'active' : ''}`} onClick={() => setTab('chat')} role="tab" tabIndex={0}>💬 Чат</div>
+        <div className={`tab ${tab === 'profile' ? 'active' : ''}`} onClick={() => setTab('profile')} role="tab" tabIndex={0}>🏢 Профиль</div>
       </div>
       {tab === 'search' && <SearchTab />}
       {tab === 'requests' && <RequestsTab />}

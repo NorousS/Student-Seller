@@ -53,9 +53,9 @@ export default function AdminDashboard() {
   return (
     <div className="container">
       <div className="tabs">
-        <div className={`tab ${tab === 'students' ? 'active' : ''}`} onClick={() => setTab('students')}>👩‍🎓 Студенты</div>
-        <div className={`tab ${tab === 'parse' ? 'active' : ''}`} onClick={() => setTab('parse')}>🔍 Парсинг</div>
-        <div className={`tab ${tab === 'tags' ? 'active' : ''}`} onClick={() => setTab('tags')}>🏷️ Теги</div>
+        <div className={`tab ${tab === 'students' ? 'active' : ''}`} onClick={() => setTab('students')} role="tab" tabIndex={0}>👩‍🎓 Студенты</div>
+        <div className={`tab ${tab === 'parse' ? 'active' : ''}`} onClick={() => setTab('parse')} role="tab" tabIndex={0}>🔍 Парсинг</div>
+        <div className={`tab ${tab === 'tags' ? 'active' : ''}`} onClick={() => setTab('tags')} role="tab" tabIndex={0}>🏷️ Теги</div>
       </div>
 
       {/* === Students tab === */}

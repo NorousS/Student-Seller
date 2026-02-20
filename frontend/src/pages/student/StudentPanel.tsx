@@ -8,10 +8,10 @@ export default function StudentPanel() {
   return (
     <div className="container">
       <div className="tabs">
-        <div className={`tab ${tab === 'profile' ? 'active' : ''}`} onClick={() => setTab('profile')}>👤 Профиль</div>
-        <div className={`tab ${tab === 'skills' ? 'active' : ''}`} onClick={() => setTab('skills')}>📚 Навыки</div>
-        <div className={`tab ${tab === 'requests' ? 'active' : ''}`} onClick={() => setTab('requests')}>📩 Запросы</div>
-        <div className={`tab ${tab === 'chat' ? 'active' : ''}`} onClick={() => setTab('chat')}>💬 Чат</div>
+        <div className={`tab ${tab === 'profile' ? 'active' : ''}`} onClick={() => setTab('profile')} role="tab" tabIndex={0}>👤 Профиль</div>
+        <div className={`tab ${tab === 'skills' ? 'active' : ''}`} onClick={() => setTab('skills')} role="tab" tabIndex={0}>📚 Навыки</div>
+        <div className={`tab ${tab === 'requests' ? 'active' : ''}`} onClick={() => setTab('requests')} role="tab" tabIndex={0}>📩 Запросы</div>
+        <div className={`tab ${tab === 'chat' ? 'active' : ''}`} onClick={() => setTab('chat')} role="tab" tabIndex={0}>💬 Чат</div>
       </div>
       {tab === 'profile' && <ProfileTab />}
       {tab === 'skills' && <SkillsTab />}
