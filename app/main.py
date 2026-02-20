@@ -85,6 +85,15 @@ async def root():
     return _serve_spa()
 
 
+@app.get("/admin-panel", include_in_schema=False)
+async def admin_panel():
+    """Старая админ-панель (standalone HTML)."""
+    admin_html = STATIC_DIR / "admin.html"
+    if admin_html.exists():
+        return FileResponse(admin_html)
+    return HTMLResponse("<h1>Admin panel not found</h1>", status_code=404)
+
+
 @app.get("/{full_path:path}", include_in_schema=False)
 async def spa_catch_all(full_path: str):
     """SPA catch-all: все неизвестные пути возвращают index.html."""
