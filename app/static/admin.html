@@ -391,22 +391,6 @@
 </head>
 <body>
 
-<div id="login-overlay" style="position:fixed; inset:0; z-index:9999; background:#0f1117; display:flex; align-items:center; justify-content:center;">
-    <div style="background:#161b22; border:1px solid #30363d; border-radius:12px; padding:32px; width:360px;">
-        <h2 style="margin-bottom:16px; text-align:center;">🔐 Вход в админ-панель</h2>
-        <div id="login-error" style="display:none; color:#f85149; margin-bottom:12px; font-size:14px;"></div>
-        <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:13px; color:#8b949e; margin-bottom:4px;">Email</label>
-            <input id="login-email" type="email" style="width:100%; padding:8px 12px; background:#0d1117; border:1px solid #30363d; border-radius:6px; color:#e1e4e8; font-size:14px;" placeholder="admin@example.com">
-        </div>
-        <div style="margin-bottom:16px;">
-            <label style="display:block; font-size:13px; color:#8b949e; margin-bottom:4px;">Пароль</label>
-            <input id="login-password" type="password" style="width:100%; padding:8px 12px; background:#0d1117; border:1px solid #30363d; border-radius:6px; color:#e1e4e8; font-size:14px;" placeholder="••••••">
-        </div>
-        <button onclick="handleLogin()" style="width:100%; padding:10px; background:#238636; border:none; border-radius:6px; color:#fff; font-size:14px; cursor:pointer; font-weight:600;">Войти</button>
-    </div>
-</div>
-
 <div class="header">
     <h1>⚡ HH Student Evaluator</h1>
     <div class="status"><span class="dot"></span>API Connected</div>
@@ -662,66 +646,20 @@
 const API = '';  // same origin
 
 // JWT Auth
-let token = localStorage.getItem('admin_token');
+let token = localStorage.getItem('access_token');
 
 function authHeaders() {
     return token ? { 'Authorization': 'Bearer ' + token } : {};
 }
 
-async function adminLogin(email, password) {
-    const res = await fetch(API + '/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-    });
-    if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.detail || 'Ошибка входа');
-    }
-    const data = await res.json();
-    const meRes = await fetch(API + '/api/v1/auth/me', {
-        headers: { 'Authorization': 'Bearer ' + data.access_token }
-    });
-    const me = await meRes.json();
-    if (me.role !== 'admin') throw new Error('Доступ только для администраторов');
-    token = data.access_token;
-    localStorage.setItem('admin_token', token);
-    return me;
-}
-
 function adminLogout() {
     token = null;
-    localStorage.removeItem('admin_token');
-    showLogin();
+    localStorage.clear();
+    window.location.href = '/login';
 }
 
 function showLogin() {
-    document.getElementById('login-overlay').style.display = 'flex';
-    document.querySelector('.header').style.display = 'none';
-    document.querySelector('.tabs').style.display = 'none';
-    document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
-}
-
-function showApp() {
-    document.getElementById('login-overlay').style.display = 'none';
-    document.querySelector('.header').style.display = '';
-    document.querySelector('.tabs').style.display = '';
-    document.querySelectorAll('.page').forEach(el => el.style.display = '');
-}
-
-async function handleLogin() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const errEl = document.getElementById('login-error');
-    try {
-        errEl.style.display = 'none';
-        await adminLogin(email, password);
-        showApp();
-        loadStudents();
-    } catch(e) {
-        errEl.textContent = e.message;
-        errEl.style.display = 'block';
-    }
+    window.location.href = '/login';
 }
 
 async function checkAuth() {
@@ -731,11 +669,10 @@ async function checkAuth() {
         if (!res.ok) throw new Error();
         const me = await res.json();
         if (me.role !== 'admin') throw new Error();
-        showApp();
         loadStudents();
     } catch {
         token = null;
-        localStorage.removeItem('admin_token');
+        localStorage.removeItem('access_token');
         showLogin();
     }
 }

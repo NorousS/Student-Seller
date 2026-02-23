@@ -36,7 +36,10 @@ function HomeRedirect() {
   const { user, loading } = useAuth()
   if (loading) return <div className="container"><div className="spinner" /></div>
   if (!user) return <Navigate to="/login" replace />
-  if (user.role === 'admin') return <Navigate to="/admin" replace />
+  if (user.role === 'admin') {
+    window.location.href = '/admin'
+    return <div className="container"><div className="spinner" /></div>
+  }
   if (user.role === 'student') return <Navigate to="/student" replace />
   if (user.role === 'employer') return <Navigate to="/employer" replace />
   return <Navigate to="/login" replace />
