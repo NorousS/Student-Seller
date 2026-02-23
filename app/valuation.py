@@ -227,6 +227,16 @@ async def evaluate_student(
             score_threshold=settings.similarity_threshold,
         )
 
+        # Дедупликация: Qdrant может вернуть дубли одного навыка
+        seen_skills: set[str] = set()
+        unique_skills: list[dict] = []
+        for s in similar_skills:
+            key = s["name"].lower()
+            if key not in seen_skills:
+                seen_skills.add(key)
+                unique_skills.append(s)
+        similar_skills = unique_skills
+
         discipline_has_match = False
 
         for skill_data in similar_skills:
