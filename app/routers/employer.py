@@ -72,6 +72,12 @@ async def update_employer_profile(
         profile.company_name = data.company_name
     if data.position is not None:
         profile.position = data.position
+    if data.contact_info is not None:
+        profile.contact_info = data.contact_info
+    if data.about_company is not None:
+        profile.about_company = data.about_company
+    if data.website_url is not None:
+        profile.website_url = data.website_url
     await db.commit()
     await db.refresh(profile)
     return profile

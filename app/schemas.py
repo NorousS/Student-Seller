@@ -239,6 +239,9 @@ class EmployerProfileResponse(BaseModel):
     user_id: int
     company_name: str | None
     position: str | None
+    contact_info: str | None = None
+    about_company: str | None = None
+    website_url: str | None = None
 
     class Config:
         from_attributes = True
@@ -248,6 +251,9 @@ class EmployerProfileUpdate(BaseModel):
     """Обновление профиля работодателя."""
     company_name: str | None = Field(None, max_length=200)
     position: str | None = Field(None, max_length=200)
+    contact_info: str | None = Field(None, max_length=2000)
+    about_company: str | None = Field(None, max_length=5000)
+    website_url: str | None = Field(None, max_length=500)
 
 
 class EmployerSearchRequest(BaseModel):

@@ -94,6 +94,17 @@ function SkillsTab() {
     load()
   }
 
+  const deleteSkill = async (id: number) => {
+    if (!confirm('Удалить дисциплину?')) return
+    await api.delete(`/profile/student/disciplines/${id}`)
+    load()
+  }
+
+  const updateGrade = async (name: string, grade: number) => {
+    await api.post('/profile/student/disciplines', { disciplines: [{ name, grade }] })
+    load()
+  }
+
   return (
     <div className="card">
       <h3 style={{ marginBottom: 16 }}>Мои навыки</h3>
@@ -107,12 +118,31 @@ function SkillsTab() {
         <button className="btn btn-primary" onClick={addSkill}>Добавить</button>
       </div>
       <table>
-        <thead><tr><th>Дисциплина</th><th>Оценка</th></tr></thead>
+        <thead><tr><th>Дисциплина</th><th>Оценка</th><th></th></tr></thead>
         <tbody>
           {disciplines.map(d => (
             <tr key={d.id}>
               <td>{d.name}</td>
-              <td><span className={`badge ${d.grade === 5 ? 'badge-green' : d.grade === 4 ? 'badge-yellow' : 'badge-red'}`}>{d.grade}</span></td>
+              <td>
+                <select
+                  value={d.grade}
+                  onChange={e => updateGrade(d.name, +e.target.value)}
+                  style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)' }}
+                >
+                  <option value={5}>5</option>
+                  <option value={4}>4</option>
+                  <option value={3}>3</option>
+                </select>
+              </td>
+              <td>
+                <button
+                  onClick={() => deleteSkill(d.id)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red)', fontSize: 16 }}
+                  title="Удалить"
+                >
+                  🗑️
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

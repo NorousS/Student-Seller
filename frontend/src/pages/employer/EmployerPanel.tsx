@@ -231,12 +231,28 @@ function ProfileTab() {
   const [profile, setProfile] = useState<any>(null)
   const [company, setCompany] = useState('')
   const [position, setPosition] = useState('')
+  const [contactInfo, setContactInfo] = useState('')
+  const [aboutCompany, setAboutCompany] = useState('')
+  const [websiteUrl, setWebsiteUrl] = useState('')
 
-  const load = () => api.get('/employer/profile').then(r => { setProfile(r.data); setCompany(r.data.company_name || ''); setPosition(r.data.position || '') })
+  const load = () => api.get('/employer/profile').then(r => {
+    setProfile(r.data)
+    setCompany(r.data.company_name || '')
+    setPosition(r.data.position || '')
+    setContactInfo(r.data.contact_info || '')
+    setAboutCompany(r.data.about_company || '')
+    setWebsiteUrl(r.data.website_url || '')
+  })
   useEffect(() => { load() }, [])
 
   const save = async () => {
-    await api.put('/employer/profile', { company_name: company, position })
+    await api.put('/employer/profile', {
+      company_name: company,
+      position,
+      contact_info: contactInfo,
+      about_company: aboutCompany,
+      website_url: websiteUrl
+    })
     load()
   }
 
@@ -247,11 +263,23 @@ function ProfileTab() {
       <h3 style={{ marginBottom: 16 }}>Профиль компании</h3>
       <div className="form-group">
         <label>Название компании</label>
-        <input value={company} onChange={e => setCompany(e.target.value)} />
+        <input value={company} onChange={e => setCompany(e.target.value)} name="organization" autoComplete="organization" />
       </div>
       <div className="form-group">
         <label>Должность</label>
-        <input value={position} onChange={e => setPosition(e.target.value)} />
+        <input value={position} onChange={e => setPosition(e.target.value)} name="organization-title" autoComplete="organization-title" />
+      </div>
+      <div className="form-group">
+        <label>Контакты</label>
+        <textarea value={contactInfo} onChange={e => setContactInfo(e.target.value)} placeholder="Телефон, email, Telegram..." rows={3} style={{ width: '100%', resize: 'vertical' }} />
+      </div>
+      <div className="form-group">
+        <label>О компании</label>
+        <textarea value={aboutCompany} onChange={e => setAboutCompany(e.target.value)} placeholder="Расскажите о вашей компании..." rows={4} style={{ width: '100%', resize: 'vertical' }} />
+      </div>
+      <div className="form-group">
+        <label>Сайт компании</label>
+        <input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} placeholder="https://example.com" type="url" autoComplete="url" />
       </div>
       <button className="btn btn-primary" onClick={save}>Сохранить</button>
     </div>

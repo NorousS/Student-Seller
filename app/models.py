@@ -49,6 +49,9 @@ class EmployerProfile(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
     company_name: Mapped[str | None] = mapped_column(String(200))
     position: Mapped[str | None] = mapped_column(String(200))
+    contact_info: Mapped[str | None] = mapped_column(Text, default=None)
+    about_company: Mapped[str | None] = mapped_column(Text, default=None)
+    website_url: Mapped[str | None] = mapped_column(String(500), default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user: Mapped["User"] = relationship(back_populates="employer_profile")

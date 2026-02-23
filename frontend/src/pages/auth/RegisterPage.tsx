@@ -42,18 +42,18 @@ export default function RegisterPage() {
           </div>
           <div className="form-group">
             <label>Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
           </div>
           <div className="form-group">
             <label>Пароль (мин. 6 символов)</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" />
           </div>
 
           {role === 'student' && (
             <>
               <div className="form-group">
                 <label>ФИО</label>
-                <input value={fullName} onChange={e => setFullName(e.target.value)} required />
+                <input value={fullName} onChange={e => setFullName(e.target.value)} required autoComplete="name" />
               </div>
               <div className="form-group">
                 <label>Группа</label>
@@ -65,7 +65,7 @@ export default function RegisterPage() {
           {role === 'employer' && (
             <div className="form-group">
               <label>Название компании</label>
-              <input value={companyName} onChange={e => setCompanyName(e.target.value)} />
+              <input value={companyName} onChange={e => setCompanyName(e.target.value)} name="organization" autoComplete="organization" />
             </div>
           )}
 

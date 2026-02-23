@@ -195,6 +195,28 @@ async def update_my_disciplines(
     return build_student_response(student)
 
 
+@router.delete("/disciplines/{discipline_id}", status_code=204)
+async def delete_my_discipline(
+    discipline_id: int,
+    current_user: User = Depends(require_role(UserRole.student)),
+    db: AsyncSession = Depends(get_db),
+):
+    """Удалить дисциплину из профиля студента."""
+    student = await _get_student_for_user(db, current_user)
+
+    stmt = select(StudentDiscipline).where(
+        StudentDiscipline.student_id == student.id,
+        StudentDiscipline.discipline_id == discipline_id,
+    )
+    result = await db.execute(stmt)
+    link = result.scalar_one_or_none()
+    if not link:
+        raise HTTPException(status_code=404, detail="Дисциплина не найдена у студента")
+
+    await db.delete(link)
+    await db.flush()
+
+
 # --- Contact requests (student side) ---
 
 
