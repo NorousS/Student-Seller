@@ -30,6 +30,10 @@ SPECIALTY_SIMILARITY_THRESHOLD = 0.7
 # Коэффициенты оценок
 GRADE_COEFFICIENTS = {3: 0.75, 4: 0.85, 5: 1.0}
 
+# Количество лучших совпадений для confidence
+# Фиксированное значение защищает от влияния общего числа навыков студента.
+CONFIDENCE_TOP_MATCHES = 3
+
 # Раскрытие аббревиатур для улучшения качества эмбеддингов
 ABBREVIATION_MAP: dict[str, str] = {
     "ООП": "ООП: Объектно-ориентированное программирование",
@@ -280,20 +284,22 @@ async def evaluate_student(
     if weight_sum > 0:
         estimated_salary = round(weighted_salary_sum / weight_sum, 2)
 
-    # Compute quality-based confidence from actual match similarities
-    # Use the weighted average similarity of contributing skills
+    # Compute quality-based confidence from top-K best valid matches
+    # This ensures confidence reflects quality of best matches, not diluted by weak ones
     if weight_sum > 0:
-        # Collect the best similarity per matched discipline
-        best_per_discipline: dict[str, float] = {}
+        # Collect all valid contributing matches with their weighted scores
+        valid_matches: list[tuple[float, SkillMatch]] = []
         for m in all_matches:
             if not m.excluded and m.avg_salary and m.vacancy_count >= MIN_TAG_COUNT:
-                key = m.discipline
                 score = m.similarity * m.grade_coeff
-                if key not in best_per_discipline or score > best_per_discipline[key]:
-                    best_per_discipline[key] = score
-
-        if best_per_discipline:
-            confidence = sum(best_per_discipline.values()) / len(best_per_discipline)
+                valid_matches.append((score, m))
+        
+        if valid_matches:
+            # Sort by score descending and take top fixed count
+            valid_matches.sort(key=lambda x: x[0], reverse=True)
+            k = min(CONFIDENCE_TOP_MATCHES, len(valid_matches))
+            top_matches = valid_matches[:k]
+            confidence = sum(score for score, _ in top_matches) / k
         else:
             confidence = 0.0
     else:

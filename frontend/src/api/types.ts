@@ -40,6 +40,17 @@ export interface EmployerProfile {
   position: string | null
 }
 
+export interface SkillMatch {
+  discipline: string
+  skill_name: string
+  similarity: number
+  avg_salary: number | null
+  vacancy_count: number
+  grade: number
+  grade_coeff: number
+  excluded: boolean
+}
+
 export interface AnonymizedStudent {
   student_id: number
   photo_url: string | null
@@ -48,6 +59,7 @@ export interface AnonymizedStudent {
   confidence: number
   matched_disciplines: number
   total_disciplines: number
+  skill_matches: SkillMatch[]
 }
 
 export interface AnonymizedStudentProfile {

@@ -1,7 +1,32 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import api from '../../api/client'
 import { useAuth } from '../../store/AuthContext'
 import type { StudentProfile, ContactRequest, ChatMessage } from '../../api/types'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js'
+import { Bar, Radar } from 'react-chartjs-2'
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+)
 
 export default function StudentPanel() {
   const [tab, setTab] = useState<'profile' | 'skills' | 'evaluation' | 'requests' | 'chat'>('profile')
@@ -166,12 +191,22 @@ interface EvaluationResult {
   student_id: number
   student_name: string
   specialty: string
-  estimated_salary: number
+  experience_filter?: string | null
+  estimated_salary: number | null
   confidence: number
   total_disciplines: number
   matched_disciplines: number
   skill_matches: SkillMatch[]
 }
+
+interface StudentDiscipline {
+  id: number
+  name: string
+  grade: number
+}
+
+type SortField = 'similarity' | 'avg_salary' | 'vacancy_count'
+type SortDirection = 'asc' | 'desc'
 
 function EvaluationTab() {
   const [specialty, setSpecialty] = useState('')
@@ -179,7 +214,15 @@ function EvaluationTab() {
   const [topK, setTopK] = useState(5)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<EvaluationResult | null>(null)
+  const [studentDisciplines, setStudentDisciplines] = useState<StudentDiscipline[]>([])
   const [excludedSkills, setExcludedSkills] = useState<Set<string>>(new Set())
+
+  const [similarityThreshold, setSimilarityThreshold] = useState(0)
+  const [minSimilarity, setMinSimilarity] = useState(0)
+  const [minSalary, setMinSalary] = useState(0)
+  const [minVacancyCount, setMinVacancyCount] = useState(0)
+  const [sortField, setSortField] = useState<SortField>('similarity')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
   const experienceMap: Record<string, string | null> = {
     'Любой': null,
@@ -188,6 +231,19 @@ function EvaluationTab() {
     '3-6 лет': 'between3And6',
     '6+ лет': 'moreThan6'
   }
+
+  const experienceLabelMap: Record<string, string> = {
+    noExperience: 'Без опыта',
+    between1And3: '1-3 года',
+    between3And6: '3-6 лет',
+    moreThan6: '6+ лет'
+  }
+
+  useEffect(() => {
+    api.get('/profile/student/disciplines')
+      .then(r => setStudentDisciplines(r.data || []))
+      .catch(() => setStudentDisciplines([]))
+  }, [])
 
   const evaluate = async () => {
     if (!specialty.trim()) {
@@ -250,63 +306,234 @@ function EvaluationTab() {
     return 'badge-red'
   }
 
+  const filteredAndSortedSkills = useMemo(() => {
+    if (!result) return []
+
+    let skills = result.skill_matches.filter(sm => {
+      if (sm.similarity < minSimilarity) return false
+      if (minSalary > 0 && (sm.avg_salary === null || sm.avg_salary < minSalary)) return false
+      if (minVacancyCount > 0 && sm.vacancy_count < minVacancyCount) return false
+      return true
+    })
+
+    skills = [...skills].sort((a, b) => {
+      let compareValue = 0
+
+      if (sortField === 'similarity') {
+        compareValue = a.similarity - b.similarity
+      } else if (sortField === 'avg_salary') {
+        const salaryA = a.avg_salary ?? 0
+        const salaryB = b.avg_salary ?? 0
+        compareValue = salaryA - salaryB
+      } else if (sortField === 'vacancy_count') {
+        compareValue = a.vacancy_count - b.vacancy_count
+      }
+      
+      return sortDirection === 'asc' ? compareValue : -compareValue
+    })
+
+    return skills
+  }, [result, minSimilarity, minSalary, minVacancyCount, sortField, sortDirection])
+
+  const impactChartData = useMemo(() => {
+    if (filteredAndSortedSkills.length === 0) return null
+
+    const impactMap: Record<string, number> = {}
+    filteredAndSortedSkills.forEach(sm => {
+      if (sm.avg_salary) {
+        const impact = sm.similarity * sm.avg_salary
+        impactMap[sm.skill_name] = (impactMap[sm.skill_name] || 0) + impact
+      }
+    })
+
+    const topImpact = Object.entries(impactMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+
+    if (topImpact.length === 0) return null
+
+    const colors = [
+      '#58a6ff', '#bc8cff', '#3fb950', '#d29922', '#f85149',
+      '#79c0ff', '#d2a8ff', '#56d364', '#e3b341', '#ff7b72',
+      '#a5d6ff', '#e8d4ff'
+    ]
+
+    return {
+      labels: topImpact.map(([name]) => name),
+      datasets: [{
+        label: 'Влияние на ЗП',
+        data: topImpact.map(([, value]) => Math.round(value)),
+        backgroundColor: colors.slice(0, topImpact.length),
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    }
+  }, [filteredAndSortedSkills])
+
+  const impactChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: 'y' as const,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx: any) => `${Number(ctx.raw).toLocaleString('ru-RU')} ₽`
+        },
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: { callback: (value: any) => `${Math.round(Number(value) / 1000)}k` },
+        grid: { color: '#21262d' }
+      },
+      y: { grid: { display: false } }
+    }
+  }
+
+  const similarityRadarData = useMemo(() => {
+    if (filteredAndSortedSkills.length === 0) return null
+
+    const groups: Record<string, number[]> = {}
+    filteredAndSortedSkills.forEach(sm => {
+      if (!groups[sm.discipline]) groups[sm.discipline] = []
+      groups[sm.discipline].push(sm.similarity)
+    })
+
+    const labels = Object.keys(groups)
+    if (labels.length === 0) return null
+
+    const data = labels.map(label => Math.max(...groups[label]))
+
+    return {
+      labels,
+      datasets: [{
+        label: 'Макс. сходство',
+        data,
+        backgroundColor: 'rgba(88,166,255,0.15)',
+        borderColor: '#58a6ff',
+        pointBackgroundColor: '#58a6ff',
+        pointBorderColor: '#0d1117',
+        pointBorderWidth: 2,
+        borderWidth: 2,
+      }]
+    }
+  }, [filteredAndSortedSkills])
+
+  const similarityRadarOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      r: {
+        beginAtZero: true,
+        max: 1,
+        grid: { color: '#21262d' },
+        angleLines: { color: '#21262d' },
+        ticks: { backdropColor: 'transparent' }
+      }
+    },
+    plugins: {
+      legend: { display: false }
+    },
+  }
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('desc')
+    }
+  }
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return '↕️'
+    return sortDirection === 'asc' ? '↑' : '↓'
+  }
+
+  const getGradeClass = (grade: number | null) => {
+    if (grade === 5) return 'g5'
+    if (grade === 4) return 'g4'
+    return 'g3'
+  }
+
+  const salaryText = result?.estimated_salary
+    ? formatSalary(result.estimated_salary)
+    : 'Н/Д'
+
+  const selectedExperience = result?.experience_filter
+    ? experienceLabelMap[result.experience_filter] || result.experience_filter
+    : 'Любой'
+
   return (
     <>
       <div className="card">
-        <h3 style={{ marginBottom: 16 }}>Параметры оценки</h3>
-        
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Специальность *</label>
-          <input
-            type="text"
-            value={specialty}
-            onChange={e => setSpecialty(e.target.value)}
-            placeholder="Например: Python разработчик"
-            style={{ width: '100%' }}
-          />
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Опыт работы</label>
-          <select
-            value={experience}
-            onChange={e => setExperience(e.target.value)}
-            style={{ width: '100%' }}
-          >
-            <option value="Любой">Любой</option>
-            <option value="Без опыта">Без опыта</option>
-            <option value="1-3 года">1-3 года</option>
-            <option value="3-6 лет">3-6 лет</option>
-            <option value="6+ лет">6+ лет</option>
-          </select>
-        </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
-            Кол-во навыков на дисциплину: {topK}
-          </label>
-          <input
-            type="range"
-            min="1"
-            max="20"
-            value={topK}
-            onChange={e => setTopK(+e.target.value)}
-            style={{ width: '100%' }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
-            <span>1</span>
-            <span>20</span>
+        <h2 style={{ marginBottom: 16, fontSize: 28 }}>Выберите параметры оценки</h2>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
+          <div className="form-group" style={{ flex: '1 1 210px', marginBottom: 0 }}>
+            <label style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>Специальность</label>
+            <input
+              type="text"
+              value={specialty}
+              onChange={e => setSpecialty(e.target.value)}
+              placeholder="Например: Python developer"
+            />
           </div>
+          <div className="form-group" style={{ flex: '1 1 170px', marginBottom: 0 }}>
+            <label style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>Опыт работы</label>
+            <select value={experience} onChange={e => setExperience(e.target.value)}>
+              <option value="Любой">Любой</option>
+              <option value="Без опыта">Без опыта</option>
+              <option value="1-3 года">1-3 года</option>
+              <option value="3-6 лет">3-6 лет</option>
+              <option value="6+ лет">6+ лет</option>
+            </select>
+          </div>
+          <div className="form-group" style={{ flex: '1 1 240px', marginBottom: 0 }}>
+            <label style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>Навыков на дисциплину: {topK}</label>
+            <input
+              type="range"
+              min="1"
+              max="20"
+              value={topK}
+              onChange={e => setTopK(+e.target.value)}
+              style={{ width: '100%' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)' }}>
+              <span>1</span>
+              <span>20</span>
+            </div>
+          </div>
+          <button
+            className="btn btn-primary"
+            onClick={evaluate}
+            disabled={loading || !specialty.trim()}
+            style={{
+              whiteSpace: 'nowrap',
+              background: 'linear-gradient(135deg, #238636 0%, #2ea043 100%)',
+              color: '#fff',
+              border: 'none',
+            }}
+          >
+            {loading ? 'Оценка...' : 'Оценить стоимость'}
+          </button>
         </div>
 
-        <button
-          className="btn btn-primary"
-          onClick={evaluate}
-          disabled={loading || !specialty.trim()}
-          style={{ width: '100%' }}
-        >
-          {loading ? 'Оценка...' : '💰 Оценить стоимость'}
-        </button>
+        {studentDisciplines.length > 0 && (
+          <div style={{ marginTop: 14 }}>
+            <h3 style={{ marginBottom: 8 }}>Дисциплины студента:</h3>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {studentDisciplines.map(d => (
+                <span key={d.id} className="tag-badge">
+                  {d.name}
+                  <span className={`grade-badge ${getGradeClass(d.grade)}`}>{d.grade}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && (
@@ -318,86 +545,264 @@ function EvaluationTab() {
 
       {result && !loading && (
         <>
-          <div className="grid-2">
-            <div className="card">
-              <h4 style={{ marginBottom: 8, color: 'var(--text-muted)', fontSize: 14 }}>Оценочная зарплата</h4>
-              <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)' }}>
-                {formatSalary(result.estimated_salary)}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 16, marginBottom: 16 }}>
+            <div className="card stat-card" style={{ marginBottom: 0 }}>
+              <div className="value salary-value">{salaryText}</div>
+              <div className="label">Оценочная зарплата</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                📌 {result.specialty} · {selectedExperience}
               </div>
             </div>
-
-            <div className="card">
-              <h4 style={{ marginBottom: 8, color: 'var(--text-muted)', fontSize: 14 }}>Уверенность оценки</h4>
-              <div style={{ fontSize: 32, fontWeight: 700 }}>
-                <span className={`badge ${getConfidenceColor(result.confidence * 100)}`} style={{ fontSize: 24, padding: '8px 16px' }}>
-                  {(result.confidence * 100).toFixed(1)}%
-                </span>
+            <div className="card stat-card" style={{ marginBottom: 0 }}>
+              <div className={`value ${getConfidenceColor(result.confidence * 100) === 'badge-green' ? 'confidence-value' : ''}`}>
+                {(result.confidence * 100).toFixed(1)}%
               </div>
+              <div className="label">Уверенность оценки</div>
+            </div>
+            <div className="card stat-card" style={{ marginBottom: 0 }}>
+              <div className="value">{result.total_disciplines}</div>
+              <div className="label">Всего дисциплин</div>
+            </div>
+            <div className="card stat-card" style={{ marginBottom: 0 }}>
+              <div className="value match-value">{result.matched_disciplines}</div>
+              <div className="label">Совпало дисциплин</div>
             </div>
           </div>
 
           <div className="grid-2">
             <div className="card">
-              <h4 style={{ marginBottom: 8, color: 'var(--text-muted)', fontSize: 14 }}>Всего дисциплин</h4>
-              <div style={{ fontSize: 28, fontWeight: 600 }}>{result.total_disciplines}</div>
+              <h2 style={{ marginBottom: 12 }}>Влияние навыков на стоимость</h2>
+              <div className="chart-container">
+                {impactChartData ? (
+                  <Bar data={impactChartData} options={impactChartOptions} />
+                ) : (
+                  <p style={{ color: 'var(--text-muted)' }}>Недостаточно данных для графика</p>
+                )}
+              </div>
+            </div>
+            <div className="card">
+              <h2 style={{ marginBottom: 12 }}>Сходство дисциплин с навыками</h2>
+              <div className="chart-container">
+                {similarityRadarData ? (
+                  <Radar data={similarityRadarData} options={similarityRadarOptions} />
+                ) : (
+                  <p style={{ color: 'var(--text-muted)' }}>Недостаточно данных для графика</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 style={{ marginBottom: 16 }}>Фильтры и порог сходства</h3>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+                Порог сходства: {(similarityThreshold * 100).toFixed(0)}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={similarityThreshold}
+                onChange={e => setSimilarityThreshold(+e.target.value)}
+                style={{ width: '100%' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                <span>0%</span>
+                <span>100%</span>
+              </div>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8 }}>
+                Навыки ниже порога будут вычеркнуты
+              </p>
             </div>
 
-            <div className="card">
-              <h4 style={{ marginBottom: 8, color: 'var(--text-muted)', fontSize: 14 }}>Совпало дисциплин</h4>
-              <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--success)' }}>{result.matched_disciplines}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+                  Мин. сходство (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={Math.round(minSimilarity * 100)}
+                  onChange={e => {
+                    const value = Number(e.target.value) || 0
+                    setMinSimilarity(Math.max(0, Math.min(1, value / 100)))
+                  }}
+                  placeholder="0"
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+                  Мин. зарплата (₽)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="10000"
+                  value={minSalary}
+                  onChange={e => setMinSalary(Number(e.target.value) || 0)}
+                  placeholder="0"
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>
+                  Мин. кол-во вакансий
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={minVacancyCount}
+                  onChange={e => setMinVacancyCount(Number(e.target.value) || 0)}
+                  placeholder="0"
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, fontSize: 13 }}>
+              <button
+                className="btn"
+                onClick={() => {
+                  setSimilarityThreshold(0)
+                  setMinSimilarity(0)
+                  setMinSalary(0)
+                  setMinVacancyCount(0)
+                }}
+                style={{ fontSize: 13 }}
+              >
+                Сбросить фильтры
+              </button>
+              <span style={{ color: 'var(--text-muted)', alignSelf: 'center' }}>
+                Показано: {filteredAndSortedSkills.length} / {result.skill_matches.length}
+              </span>
             </div>
           </div>
 
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3>Детализация по навыкам</h3>
+              <h2 style={{ margin: 0 }}>Детальная разбивка</h2>
               <button
                 className="btn btn-primary"
                 onClick={evaluate}
                 disabled={loading}
-                style={{ fontSize: 14 }}
+                style={{
+                  fontSize: 13,
+                  background: 'linear-gradient(135deg, #238636 0%, #2ea043 100%)',
+                  color: '#fff',
+                  border: 'none',
+                }}
               >
                 🔄 Пересчитать
               </button>
             </div>
 
-            {result.skill_matches.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)' }}>Навыки не найдены</p>
+            {filteredAndSortedSkills.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)' }}>
+                {result.skill_matches.length === 0 
+                  ? 'Навыки не найдены' 
+                  : 'Нет навыков, соответствующих фильтрам'}
+              </p>
             ) : (
               <div style={{ overflowX: 'auto' }}>
-                <table>
+                <table className="tags-table">
                   <thead>
                     <tr>
                       <th>Дисциплина</th>
                       <th>Навык hh.ru</th>
-                      <th>Сходство</th>
-                      <th>Ср. ЗП</th>
-                      <th>Вакансий</th>
+                      <th 
+                        style={{ cursor: 'pointer', userSelect: 'none' }} 
+                        onClick={() => handleSort('similarity')}
+                        title="Нажмите для сортировки"
+                      >
+                        Сходство {getSortIcon('similarity')}
+                      </th>
+                      <th 
+                        style={{ cursor: 'pointer', userSelect: 'none' }} 
+                        onClick={() => handleSort('avg_salary')}
+                        title="Нажмите для сортировки"
+                      >
+                        Ср. ЗП {getSortIcon('avg_salary')}
+                      </th>
+                      <th 
+                        style={{ cursor: 'pointer', userSelect: 'none' }} 
+                        onClick={() => handleSort('vacancy_count')}
+                        title="Нажмите для сортировки"
+                      >
+                        Вакансий {getSortIcon('vacancy_count')}
+                      </th>
                       <th>Оценка</th>
                       <th>Исключить</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {result.skill_matches.map((sm, idx) => {
+                    {filteredAndSortedSkills.map((sm, idx) => {
                       const isExcluded = excludedSkills.has(`${sm.discipline}:${sm.skill_name}`)
+                      const isLowVacancy = sm.vacancy_count < 3
+                      const isBelowThreshold = sm.similarity < similarityThreshold
+                      const shouldStrikethrough = isExcluded || isBelowThreshold
+
                       return (
                         <tr
                           key={idx}
+                          className={isLowVacancy && !isExcluded ? 'filtered-tag' : undefined}
                           style={{
-                            textDecoration: isExcluded ? 'line-through' : 'none',
-                            backgroundColor: isExcluded ? 'rgba(239, 68, 68, 0.1)' : 'transparent'
+                            textDecoration: shouldStrikethrough ? 'line-through' : 'none',
+                            backgroundColor: isExcluded
+                              ? 'rgba(239, 68, 68, 0.1)'
+                              : isBelowThreshold
+                                ? 'rgba(156, 163, 175, 0.1)'
+                                : 'transparent',
+                            opacity: isBelowThreshold ? 0.6 : 1,
+                            transition: 'all 0.2s ease',
                           }}
                         >
-                          <td>{sm.discipline}</td>
+                          <td>
+                            <span className="tag-badge">
+                              {sm.discipline}
+                            </span>
+                            {isLowVacancy && <span className="warning-note"> (&lt; 3 вакансий)</span>}
+                          </td>
                           <td>{sm.skill_name}</td>
-                          <td>{(sm.similarity * 100).toFixed(1)}%</td>
-                          <td>{sm.avg_salary ? formatSalary(sm.avg_salary) : '—'}</td>
-                          <td>{sm.vacancy_count}</td>
+                          <td>
+                            <div className="tag-bar-bg">
+                              <div className="tag-bar" style={{ width: `${Math.min(sm.similarity * 100, 100)}%` }} />
+                            </div>
+                            <span style={{
+                              color: isBelowThreshold ? 'var(--text-muted)' : 'inherit',
+                              fontWeight: isBelowThreshold ? 'normal' : 500
+                            }}>
+                              {(sm.similarity * 100).toFixed(1)}%
+                              {isLowVacancy && <span className="warning-note"> (&lt; 3 вакансий)</span>}
+                            </span>
+                          </td>
+                          <td>
+                            {!isLowVacancy && sm.avg_salary ? formatSalary(sm.avg_salary) : (
+                              <>
+                                — <span className="warning-note">(&lt; 3 вакансий)</span>
+                              </>
+                            )}
+                          </td>
+                          <td>
+                            {sm.vacancy_count}
+                            {isLowVacancy && <span className="warning-note"> ⚠️ (&lt; 3 вакансий)</span>}
+                          </td>
                           <td>
                             {sm.grade !== null && sm.grade !== undefined ? (
-                              <span className={`badge ${sm.grade === 5 ? 'badge-green' : sm.grade === 4 ? 'badge-yellow' : 'badge-red'}`}>
-                                {sm.grade}
-                              </span>
+                              <>
+                                <span className={`grade-badge ${getGradeClass(sm.grade)}`}>{sm.grade}</span>
+                                <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+                                  {' '}×{sm.grade_coeff ?? 1}
+                                </span>
+                                {isLowVacancy && <span className="warning-note"> (&lt; 3 вакансий)</span>}
+                              </>
                             ) : '—'}
                           </td>
                           <td style={{ textAlign: 'center' }}>
@@ -407,6 +812,7 @@ function EvaluationTab() {
                               onChange={() => toggleExcluded(sm.discipline, sm.skill_name)}
                               style={{ cursor: 'pointer', width: 18, height: 18 }}
                             />
+                            {isLowVacancy && <div className="warning-note">&lt; 3 вакансий</div>}
                           </td>
                         </tr>
                       )

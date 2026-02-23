@@ -272,6 +272,9 @@ class AnonymizedStudentResult(BaseModel):
     confidence: float
     matched_disciplines: int
     total_disciplines: int
+    skill_matches: list[SkillMatchResponse] = Field(
+        default_factory=list, description="Детальная разбивка по навыкам"
+    )
 
 
 class AnonymizedStudentProfile(BaseModel):

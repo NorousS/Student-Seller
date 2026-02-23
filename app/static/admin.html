@@ -479,9 +479,15 @@
                         <tr>
                             <th>Дисциплина</th>
                             <th>Навык hh.ru</th>
-                            <th>Сходство</th>
-                            <th>Ср. ЗП</th>
-                            <th>Вакансий</th>
+                            <th style="cursor:pointer;user-select:none;" onclick="setEvalSort('similarity')">
+                                Сходство <span id="eval-sort-similarity">↓</span>
+                            </th>
+                            <th style="cursor:pointer;user-select:none;" onclick="setEvalSort('avg_salary')">
+                                Ср. ЗП <span id="eval-sort-avg_salary">↕</span>
+                            </th>
+                            <th style="cursor:pointer;user-select:none;" onclick="setEvalSort('vacancy_count')">
+                                Вакансий <span id="eval-sort-vacancy_count">↕</span>
+                            </th>
                             <th>Оценка</th>
                             <th>Исключить</th>
                         </tr>
@@ -637,9 +643,15 @@
                         <table class="tags-table" id="tags-full-table">
                             <thead>
                                 <tr>
-                                    <th>Навык</th>
-                                    <th>Кол-во</th>
-                                    <th>Доля</th>
+                                    <th style="cursor:pointer;user-select:none;" onclick="setTagsSort('name')">
+                                        Навык <span id="tags-sort-name">↕</span>
+                                    </th>
+                                    <th style="cursor:pointer;user-select:none;" onclick="setTagsSort('count')">
+                                        Кол-во <span id="tags-sort-count">↓</span>
+                                    </th>
+                                    <th style="cursor:pointer;user-select:none;" onclick="setTagsSort('pct')">
+                                        Доля <span id="tags-sort-pct">↕</span>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -709,6 +721,45 @@ function destroyChart(id) {
 // ============ EXCLUDED SKILLS ============
 let excludedSkills = new Set();
 let lastEvalData = null;
+let evalSortField = 'similarity';
+let evalSortDirection = 'desc';
+let tagsSortField = 'count';
+let tagsSortDirection = 'desc';
+let lastTagsData = null;
+
+function updateSortIcons(prefix, currentField, currentDirection, fields) {
+    fields.forEach(field => {
+        const icon = document.getElementById(`${prefix}-${field}`);
+        if (!icon) return;
+        if (field !== currentField) {
+            icon.textContent = '↕';
+        } else {
+            icon.textContent = currentDirection === 'asc' ? '↑' : '↓';
+        }
+    });
+}
+
+function setEvalSort(field) {
+    if (evalSortField === field) {
+        evalSortDirection = evalSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        evalSortField = field;
+        evalSortDirection = 'desc';
+    }
+    if (lastEvalData) renderEvaluation(lastEvalData);
+    else updateSortIcons('eval-sort', evalSortField, evalSortDirection, ['similarity', 'avg_salary', 'vacancy_count']);
+}
+
+function setTagsSort(field) {
+    if (tagsSortField === field) {
+        tagsSortDirection = tagsSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        tagsSortField = field;
+        tagsSortDirection = field === 'name' ? 'asc' : 'desc';
+    }
+    if (lastTagsData) renderTagsTable(lastTagsData.allTags, lastTagsData.totalCount);
+    else updateSortIcons('tags-sort', tagsSortField, tagsSortDirection, ['name', 'count', 'pct']);
+}
 
 function toggleExcluded(discipline, skillName) {
     const key = `${discipline}:${skillName}`;
@@ -1100,8 +1151,21 @@ function renderEvaluation(data) {
     });
 
     // Detail table
+    updateSortIcons('eval-sort', evalSortField, evalSortDirection, ['similarity', 'avg_salary', 'vacancy_count']);
+    const sortedMatches = [...matches].sort((a, b) => {
+        let cmp = 0;
+        if (evalSortField === 'similarity') {
+            cmp = (a.similarity || 0) - (b.similarity || 0);
+        } else if (evalSortField === 'avg_salary') {
+            cmp = (a.avg_salary || 0) - (b.avg_salary || 0);
+        } else if (evalSortField === 'vacancy_count') {
+            cmp = (a.vacancy_count || 0) - (b.vacancy_count || 0);
+        }
+        return evalSortDirection === 'asc' ? cmp : -cmp;
+    });
+
     const tbody = document.querySelector('#eval-details-table tbody');
-    tbody.innerHTML = matches.map(m => {
+    tbody.innerHTML = sortedMatches.map(m => {
         const isFiltered = m.vacancy_count < 3;
         const gc = m.grade === 5 ? 'g5' : m.grade === 4 ? 'g4' : 'g3';
         const exKey = `${m.discipline}:${m.skill_name}`;
@@ -1305,26 +1369,46 @@ async function loadTags() {
             }
         });
 
-        // Full table — show ALL tags, but mark count=1 as dimmed
         const totalCount = allTags.reduce((s, t) => s + t.count, 0);
-        const tbody = document.querySelector('#tags-full-table tbody');
-        tbody.innerHTML = allTags.map(t => {
-            const pct = totalCount > 0 ? ((t.count / totalCount) * 100).toFixed(1) : 0;
-            const dim = t.count <= 1 ? 'style="opacity:0.45;"' : '';
-            return `
-                <tr ${dim}>
-                    <td><span class="tag-badge">${t.name}</span></td>
-                    <td>${t.count}</td>
-                    <td>
-                        <div class="tag-bar-bg"><div class="tag-bar" style="width:${pct}%"></div></div>
-                        ${pct}%
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        lastTagsData = { allTags, totalCount };
+        renderTagsTable(allTags, totalCount);
     } catch (e) {
         alert('Ошибка: ' + e.message);
     }
+}
+
+function renderTagsTable(allTags, totalCount) {
+    updateSortIcons('tags-sort', tagsSortField, tagsSortDirection, ['name', 'count', 'pct']);
+
+    const sortedTags = [...allTags].sort((a, b) => {
+        let cmp = 0;
+        if (tagsSortField === 'name') {
+            cmp = a.name.localeCompare(b.name, 'ru');
+        } else if (tagsSortField === 'count') {
+            cmp = (a.count || 0) - (b.count || 0);
+        } else if (tagsSortField === 'pct') {
+            const pctA = totalCount > 0 ? (a.count / totalCount) * 100 : 0;
+            const pctB = totalCount > 0 ? (b.count / totalCount) * 100 : 0;
+            cmp = pctA - pctB;
+        }
+        return tagsSortDirection === 'asc' ? cmp : -cmp;
+    });
+
+    const tbody = document.querySelector('#tags-full-table tbody');
+    tbody.innerHTML = sortedTags.map(t => {
+        const pct = totalCount > 0 ? ((t.count / totalCount) * 100).toFixed(1) : 0;
+        const dim = t.count <= 1 ? 'style="opacity:0.45;"' : '';
+        return `
+            <tr ${dim}>
+                <td><span class="tag-badge">${t.name}</span></td>
+                <td>${t.count}</td>
+                <td>
+                    <div class="tag-bar-bg"><div class="tag-bar" style="width:${pct}%"></div></div>
+                    ${pct}%
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // ============ DISCIPLINE MANAGEMENT (Form) ============

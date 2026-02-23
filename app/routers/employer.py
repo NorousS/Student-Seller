@@ -30,6 +30,7 @@ from app.schemas import (
     EmployerProfileResponse,
     EmployerProfileUpdate,
     EmployerSearchRequest,
+    SkillMatchResponse,
 )
 from app.valuation import DisciplineWithGrade, evaluate_student
 
@@ -133,6 +134,20 @@ async def search_students(
         except Exception:
             continue
 
+        skill_matches = [
+            SkillMatchResponse(
+                discipline=m.discipline,
+                skill_name=m.skill_name,
+                similarity=m.similarity,
+                avg_salary=m.avg_salary,
+                vacancy_count=m.vacancy_count,
+                grade=m.grade,
+                grade_coeff=m.grade_coeff,
+                excluded=m.excluded,
+            )
+            for m in valuation.skill_matches
+        ]
+
         results.append(AnonymizedStudentResult(
             student_id=student.id,
             photo_url=student.photo_path,
@@ -141,6 +156,7 @@ async def search_students(
             confidence=valuation.confidence,
             matched_disciplines=valuation.matched_disciplines,
             total_disciplines=valuation.total_disciplines,
+            skill_matches=skill_matches,
         ))
 
     # Sort: confidence desc, then salary desc

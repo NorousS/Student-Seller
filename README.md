@@ -13,7 +13,11 @@
 ✅ **Система контактов** — отправка запросов на контакт от работодателей к студентам  
 ✅ **Real-time чат** — WebSocket-чат между студентом и работодателем после принятия запроса  
 ✅ **React-фронтенд** — современный SPA на React 18 + TypeScript + Vite с роутингом  
-✅ **Админ-панель** — standalone HTML панель по адресу `/admin` с JWT-аутентификацией
+✅ **Админ-панель** — standalone HTML панель по адресу `/admin` с JWT-аутентификацией  
+✅ **Расширенная аналитика оценки** — KPI-карточки, графики и детальная таблица навыков в интерфейсах student/admin  
+✅ **Порог сходства с вычеркиванием** — навыки ниже выбранного порога визуально исключаются из фокуса  
+✅ **Фильтрация и сортировка навыков** — в кабинетах student/employer по сходству, средней ЗП и количеству вакансий  
+✅ **Сортировка тегов в админке** — по названию навыка, числу вакансий и доле в выборке
 
 ---
 
@@ -95,7 +99,11 @@ npm run dev
 ## Тестирование
 
 ```powershell
-# Запуск всех тестов (64 теста)
+# Smoke: проверка запуска всех сервисов в Docker
+docker-compose up --build -d
+Invoke-RestMethod -Uri "http://localhost:8000/health"
+
+# Запуск всех backend-тестов
 uv run pytest tests\\ -v
 
 # Запуск конкретного файла тестов
@@ -105,12 +113,15 @@ uv run pytest tests\\test_auth.py -v
 uv run pytest tests\\ --cov=app --cov-report=html
 ```
 
+**Playwright smoke (UI):** быстрый прогон ключевых пользовательских сценариев (login + student/employer/admin панели, оценка, фильтры, сортировки).
+
 **Тестовые файлы:**
 - `tests\\test_auth.py` — аутентификация и JWT
 - `tests\\test_students.py` — CRUD студентов (admin)
 - `tests\\test_student_profile.py` — профиль студента
 - `tests\\test_employer.py` — функции работодателя
 - `tests\\test_chat.py` — WebSocket чат
+- `tests\\test_diagnostics_api.py` — диагностика similarity-anomalies
 
 ---
 
@@ -183,15 +194,27 @@ uv run pytest tests\\ --cov=app --cov-report=html
 | GET   | `/api/v1/vacancies/` | Список вакансий | Все |
 | GET   | `/api/v1/vacancies/tags` | Статистика тегов | Все |
 
-### Оценка (`/api/v1/evaluation/`)
+### Оценка (`/api/v1/students/`)
 
 | Метод | Эндпоинт | Описание |
 |-------|----------|----------|
-| POST  | `/api/v1/evaluation/evaluate` | Оценка рыночной стоимости |
-| GET   | `/api/v1/evaluation/skills` | Навыки студента в терминах hh.ru |
+| POST  | `/api/v1/students/{student_id}/evaluate` | Оценка рыночной стоимости студента |
+| GET   | `/api/v1/students/{student_id}/skills` | Навыки студента в терминах hh.ru |
+
+### Диагностика (`/api/v1/diagnostics/`)
+
+| Метод | Эндпоинт | Описание |
+|-------|----------|----------|
+| POST  | `/api/v1/diagnostics/similarity-anomalies` | Поиск аномально высокого similarity между разными терминами (admin) |
+
+### Админ-операции (`/api/v1/admin/`)
+
+| Метод | Эндпоинт | Описание |
+|-------|----------|----------|
+| POST  | `/api/v1/admin/reindex-skills` | Полная переиндексация навыков в Qdrant с автодиагностикой similarity |
 
 **Параметры `/evaluate`:**
-- `student_id` — ID студента
+- `student_id` — ID студента в path
 - `specialty` — специальность для фильтрации вакансий
 - `top_k` (1–20, по умолчанию 5) — навыков на дисциплину
 - `experience` — фильтр опыта: `noExperience`, `between1And3`, `between3And6`, `moreThan6`
@@ -280,7 +303,8 @@ C:\\projects\\test_antigravity\\
 │   ├── test_students.py
 │   ├── test_student_profile.py
 │   ├── test_employer.py
-│   └── test_chat.py
+│   ├── test_chat.py
+│   └── test_diagnostics_api.py
 │
 ├── Dockerfile                    # Multi-stage: Node + Python
 ├── docker-compose.yml            # app + postgres + qdrant + ollama
@@ -299,7 +323,8 @@ C:\\projects\\test_antigravity\\
 ### Admin
 - CRUD студентов (создание, редактирование, удаление)
 - Парсинг вакансий с hh.ru
-- Просмотр статистики тегов
+- Просмотр и сортировка статистики тегов
+- Диагностика аномалий similarity и переиндексация навыков
 - Управление всеми сущностями системы
 
 ### Student
@@ -308,7 +333,9 @@ C:\\projects\\test_antigravity\\
 - Просмотр запросов на контакт от работодателей
 - Принятие/отклонение запросов
 - Чат с работодателями (после принятия)
-- Оценка своей рыночной стоимости
+- Оценка своей рыночной стоимости (KPI, графики, таблица навыков)
+- Фильтрация/сортировка навыков по сходству, ЗП и количеству вакансий
+- Порог сходства с визуальным вычеркиванием строк
 
 ### Employer
 - Редактирование профиля (название компании, должность)
@@ -316,6 +343,7 @@ C:\\projects\\test_antigravity\\
 - Просмотр полного профиля студента по ID
 - Отправка запросов на контакт
 - Чат со студентами (после принятия)
+- Фильтрация/сортировка навыков студента по сходству, ЗП и количеству вакансий
 
 ---
 

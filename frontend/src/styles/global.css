@@ -122,6 +122,74 @@ input:focus, select:focus, textarea:focus {
 }
 .stat-card .value { font-size: 28px; font-weight: 700; color: var(--accent); }
 .stat-card .label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+.salary-value { color: var(--green); }
+.confidence-value { color: var(--accent); }
+.match-value { color: var(--accent2); }
+
+.chart-container {
+  position: relative;
+  height: 380px;
+}
+
+.tags-table { width: 100%; border-collapse: collapse; }
+.tags-table th, .tags-table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid #21262d;
+  font-size: 14px;
+}
+.tags-table th {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.tags-table tr:hover td { background: #1c2129; }
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(31, 111, 235, 0.15);
+  color: var(--accent);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.grade-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 6px;
+}
+.grade-badge.g5 { background: var(--green); }
+.grade-badge.g4 { background: var(--yellow); color: #161b22; }
+.grade-badge.g3 { background: var(--red); }
+
+.tag-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: #21262d;
+  border-radius: 3px;
+  margin-bottom: 6px;
+}
+.tag-bar {
+  height: 6px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.filtered-tag { opacity: 0.45; }
+.warning-note { color: var(--yellow); font-size: 12px; }
 
 .chat-messages {
   max-height: 400px;

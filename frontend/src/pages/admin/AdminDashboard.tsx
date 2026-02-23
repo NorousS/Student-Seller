@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import api from '../../api/client'
 import type { Student } from '../../api/types'
 
@@ -158,21 +158,76 @@ export default function AdminDashboard() {
 
 function TagsTab() {
   const [tags, setTags] = useState<any>(null)
+  const [sortField, setSortField] = useState<'name' | 'count' | 'percent'>('count')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+
   useEffect(() => { api.get('/tags').then(r => setTags(r.data)).catch(() => {}) }, [])
   if (!tags) return <div className="card"><div className="spinner" /></div>
+
+  const totalVacancies = tags.total_vacancies || 0
+  const sortedTags = useMemo(() => {
+    const list = [...(tags.tags || [])]
+    return list.sort((a: any, b: any) => {
+      let cmp = 0
+      if (sortField === 'name') cmp = String(a.name).localeCompare(String(b.name), 'ru')
+      if (sortField === 'count') cmp = Number(a.count || 0) - Number(b.count || 0)
+      if (sortField === 'percent') {
+        const pctA = totalVacancies > 0 ? (Number(a.count || 0) / totalVacancies) * 100 : 0
+        const pctB = totalVacancies > 0 ? (Number(b.count || 0) / totalVacancies) * 100 : 0
+        cmp = pctA - pctB
+      }
+      return sortDirection === 'asc' ? cmp : -cmp
+    })
+  }, [tags, sortField, sortDirection, totalVacancies])
+
+  const setSort = (field: 'name' | 'count' | 'percent') => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection(field === 'name' ? 'asc' : 'desc')
+    }
+  }
+
+  const sortIcon = (field: 'name' | 'count' | 'percent') => (
+    sortField !== field ? '↕️' : sortDirection === 'asc' ? '↑' : '↓'
+  )
+
   return (
     <div className="card">
       <h3 style={{ marginBottom: 16 }}>Навыки и теги</h3>
       <div className="grid-2" style={{ marginBottom: 16 }}>
-        <div className="card stat-card"><div className="value">{tags.total_vacancies || 0}</div><div className="label">Вакансий</div></div>
+        <div className="card stat-card"><div className="value">{totalVacancies}</div><div className="label">Вакансий</div></div>
         <div className="card stat-card"><div className="value">{tags.tags?.length || 0}</div><div className="label">Тегов</div></div>
       </div>
-      <table>
-        <thead><tr><th>Навык</th><th>Вакансий</th><th>%</th></tr></thead>
+      <table className="tags-table">
+        <thead>
+          <tr>
+            <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSort('name')}>
+              Навык {sortIcon('name')}
+            </th>
+            <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSort('count')}>
+              Вакансий {sortIcon('count')}
+            </th>
+            <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSort('percent')}>
+              % {sortIcon('percent')}
+            </th>
+          </tr>
+        </thead>
         <tbody>
-          {(tags.tags || []).slice(0, 30).map((t: any) => (
-            <tr key={t.name}><td>{t.name}</td><td>{t.count}</td><td>{tags.total_vacancies ? ((t.count / tags.total_vacancies) * 100).toFixed(1) : 0}%</td></tr>
-          ))}
+          {sortedTags.slice(0, 100).map((t: any) => {
+            const pct = totalVacancies ? (t.count / totalVacancies) * 100 : 0
+            return (
+              <tr key={t.name} className={t.count <= 1 ? 'filtered-tag' : undefined}>
+                <td><span className="tag-badge">{t.name}</span></td>
+                <td>{t.count}</td>
+                <td>
+                  <div className="tag-bar-bg"><div className="tag-bar" style={{ width: `${Math.min(100, pct)}%` }} /></div>
+                  {pct.toFixed(1)}%
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>
