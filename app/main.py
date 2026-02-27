@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 
 from app.database import create_tables
-from app.routers import vacancies, students, evaluation, auth, student_profile, employer, chat, diagnostics, admin, partnership, landing
+from app.routers import vacancies, students, evaluation, auth, student_profile, employer, chat, diagnostics, admin, partnership, landing, admin_disciplines
 from app.vector_store import vector_store
 from app.embeddings import embedding_service
 from app.schemas import HealthResponse
@@ -58,6 +58,7 @@ app.include_router(chat.router)
 app.include_router(diagnostics.router)
 app.include_router(admin.router)
 app.include_router(partnership.router)
+app.include_router(admin_disciplines.router)
 app.include_router(landing.router)
 
 

@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import require_role
 from app.database import get_db
 from app.models import (
+    Discipline,
     EmployerPartnershipAudit,
     EmployerProfile,
     PartnershipStatus,
@@ -19,6 +20,7 @@ from app.models import (
     UserRole,
 )
 from app.schemas import (
+    DisciplineCategoryUpdate,
     EmployerProfileResponse,
     PartnershipUpdateRequest,
 )
@@ -65,6 +67,33 @@ async def update_partnership_status(
     await db.commit()
     await db.refresh(profile)
     return profile
+
+
+@router.patch(
+    "/disciplines/{discipline_id}/category",
+    dependencies=[Depends(require_role(UserRole.admin))],
+)
+async def update_discipline_category(
+    discipline_id: int,
+    data: DisciplineCategoryUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Обновить категорию дисциплины (admin only)."""
+    result = await db.execute(
+        select(Discipline).where(Discipline.id == discipline_id)
+    )
+    discipline = result.scalar_one_or_none()
+    if not discipline:
+        raise HTTPException(status_code=404, detail="Discipline not found")
+
+    discipline.category = data.category
+    await db.commit()
+    await db.refresh(discipline)
+    return {
+        "id": discipline.id,
+        "name": discipline.name,
+        "category": discipline.category,
+    }
 
 
 @router.get(

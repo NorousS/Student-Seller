@@ -335,6 +335,11 @@ class PartnershipUpdateRequest(BaseModel):
     partnership_status: PartnershipStatusEnum
 
 
+class DisciplineCategoryUpdate(BaseModel):
+    """Обновление категории дисциплины."""
+    category: str = Field(..., max_length=100, description="Категория дисциплины")
+
+
 # --- Landing / Competence / Valuation ---
 
 

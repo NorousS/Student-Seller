@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import api from '../../api/client'
 import { useAuth } from '../../store/AuthContext'
-import type { AnonymizedStudent, AnonymizedStudentProfile, ContactRequest, ChatMessage, SkillMatch, PaywallOption } from '../../api/types'
+import type { AnonymizedStudent, AnonymizedStudentProfile, ContactRequest, ChatMessage, SkillMatch, PaywallOption, EmployerProfile } from '../../api/types'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -24,18 +24,35 @@ ChartJS.register(
 
 export default function EmployerPanel() {
   const [tab, setTab] = useState<'search' | 'requests' | 'chat' | 'profile'>('search')
+  const [partnershipStatus, setPartnershipStatus] = useState<EmployerProfile['partnership_status'] | null>(null)
+
+  useEffect(() => {
+    api.get('/employer/profile').then(r => setPartnershipStatus(r.data.partnership_status)).catch(() => {})
+  }, [])
+
+  const partnerBadge = partnershipStatus === 'partner'
+    ? <span className="badge badge-green">✅ Партнер вуза</span>
+    : partnershipStatus === 'blocked'
+    ? <span className="badge badge-red">🚫 Доступ ограничен</span>
+    : partnershipStatus === 'basic'
+    ? <span className="badge badge-yellow">⭐ Базовый доступ <a href="#" onClick={e => { e.preventDefault(); setTab('profile') }} style={{ fontSize: 11, marginLeft: 4 }}>Стать партнером</a></span>
+    : null
+
   return (
     <div className="container">
-      <div className="tabs">
-        <div className={`tab ${tab === 'search' ? 'active' : ''}`} onClick={() => setTab('search')} role="tab" tabIndex={0}>🔍 Поиск</div>
-        <div className={`tab ${tab === 'requests' ? 'active' : ''}`} onClick={() => setTab('requests')} role="tab" tabIndex={0}>📩 Запросы</div>
-        <div className={`tab ${tab === 'chat' ? 'active' : ''}`} onClick={() => setTab('chat')} role="tab" tabIndex={0}>💬 Чат</div>
-        <div className={`tab ${tab === 'profile' ? 'active' : ''}`} onClick={() => setTab('profile')} role="tab" tabIndex={0}>🏢 Профиль</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div className="tabs" style={{ flex: 1 }}>
+          <div className={`tab ${tab === 'search' ? 'active' : ''}`} onClick={() => setTab('search')} role="tab" tabIndex={0}>🔍 Поиск</div>
+          <div className={`tab ${tab === 'requests' ? 'active' : ''}`} onClick={() => setTab('requests')} role="tab" tabIndex={0}>📩 Запросы</div>
+          <div className={`tab ${tab === 'chat' ? 'active' : ''}`} onClick={() => setTab('chat')} role="tab" tabIndex={0}>💬 Чат</div>
+          <div className={`tab ${tab === 'profile' ? 'active' : ''}`} onClick={() => setTab('profile')} role="tab" tabIndex={0}>🏢 Профиль</div>
+        </div>
+        {partnerBadge}
       </div>
-      {tab === 'search' && <SearchTab />}
+      {tab === 'search' && <SearchTab partnershipStatus={partnershipStatus} />}
       {tab === 'requests' && <RequestsTab />}
       {tab === 'chat' && <EmployerChatTab />}
-      {tab === 'profile' && <ProfileTab />}
+      {tab === 'profile' && <ProfileTab partnershipStatus={partnershipStatus} />}
     </div>
   )
 }
@@ -43,7 +60,7 @@ export default function EmployerPanel() {
 type SortField = 'similarity' | 'avg_salary' | 'vacancy_count'
 type SortDirection = 'asc' | 'desc'
 
-function SearchTab() {
+function SearchTab({ partnershipStatus }: { partnershipStatus: EmployerProfile['partnership_status'] | null }) {
   const [jobTitle, setJobTitle] = useState('')
   const [results, setResults] = useState<AnonymizedStudent[]>([])
   const [searching, setSearching] = useState(false)
@@ -253,7 +270,15 @@ function SearchTab() {
         </div>
 
         {/* Student profile */}
-        <div className="card">
+        <div className="card" style={{ position: 'relative' }}>
+          {profile && partnershipStatus !== 'partner' && (
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, borderRadius: 'inherit' }}>
+              <div style={{ textAlign: 'center', padding: 24 }}>
+                <p style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>🔒 Полный профиль доступен партнерам</p>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Станьте партнером вуза для просмотра полных профилей студентов</p>
+              </div>
+            </div>
+          )}
           {profile ? (
             <>
               <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
@@ -645,7 +670,7 @@ function EmployerChatTab() {
   )
 }
 
-function ProfileTab() {
+function ProfileTab({ partnershipStatus }: { partnershipStatus: EmployerProfile['partnership_status'] | null }) {
   const [profile, setProfile] = useState<any>(null)
   const [company, setCompany] = useState('')
   const [position, setPosition] = useState('')
@@ -699,6 +724,22 @@ function ProfileTab() {
         <label>Сайт компании</label>
         <input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} placeholder="https://example.com" type="url" autoComplete="url" />
       </div>
+      <div className="form-group">
+        <label>Статус партнерства</label>
+        <div>
+          {partnershipStatus === 'partner'
+            ? <span className="badge badge-green">✅ Партнер вуза</span>
+            : partnershipStatus === 'blocked'
+            ? <span className="badge badge-red">🚫 Доступ ограничен</span>
+            : <span className="badge badge-yellow">⭐ Базовый доступ</span>}
+        </div>
+      </div>
+      {partnershipStatus === 'basic' && (
+        <div className="card" style={{ padding: 16, marginBottom: 16, background: 'rgba(88,166,255,0.05)', border: '1px solid var(--border)' }}>
+          <p style={{ fontWeight: 600, marginBottom: 4 }}>Хотите стать партнером вуза?</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Свяжитесь с нами для получения полного доступа.</p>
+        </div>
+      )}
       <button className="btn btn-primary" onClick={save}>Сохранить</button>
     </div>
   )

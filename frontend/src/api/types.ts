@@ -41,7 +41,7 @@ export interface EmployerProfile {
   contact_info?: string | null
   about_company?: string | null
   website_url?: string | null
-  partnership_status: 'partner' | 'non_partner'
+  partnership_status: 'partner' | 'basic' | 'blocked'
 }
 
 export interface SkillMatch {
