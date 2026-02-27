@@ -18,6 +18,11 @@ class UserRole(str, enum.Enum):
     employer = "employer"
 
 
+class PartnershipStatus(str, enum.Enum):
+    partner = "partner"
+    non_partner = "non_partner"
+
+
 class ContactRequestStatus(str, enum.Enum):
     """Статусы запросов на контакт."""
     pending = "pending"
@@ -52,6 +57,9 @@ class EmployerProfile(Base):
     contact_info: Mapped[str | None] = mapped_column(Text, default=None)
     about_company: Mapped[str | None] = mapped_column(Text, default=None)
     website_url: Mapped[str | None] = mapped_column(String(500), default=None)
+    partnership_status: Mapped[PartnershipStatus] = mapped_column(
+        Enum(PartnershipStatus), default=PartnershipStatus.non_partner
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user: Mapped["User"] = relationship(back_populates="employer_profile")
@@ -148,6 +156,7 @@ class Student(Base):
     group_name: Mapped[str | None] = mapped_column(String(50)) # Номер группы
     about_me: Mapped[str | None] = mapped_column(Text, nullable=True)
     photo_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    work_ready_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user: Mapped["User | None"] = relationship(back_populates="student")
@@ -175,6 +184,7 @@ class Discipline(Base):
     
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(200), unique=True, index=True)
+    category: Mapped[str | None] = mapped_column(String(200), nullable=True)
     
     student_disciplines: Mapped[list["StudentDiscipline"]] = relationship(
         back_populates="discipline",
@@ -218,3 +228,45 @@ class Message(Base):
 
     contact_request: Mapped["ContactRequest"] = relationship(back_populates="messages")
     sender: Mapped["User"] = relationship(foreign_keys=[sender_id])
+
+
+class EmployerPartnershipAudit(Base):
+    """Аудит изменений статуса партнерства."""
+    __tablename__ = "employer_partnership_audit"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    employer_id: Mapped[int] = mapped_column(ForeignKey("employer_profiles.id", ondelete="CASCADE"), index=True)
+    old_status: Mapped[str] = mapped_column(String(50))
+    new_status: Mapped[str] = mapped_column(String(50))
+    changed_by: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    changed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class FunnelEventType(str, enum.Enum):
+    view_card = "view_card"
+    click_invite = "click_invite"
+    paywall_open = "paywall_open"
+    invite_created = "invite_created"
+
+
+class FunnelEvent(Base):
+    """Событие воронки работодателя."""
+    __tablename__ = "funnel_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    event_type: Mapped[FunnelEventType] = mapped_column(Enum(FunnelEventType), index=True)
+    actor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    student_id: Mapped[int | None] = mapped_column(ForeignKey("students.id", ondelete="SET NULL"), nullable=True)
+    employer_id: Mapped[int | None] = mapped_column(ForeignKey("employer_profiles.id", ondelete="SET NULL"), nullable=True)
+    payload_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class CompetenceBlock(Base):
+    """Блок компетенций (группировка дисциплин)."""
+    __tablename__ = "competence_blocks"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(200), unique=True, index=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

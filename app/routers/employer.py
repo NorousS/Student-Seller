@@ -89,7 +89,7 @@ async def update_employer_profile(
 
 def _build_disciplines_response(student: Student) -> list[DisciplineResponse]:
     return [
-        DisciplineResponse(id=sd.discipline.id, name=sd.discipline.name, grade=sd.grade)
+        DisciplineResponse(id=sd.discipline.id, name=sd.discipline.name, grade=sd.grade, category=sd.discipline.category)
         for sd in student.student_disciplines
     ]
 
@@ -199,12 +199,21 @@ async def get_anonymized_student_profile(
     contact_status = contact_req.status.value if contact_req else None
     show_about_me = contact_req and contact_req.status == ContactRequestStatus.accepted
 
+    # Get employer profile for partnership status
+    emp_result = await db.execute(
+        select(EmployerProfile).where(EmployerProfile.user_id == current_user.id)
+    )
+    emp_profile = emp_result.scalar_one_or_none()
+    partnership = emp_profile.partnership_status.value if emp_profile else None
+
     return AnonymizedStudentProfile(
         student_id=student.id,
         photo_url=student.photo_path,
         disciplines=_build_disciplines_response(student),
         about_me=student.about_me if show_about_me else None,
         contact_status=contact_status,
+        partnership_status=partnership,
+        work_ready_date=student.work_ready_date.isoformat() if student.work_ready_date else None,
     )
 
 

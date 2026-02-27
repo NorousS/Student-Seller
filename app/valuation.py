@@ -100,6 +100,13 @@ class SkillMatch:
 
 
 @dataclass
+class FactorContribution:
+    """Вклад фактора в оценку."""
+    factor_name: str
+    contribution: float
+
+
+@dataclass
 class ValuationResult:
     """Результат оценки стоимости студента."""
     estimated_salary: float | None
@@ -107,6 +114,11 @@ class ValuationResult:
     skill_matches: list[SkillMatch]
     total_disciplines: int
     matched_disciplines: int
+    factor_breakdown: list[FactorContribution] = None
+
+    def __post_init__(self):
+        if self.factor_breakdown is None:
+            self.factor_breakdown = []
 
 
 async def get_matching_search_queries(
@@ -284,6 +296,31 @@ async def evaluate_student(
     if weight_sum > 0:
         estimated_salary = round(weighted_salary_sum / weight_sum, 2)
 
+    # Compute factor breakdown
+    factor_breakdown = []
+    if weight_sum > 0 and estimated_salary:
+        similarity_contrib = 0.0
+        vacancy_contrib = 0.0
+        grade_contrib = 0.0
+        for m in all_matches:
+            if not m.excluded and m.avg_salary and m.vacancy_count >= MIN_TAG_COUNT:
+                sim_part = m.similarity * m.avg_salary / weight_sum
+                vac_part = math.log1p(m.vacancy_count) * m.avg_salary * m.similarity / weight_sum
+                grade_part = m.grade_coeff * m.avg_salary * m.similarity / weight_sum
+
+                similarity_contrib += sim_part
+                vacancy_contrib += vac_part
+                grade_contrib += grade_part
+
+        raw_total = similarity_contrib + vacancy_contrib + grade_contrib
+        if raw_total > 0:
+            scale = estimated_salary / raw_total
+            factor_breakdown = [
+                FactorContribution("similarity", round(similarity_contrib * scale, 2)),
+                FactorContribution("vacancy_demand", round(vacancy_contrib * scale, 2)),
+                FactorContribution("academic_grade", round(grade_contrib * scale, 2)),
+            ]
+
     # Compute quality-based confidence from top-K best valid matches
     # This ensures confidence reflects quality of best matches, not diluted by weak ones
     if weight_sum > 0:
@@ -311,4 +348,5 @@ async def evaluate_student(
         skill_matches=all_matches,
         total_disciplines=len(disciplines),
         matched_disciplines=matched_disciplines,
+        factor_breakdown=factor_breakdown,
     )

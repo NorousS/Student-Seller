@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
     
+    # Valuation coefficients
+    recency_decay_days: int = 180
+    grade_weight: float = 1.0
+    similarity_weight: float = 1.0
+    vacancy_count_weight: float = 1.0
+
     # Uploads
     upload_dir: str = "app/static/uploads"
     max_photo_size_mb: int = 5

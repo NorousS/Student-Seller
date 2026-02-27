@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import api from '../../api/client'
 import { useAuth } from '../../store/AuthContext'
-import type { AnonymizedStudent, AnonymizedStudentProfile, ContactRequest, ChatMessage, SkillMatch } from '../../api/types'
+import type { AnonymizedStudent, AnonymizedStudentProfile, ContactRequest, ChatMessage, SkillMatch, PaywallOption } from '../../api/types'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -50,6 +50,8 @@ function SearchTab() {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [profile, setProfile] = useState<AnonymizedStudentProfile | null>(null)
   const [selectedStudent, setSelectedStudent] = useState<AnonymizedStudent | null>(null)
+  const [showPaywall, setShowPaywall] = useState(false)
+  const [paywallOptions, setPaywallOptions] = useState<PaywallOption[]>([])
 
   // Фильтры навыков
   const [similarityThreshold, setSimilarityThreshold] = useState(0)
@@ -92,8 +94,14 @@ function SearchTab() {
 
   const requestContact = async (studentId: number) => {
     try {
-      await api.post(`/employer/students/${studentId}/request-contact`)
-      openProfile(studentId)
+      const { data } = await api.post(`/landing/invite/${studentId}`)
+      if (data.status === 'paywall_required') {
+        const opts = await api.get('/landing/paywall-options')
+        setPaywallOptions(opts.data)
+        setShowPaywall(true)
+      } else {
+        openProfile(studentId)
+      }
     } catch (e: any) {
       alert(e.response?.data?.detail || 'Ошибка')
     }
@@ -273,6 +281,42 @@ function SearchTab() {
                 <div style={{ marginBottom: 16 }}>
                   <h4 style={{ marginBottom: 8 }}>О студенте</h4>
                   <p style={{ fontSize: 14 }}>{profile.about_me}</p>
+                </div>
+              )}
+
+              {profile.work_ready_date && (
+                <div style={{ marginBottom: 16 }}>
+                  <h4 style={{ marginBottom: 8 }}>📅 Готовность к работе</h4>
+                  <p style={{ fontSize: 14 }}>{new Date(profile.work_ready_date).toLocaleDateString('ru')}</p>
+                </div>
+              )}
+
+              {profile.competence_blocks && profile.competence_blocks.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <h4 style={{ marginBottom: 12 }}>🎯 Блоки компетенций</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                    {profile.competence_blocks.map((block, i) => (
+                      <div key={i} className="card" style={{ padding: 16 }}>
+                        <div style={{ fontWeight: 600, marginBottom: 8 }}>{block.block_name}</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                          Ср. балл: <span className={`badge ${block.avg_grade >= 4.5 ? 'badge-green' : block.avg_grade >= 3.5 ? 'badge-yellow' : 'badge-red'}`}>{block.avg_grade.toFixed(1)}</span>
+                        </div>
+                        {block.market_value && (
+                          <div style={{ fontSize: 13, color: 'var(--green)', marginTop: 4 }}>
+                            ₽{Math.round(block.market_value).toLocaleString()}
+                          </div>
+                        )}
+                        {block.top_tags.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 8 }}>
+                            {block.top_tags.map(tag => (
+                              <span key={tag} className="badge badge-blue" style={{ fontSize: 11 }}>{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>{block.achievements_summary}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -478,6 +522,28 @@ function SearchTab() {
             )}
           </div>
         </>
+      )}
+
+      {showPaywall && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="card" style={{ maxWidth: 500, width: '90%', padding: 32 }}>
+            <h3 style={{ marginBottom: 16 }}>Доступ ограничен</h3>
+            <p style={{ marginBottom: 24, color: 'var(--text-muted)' }}>
+              Для приглашения студентов необходимо оплатить доступ или стать партнером вуза.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {paywallOptions.map(opt => (
+                <button key={opt.id} className="btn btn-primary" style={{ width: '100%', textAlign: 'left', padding: '16px 20px' }}>
+                  <div style={{ fontWeight: 600 }}>{opt.title}</div>
+                  <div style={{ fontSize: 13, opacity: 0.8, marginTop: 4 }}>{opt.description}</div>
+                </button>
+              ))}
+            </div>
+            <button className="btn" style={{ width: '100%', marginTop: 16 }} onClick={() => setShowPaywall(false)}>
+              Закрыть
+            </button>
+          </div>
+        </div>
       )}
     </>
   )

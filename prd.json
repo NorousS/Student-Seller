@@ -1,0 +1,457 @@
+{
+  "project": "HH.ru Student Evaluator Expansion",
+  "branchName": "ralph/hh-student-evaluator-expansion",
+  "description": "Расширение платформы для работодателей: SEO-лендинг, партнерский доступ, карточки компетенций и усиленная рыночная оценка студентов.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Добавить статус партнерства работодателя в БД",
+      "description": "As an admin, I want employer partnership status persisted so that access logic can be enforced reliably.",
+      "acceptanceCriteria": [
+        "Добавить поле partnership_status в модель работодателя со значениями partner | non_partner и default non_partner",
+        "Обновить схемы API, чтобы поле partnership_status сериализовалось корректно",
+        "Создать и применить миграцию без ошибок",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Добавить аудит смены партнерского статуса",
+      "description": "As a compliance owner, I want partnership status changes audited so that access changes are traceable.",
+      "acceptanceCriteria": [
+        "Создать таблицу employer_partnership_audit с полями employer_id, old_status, new_status, changed_by, changed_at",
+        "Добавить индекс по employer_id и changed_at для быстрых выборок истории",
+        "Миграция выполняется без ошибок",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Добавить категорию компетенции в дисциплину",
+      "description": "As a backend developer, I want each discipline to store a competence category so that aggregation can run deterministically.",
+      "acceptanceCriteria": [
+        "Добавить в disciplines поле category nullable на первом этапе миграции",
+        "Обновить ORM-модель и Pydantic-схемы дисциплины",
+        "Миграция применяется и откатывается штатно",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Создать сущности блоков компетенций",
+      "description": "As a system architect, I want explicit competence block entities so that grouped metrics can be stored and reused.",
+      "acceptanceCriteria": [
+        "Создать таблицу competence_blocks с уникальным name и служебными полями",
+        "Создать связь discipline_to_block для хранения принадлежности дисциплины к блоку",
+        "Добавить ограничения целостности и индексы по внешним ключам",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Расширить сущность приглашения статусами",
+      "description": "As a student, I want invitation statuses tracked so that contact visibility depends on my decision.",
+      "acceptanceCriteria": [
+        "Добавить в invitations поля status (pending|accepted|rejected), responded_at, accepted_at",
+        "Default status для нового приглашения равен pending",
+        "Миграция обновляет существующие записи безопасным значением pending",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Добавить таблицу событий воронки работодателя",
+      "description": "As a product analyst, I want funnel events persisted so that conversion metrics can be measured.",
+      "acceptanceCriteria": [
+        "Создать таблицу funnel_events с полями event_type, actor_id, student_id, employer_id, payload_json, created_at",
+        "Ограничить event_type enum-набором: view_card, click_invite, paywall_open, invite_created",
+        "Добавить индекс по event_type и created_at",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Добавить дату готовности к работе в профиль студента",
+      "description": "As an employer, I want to see work readiness date so that I can plan hiring windows.",
+      "acceptanceCriteria": [
+        "Добавить поле work_ready_date в профиль студента",
+        "Обновить API-схемы создания и обновления профиля студента",
+        "Валидация отклоняет невалидный формат даты",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Вернуть статус партнерства в API работодателя",
+      "description": "As an employer frontend, I want partnership status in profile response so that UI can branch behavior.",
+      "acceptanceCriteria": [
+        "GET профиля работодателя возвращает поле partnership_status",
+        "Неподдерживаемые или пустые значения статуса не сериализуются как валидные",
+        "Покрыть endpoint тестом на partner и non_partner",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Реализовать админ-эндпоинт смены партнерства",
+      "description": "As an admin, I want to update employer partnership status so that business access can be managed.",
+      "acceptanceCriteria": [
+        "Создать PATCH endpoint только для admin роли",
+        "При смене статуса записывать событие в employer_partnership_audit",
+        "Endpoint возвращает обновленный профиль работодателя",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Сделать API первого экрана с топ-5 анонимными студентами",
+      "description": "As an unauthenticated visitor, I want top student cards from API so that I can evaluate platform value quickly.",
+      "acceptanceCriteria": [
+        "Создать endpoint, возвращающий ровно 5 студентов по внутреннему рейтингу",
+        "Ответ содержит только анонимизированные данные: фото-аватар, зарплата, краткий competency-summary",
+        "Контакты студента исключены из ответа endpoint",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Разветвить сценарий приглашения по типу работодателя",
+      "description": "As the platform, I want invite action to branch by partnership status so that monetization rules are enforced.",
+      "acceptanceCriteria": [
+        "Для partner работодатель создает приглашение со статусом pending",
+        "Для non_partner endpoint возвращает код paywall_required и не создает приглашение",
+        "Ответ содержит machine-readable reason для фронтенда",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Сделать endpoint вариантов paywall",
+      "description": "As a non-partner employer, I want explicit paywall options so that I can choose a monetization path.",
+      "acceptanceCriteria": [
+        "Создать endpoint, возвращающий минимум 2 опции: pay_access и university_contract",
+        "Каждая опция содержит id, title, description и action_url",
+        "Endpoint доступен только авторизованным работодателям",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Ограничить доступ к контактам до принятия приглашения",
+      "description": "As a student, I want my contacts hidden until I accept so that my personal data stays protected.",
+      "acceptanceCriteria": [
+        "Endpoint контактов возвращает доступ только если у запрашивающего работодателя есть accepted invitation",
+        "При pending/rejected invitation возвращается ошибка авторизации",
+        "После accepted контакты доступны только работодателю-инициатору приглашения",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Добавить сервис LLM-категоризации дисциплин",
+      "description": "As the system, I want Ollama-based categorization of disciplines so that competence grouping is automated.",
+      "acceptanceCriteria": [
+        "Сервис принимает название дисциплины и возвращает category из согласованного словаря",
+        "При повторном запросе для той же дисциплины используется cache, повторный вызов LLM не выполняется",
+        "При ошибке LLM применяется fallback category и пишется структурированный лог",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Добавить ручной override категории дисциплины админом",
+      "description": "As an admin, I want to override generated category so that incorrect LLM mapping can be fixed.",
+      "acceptanceCriteria": [
+        "Создать admin-only endpoint для обновления category выбранной дисциплины",
+        "Старое и новое значение category логируются в аудит",
+        "Обновление запускает пересчет агрегатов по затронутому студенту",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Реализовать aggregate_by_competence для метрик блока",
+      "description": "As an employer, I want block-level metrics so that I can assess candidate strengths quickly.",
+      "acceptanceCriteria": [
+        "Функция aggregate_by_competence группирует дисциплины по category/competence block",
+        "Для каждого блока рассчитываются g_avg, market_value_sum и strong_points_count",
+        "Результат сортируется по убыванию market_value_sum",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Внедрить политику видимости профиля по ролям",
+      "description": "As a product owner, I want role-based payload shaping so that each role sees allowed detail level only.",
+      "acceptanceCriteria": [
+        "Для employer базового доступа возвращаются только блоки компетенций и агрегированные метрики",
+        "Для employer partner добавляются достижения и расширенное описание компетенций",
+        "Полная академическая ведомость исключена из employer payload во всех режимах",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Расширить формулу рыночной оценки",
+      "description": "As the valuation engine, I want additional statistical factors so that salary estimation is more robust.",
+      "acceptanceCriteria": [
+        "Формула учитывает similarity, log1p(vacancy_count), grade_coefficient и recency_coefficient",
+        "Коэффициенты хранятся в конфиге и читаются без хардкода в коде",
+        "При отсутствии одного фактора расчет не падает, а использует валидированное значение по умолчанию",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Добавить объяснимость вклада факторов в ответ оценки",
+      "description": "As an employer, I want factor contribution breakdown so that I can trust the final valuation.",
+      "acceptanceCriteria": [
+        "Ответ endpoint оценки содержит массив factor_breakdown с именем фактора и его contribution",
+        "Сумма contribution равна итоговой оценке с допустимой погрешностью округления",
+        "Формат ответа обратно совместим для существующих полей",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Сделать экспорт объяснения оценки",
+      "description": "As a stakeholder, I want to export valuation explanation so that results can be reviewed externally.",
+      "acceptanceCriteria": [
+        "Создать endpoint экспорта объяснения по студенту в JSON-формате",
+        "Экспорт содержит итоговую стоимость, breakdown факторов и top skill tags",
+        "Endpoint защищен авторизацией и role checks",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Логировать события воронки работодателя",
+      "description": "As a product analyst, I want key funnel events tracked so that conversion can be measured end-to-end.",
+      "acceptanceCriteria": [
+        "Backend пишет события view_card, click_invite, paywall_open и invite_created в funnel_events",
+        "Каждое событие содержит timestamp и контекст actor/student/employer",
+        "Ошибка записи события не ломает основной пользовательский сценарий и явно логируется",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Собрать first-screen лендинга с 5 карточками и CTA",
+      "description": "As a visitor, I want a compelling first screen with top students so that I can act quickly.",
+      "acceptanceCriteria": [
+        "Лендинг запрашивает и отображает 5 карточек из API первого экрана",
+        "Каждая карточка показывает фото, зарплату, краткий competency-summary и кнопку invite",
+        "Клик по invite вызывает корректный backend flow в зависимости от типа работодателя",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "Добавить SEO-метаданные и индексацию лендинга",
+      "description": "As a marketing owner, I want SEO metadata configured so that landing visibility in search improves.",
+      "acceptanceCriteria": [
+        "Добавить title, description, canonical и OpenGraph для лендинга",
+        "Обновить robots.txt и sitemap с включением landing route",
+        "Проверка SSR/HTML показывает наличие метатегов в итоговой разметке",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-024",
+      "title": "Добавить paywall-модалку для non-partner работодателя",
+      "description": "As a non-partner employer, I want a paywall modal with clear options so that I can continue the flow.",
+      "acceptanceCriteria": [
+        "При ответе paywall_required фронтенд открывает модалку без создания приглашения",
+        "Модалка показывает CTA: Оплатить доступ и Заключить договор с вузом",
+        "Выбор CTA вызывает соответствующее действие и закрывает модалку",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-025",
+      "title": "Заменить таблицу дисциплин на grid карточек компетенций",
+      "description": "As an employer, I want competence cards instead of raw discipline table so that profile review is faster.",
+      "acceptanceCriteria": [
+        "Employer panel рендерит grid карточек на основе aggregate_by_competence payload",
+        "Карточка содержит block title, level, top-3 tags и achievements summary",
+        "Layout корректно работает минимум для desktop и tablet брейкпоинтов",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-026",
+      "title": "Сделать UI-варианты профиля для базового и партнерского работодателя",
+      "description": "As an employer, I want profile depth to match my access level so that premium value is clear and controlled.",
+      "acceptanceCriteria": [
+        "Для non_partner UI показывает только агрегированные блоки и стоимость",
+        "Для partner UI показывает расширенные достижения и детали компетенций",
+        "Контакты скрыты до accepted invitation в обоих вариантах интерфейса",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-027",
+      "title": "Показать дату готовности к работе в employer интерфейсе",
+      "description": "As an employer, I want to see student work-ready date so that I can schedule interviews and hiring.",
+      "acceptanceCriteria": [
+        "В карточке/профиле работодателя отображается поле work_ready_date",
+        "Если дата не задана, UI показывает явное состояние 'Дата не указана'",
+        "Формат отображения даты единообразен во всех местах интерфейса",
+        "Verify in browser using dev-browser skill",
+        "Typecheck passes"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-028",
+      "title": "Покрыть тестами матрицу видимости и гейтинг контактов",
+      "description": "As a maintainer, I want automated tests for role visibility and contacts gating so that regressions are prevented.",
+      "acceptanceCriteria": [
+        "Добавить API-тесты для student, admin, employer non_partner и employer partner",
+        "Тесты подтверждают, что контакты не раскрываются до accepted invitation",
+        "Тесты подтверждают отсутствие полной ведомости в employer payload",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-029",
+      "title": "Добавить интеграционный тест полного сценария приглашения",
+      "description": "As a QA engineer, I want end-to-end invite flow tested so that partner and non-partner paths are validated.",
+      "acceptanceCriteria": [
+        "Интеграционный тест покрывает сценарий partner -> invite_created -> student_accepts -> contacts_open",
+        "Интеграционный тест покрывает сценарий non_partner -> paywall_required без создания приглашения",
+        "Тесты используют существующие фикстуры ролей и не ломают изоляцию тестовой БД",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-030",
+      "title": "Добавить проверку SLA для endpoint оценки",
+      "description": "As a product owner, I want valuation endpoint SLA checked so that performance targets stay measurable.",
+      "acceptanceCriteria": [
+        "Добавить performance-тест/скрипт, измеряющий latency для batch запросов оценки",
+        "Отчет фиксирует p95 latency и долю успешных ответов",
+        "Порог SLA для теста задается через конфиг окружения",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
