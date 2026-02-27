@@ -46,6 +46,9 @@
 │  │  ┌──────────────┐ ┌──────────────┐ ┌────────────────────┐ │   │
 │  │  │student_profile│ │  evaluation  │ │       chat         │ │   │
 │  │  └──────────────┘ └──────────────┘ └────────────────────┘ │   │
+│  │  ┌────────────┐ ┌──────────────┐ ┌─────────────────────┐ │   │
+│  │  │partnership │ │   landing    │ │ admin_disciplines   │ │   │
+│  │  └────────────┘ └──────────────┘ └─────────────────────┘ │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                                                                     │
 │  ┌─────────────────────────────────────────────────────────────┐   │
@@ -58,6 +61,8 @@
 │  │  • auth.py — JWT токены, проверка ролей                    │   │
 │  │  • parser.py — парсинг hh.ru                               │   │
 │  │  • valuation.py — алгоритм оценки стоимости                │   │
+│  │  • categorization.py — LLM-категоризация дисциплин        │   │
+│  │  • competence.py — агрегация блоков компетенций            │   │
 │  │  • embeddings.py — Ollama клиент                           │   │
 │  │  • vector_store.py — Qdrant клиент                         │   │
 │  └─────────────────────────────────────────────────────────────┘   │
@@ -112,6 +117,9 @@
 | `diagnostics.py` | `/api/v1/diagnostics/` | Диагностика аномалий similarity эмбеддингов | Admin только |
 | `admin.py` | `/api/v1/admin/` | Админ-операции векторного индекса (reindex + диагностика) | Admin только |
 | `chat.py` | `/api/v1/chat/` | История сообщений | Student/Employer |
+| `partnership.py` | `/api/v1/admin/partnership/` | Управление статусом партнёрства работодателей | Admin только |
+| `landing.py` | `/api/v1/landing/` | Публичный лендинг, топ-студенты | Публичный |
+| `admin_disciplines.py` | `/api/v1/admin/disciplines/` | Управление дисциплинами и категоризация | Admin только |
 
 #### WebSocket Handler
 - **Эндпоинт**: `/ws/chat/{request_id}?token=<jwt>`
@@ -200,6 +208,23 @@ contact_requests         messages
 - `vacancies.hh_id` (unique), `vacancies.experience` (index), `vacancies.search_query` (index)
 - `tags.name` (unique index)
 - `students.full_name` (index)
+
+**Новые модели (расширение)**:
+
+| Модель | Назначение | Ключевые поля |
+|--------|-----------|---------------|
+| `EmployerPartnershipAudit` | Журнал изменений статуса партнёрства | employer_id, old_status, new_status, changed_by, reason, timestamp |
+| `FunnelEvent` | События воронки аналитики | event_type, employer_id, student_id, metadata, timestamp |
+| `CompetenceBlock` | Блок компетенций | name, discipline_ids, average_similarity |
+
+**Новые Enum**:
+- `PartnershipStatus` — `basic`, `partner`, `blocked`
+- `FunnelEventType` — `view_profile`, `send_invite`, `accept_invite`, `reject_invite`, `view_contacts`, `paywall_shown`
+
+**Новые поля в существующих моделях**:
+- `EmployerProfile.partnership_status` — статус партнёрства (default: `basic`)
+- `Student.work_ready_date` — дата готовности к работе
+- `Discipline.category` — категория компетенции (для группировки)
 
 #### Qdrant (Векторная БД)
 
@@ -456,6 +481,34 @@ FastAPI → Broadcast всем активным соединениям в чат
     ↓
 Frontend (оба участника) → Отображение сообщения в чате
 ```
+
+### 10. Система партнёрства работодателей
+
+Работодатели имеют три уровня доступа:
+- **basic** — стандартный доступ, invite через paywall
+- **partner** — прямой invite без paywall, полный доступ к контактам
+- **blocked** — доступ заблокирован
+
+Изменение статуса выполняется администратором через PATCH `/api/v1/admin/partnership/{id}/status`. Каждое изменение записывается в `EmployerPartnershipAudit` с указанием причины.
+
+### 11. Лендинг и Invite-flow
+
+1. Публичный лендинг показывает топ-5 студентов (анонимизировано)
+2. Работодатель нажимает "Пригласить" → проверяется partnership_status:
+   - partner → прямое приглашение (ContactRequest создаётся сразу)
+   - basic → показывается paywall с вариантами доступа
+   - blocked → 403 Forbidden
+3. После принятия приглашения студентом работодатель получает контакты
+4. Все действия логируются как FunnelEvent
+
+### 12. LLM-категоризация дисциплин
+
+Сервис `app/categorization.py` использует эмбеддинги Ollama (nomic-embed-text, 768-dim) для автоматического распределения дисциплин по категориям компетенций:
+- Генерирует эмбеддинг названия дисциплины
+- Сравнивает cosine similarity с эталонными категориями
+- Присваивает наиболее подходящую категорию (programming, databases, math, management, etc.)
+
+Результат сохраняется в поле `Discipline.category` и используется для группировки в UI (блоки компетенций).
 
 ---
 

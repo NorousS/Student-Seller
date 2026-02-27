@@ -18,6 +18,14 @@
 ✅ **Порог сходства с вычеркиванием** — навыки ниже выбранного порога визуально исключаются из фокуса  
 ✅ **Фильтрация и сортировка навыков** — в кабинетах student/employer по сходству, средней ЗП и количеству вакансий  
 ✅ **Сортировка тегов в админке** — по названию навыка, числу вакансий и доле в выборке
+✅ **Система партнёрства** — три уровня доступа для работодателей: basic, partner, blocked (с аудит-логом)  
+✅ **Лендинг-страница** — публичная витрина топ-5 студентов с invite-flow и paywall  
+✅ **Paywall-система** — монетизация: бесплатный/премиум доступ к контактам студентов  
+✅ **LLM-категоризация дисциплин** — автоматическое распределение дисциплин по компетенциям (Ollama embeddings)  
+✅ **Блоки компетенций** — визуальная группировка навыков по категориям  
+✅ **Расширенная оценка** — факторная декомпозиция зарплаты (similarity, vacancy_demand, academic_grade)  
+✅ **Воронка аналитики** — логирование событий (view_profile, send_invite, accept_invite и др.)  
+✅ **E2E-тестирование** — 17 Playwright-сценариев для UI + 143 backend-теста
 
 ---
 
@@ -115,6 +123,12 @@ uv run pytest tests\\ --cov=app --cov-report=html
 
 **Playwright smoke (UI):** быстрый прогон ключевых пользовательских сценариев (login + student/employer/admin панели, оценка, фильтры, сортировки).
 
+```powershell
+# Запуск Playwright E2E тестов
+cd frontend
+npx playwright test
+```
+
 **Тестовые файлы:**
 - `tests\\test_auth.py` — аутентификация и JWT
 - `tests\\test_students.py` — CRUD студентов (admin)
@@ -122,6 +136,11 @@ uv run pytest tests\\ --cov=app --cov-report=html
 - `tests\\test_employer.py` — функции работодателя
 - `tests\\test_chat.py` — WebSocket чат
 - `tests\\test_diagnostics_api.py` — диагностика similarity-anomalies
+- `tests\\test_partnership.py` — управление партнёрством
+- `tests\\test_landing.py` — лендинг и invite-flow
+- `tests\\test_categorization.py` — LLM-категоризация
+- `tests\\test_visibility.py` — ролевая видимость профилей
+- `tests\\test_sla.py` — SLA производительности
 
 ---
 
@@ -220,6 +239,36 @@ uv run pytest tests\\ --cov=app --cov-report=html
 - `experience` — фильтр опыта: `noExperience`, `between1And3`, `between3And6`, `moreThan6`
 - `excluded_skills` — навыки для исключения
 
+### Партнёрство (Admin) (`/api/v1/admin/partnership/`)
+
+| Метод | Эндпоинт | Описание |
+|-------|----------|----------|
+| PATCH | `/api/v1/admin/partnership/{employer_id}/status` | Изменить статус партнёрства |
+| GET   | `/api/v1/admin/partnership/{employer_id}/audit` | Журнал изменений статуса |
+| PATCH | `/api/v1/admin/partnership/disciplines/{id}/category` | Изменить категорию дисциплины |
+
+### Лендинг (`/api/v1/landing/`)
+
+| Метод | Эндпоинт | Описание |
+|-------|----------|----------|
+| GET   | `/api/v1/landing/top-students` | Топ-5 студентов (публичный) |
+| POST  | `/api/v1/landing/invite/{student_id}` | Отправить приглашение студенту |
+| GET   | `/api/v1/landing/paywall-options` | Варианты доступа |
+| GET   | `/api/v1/landing/contacts/{student_id}` | Контакты студента (после принятия) |
+
+### Расширенная оценка (`/api/v1/evaluation/`)
+
+| Метод | Эндпоинт | Описание |
+|-------|----------|----------|
+| POST  | `/api/v1/evaluation/{student_id}/evaluate-enhanced` | Оценка с факторной декомпозицией |
+| GET   | `/api/v1/evaluation/{student_id}/export` | Экспорт оценки (JSON) |
+
+### Категоризация дисциплин (`/api/v1/admin/disciplines/`)
+
+| Метод | Эндпоинт | Описание |
+|-------|----------|----------|
+| POST  | `/api/v1/admin/disciplines/categorize` | LLM-категоризация всех дисциплин (admin) |
+
 ### Чат (`/api/v1/chat/`, `/ws/chat/{request_id}`)
 
 | Тип | Эндпоинт | Описание |
@@ -274,6 +323,8 @@ C:\\projects\\test_antigravity\\
 │   ├── vector_store.py           # Qdrant клиент
 │   ├── embeddings.py             # Ollama эмбеддинги
 │   ├── valuation.py              # Алгоритм оценки
+│   ├── categorization.py         # LLM-категоризация дисциплин
+│   ├── competence.py             # Агрегация блоков компетенций
 │   ├── routers\\                 # API роутеры
 │   │   ├── auth.py
 │   │   ├── students.py           # Admin CRUD
@@ -281,13 +332,16 @@ C:\\projects\\test_antigravity\\
 │   │   ├── employer.py           # Employer functions
 │   │   ├── vacancies.py
 │   │   ├── evaluation.py
+│   │   ├── partnership.py        # Управление партнёрством
+│   │   ├── landing.py            # Лендинг и invite-flow
+│   │   ├── admin_disciplines.py  # Категоризация дисциплин
 │   │   └── chat.py
 │   └── static\\                  # Статика
 │       └── admin.html            # Legacy admin panel
 │
 ├── frontend\\                     # Frontend (React + TypeScript)
 │   ├── src\\
-│   │   ├── pages\\               # Страницы (Login, Admin, Student, Employer)
+│   │   ├── pages\\               # Страницы (Login, Admin, Student, Employer, Landing)
 │   │   ├── components\\          # React-компоненты
 │   │   ├── store\\               # Zustand stores
 │   │   ├── hooks\\               # Custom hooks
@@ -295,7 +349,10 @@ C:\\projects\\test_antigravity\\
 │   │   └── App.tsx               # Главный компонент
 │   ├── public\\                  # Публичные файлы
 │   ├── package.json
-│   └── vite.config.ts
+│   ├── vite.config.ts
+│   ├── playwright.config.ts
+│   └── e2e/                      # Playwright E2E тесты
+│       └── app.spec.ts
 │
 ├── tests\\                        # Тесты (pytest)
 │   ├── conftest.py               # Fixtures
@@ -304,7 +361,12 @@ C:\\projects\\test_antigravity\\
 │   ├── test_student_profile.py
 │   ├── test_employer.py
 │   ├── test_chat.py
-│   └── test_diagnostics_api.py
+│   ├── test_diagnostics_api.py
+│   ├── test_partnership.py
+│   ├── test_landing.py
+│   ├── test_categorization.py
+│   ├── test_visibility.py
+│   └── test_sla.py
 │
 ├── Dockerfile                    # Multi-stage: Node + Python
 ├── docker-compose.yml            # app + postgres + qdrant + ollama
@@ -325,6 +387,8 @@ C:\\projects\\test_antigravity\\
 - Парсинг вакансий с hh.ru
 - Просмотр и сортировка статистики тегов
 - Диагностика аномалий similarity и переиндексация навыков
+- Управление статусами партнёрства работодателей
+- LLM-категоризация дисциплин по компетенциям
 - Управление всеми сущностями системы
 
 ### Student
@@ -343,6 +407,8 @@ C:\\projects\\test_antigravity\\
 - Просмотр полного профиля студента по ID
 - Отправка запросов на контакт
 - Чат со студентами (после принятия)
+- Статус партнёрства (basic/partner/blocked) влияет на доступ
+- Приглашение студентов через лендинг (invite-flow)
 - Фильтрация/сортировка навыков студента по сходству, ЗП и количеству вакансий
 
 ---

@@ -150,6 +150,96 @@ confidence = average(top-3(similarity × grade_coeff)) = (0.95 + 0.93 + 0.82) / 
 | `excluded_skills`      | `[]` (параметр запроса) | Навыки для исключения из расчёта |
 | `embedding_model`      | `nomic-embed-text`    | Модель для генерации эмбеддингов |
 | `embedding_dimension`  | 768                   | Размерность вектора |
+| `grade_3_coeff` | 0.75 | Коэффициент для оценки 3 |
+| `grade_4_coeff` | 0.85 | Коэффициент для оценки 4 |
+| `grade_5_coeff` | 1.0  | Коэффициент для оценки 5 |
+
+---
+
+## Расширенная оценка: факторная декомпозиция
+
+### Новый эндпоинт
+
+`POST /api/v1/evaluation/{student_id}/evaluate-enhanced`
+
+В дополнение к стандартной оценке (`estimated_salary`, `confidence`), расширенная оценка возвращает **факторную декомпозицию** — процентный вклад каждого фактора в итоговую стоимость.
+
+### Три фактора
+
+Каждый навык в оценке получает вес по формуле:
+
+```
+weight = similarity × log(1 + vacancy_count) × grade_coeff
+```
+
+Расширенная оценка разбивает этот вес на **три составляющие** и вычисляет их процентный вклад:
+
+| Фактор | Формула | Описание |
+|--------|---------|----------|
+| `similarity_contribution` | `similarity / (similarity + log1p + grade)` | Насколько точно дисциплина соответствует навыку |
+| `vacancy_demand_contribution` | `log1p(vacancy_count) / (similarity + log1p + grade)` | Насколько востребован навык на рынке |
+| `academic_grade_contribution` | `grade_coeff / (similarity + log1p + grade)` | Вклад академической оценки студента |
+
+### Модель ответа
+
+```json
+{
+  "estimated_salary": 165800,
+  "confidence": 0.90,
+  "factor_breakdown": {
+    "similarity_pct": 42.3,
+    "vacancy_demand_pct": 38.1,
+    "academic_grade_pct": 19.6
+  },
+  "matches": [...]
+}
+```
+
+### Интерпретация
+
+- **Высокий similarity_pct** — оценка определяется прежде всего точностью совпадения дисциплин с рыночными навыками
+- **Высокий vacancy_demand_pct** — доминирует востребованность навыков (много вакансий с высокими зарплатами)
+- **Высокий academic_grade_pct** — академические оценки существенно влияют на результат
+
+### Экспорт результатов
+
+`GET /api/v1/evaluation/{student_id}/export` — возвращает полный JSON с оценкой, декомпозицией и метаданными.
+
+---
+
+## Компетенции и категоризация
+
+### Категории дисциплин
+
+Каждая дисциплина может иметь категорию компетенции (поле `Discipline.category`):
+- `programming` — программирование
+- `databases` — базы данных
+- `math` — математика
+- `management` — менеджмент
+- `networks` — сети
+- `security` — безопасность
+- `ai_ml` — искусственный интеллект
+- и другие
+
+### Автоматическая категоризация
+
+Сервис `app/categorization.py` использует эмбеддинги Ollama для автоматического определения категории:
+1. Генерирует вектор названия дисциплины (nomic-embed-text)
+2. Сравнивает с эталонными векторами категорий (cosine similarity)
+3. Присваивает категорию с наибольшим сходством
+
+### Блоки компетенций
+
+Сервис `app/competence.py` группирует дисциплины по категориям для визуализации:
+- Агрегация `aggregate_by_competence(disciplines)` → список `CompetenceBlock`
+- Каждый блок: название категории, список дисциплин, средний similarity
+
+### Влияние на оценку
+
+Категоризация не влияет на числовую оценку напрямую — она используется для:
+- Визуальной группировки навыков в UI
+- Административного анализа программы обучения
+- Ручного переопределения через `PATCH /api/v1/admin/partnership/disciplines/{id}/category`
 
 ---
 
@@ -159,3 +249,6 @@ confidence = average(top-3(similarity × grade_coeff)) = (0.95 + 0.93 + 0.82) / 
 - `app/vector_store.py` — семантический поиск в Qdrant (`search_similar_skills`)
 - `app/embeddings.py` — генерация эмбеддингов через Ollama
 - `app/routers/evaluation.py` — API-эндпоинты `/{student_id}/evaluate` и `/{student_id}/skills`
+- `app/categorization.py` — LLM-категоризация дисциплин через Ollama
+- `app/competence.py` — агрегация блоков компетенций
+- `app/routers/admin_disciplines.py` — API категоризации (admin)
