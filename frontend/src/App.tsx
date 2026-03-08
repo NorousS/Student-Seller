@@ -36,7 +36,7 @@ function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?
 function HomeRedirect() {
   const { user, loading } = useAuth()
   if (loading) return <div className="container"><div className="spinner" /></div>
-  if (!user) return <Navigate to="/landing" replace />
+  if (!user) return <LandingPage />
   if (user.role === 'admin') {
     window.location.href = '/admin'
     return <div className="container"><div className="spinner" /></div>
@@ -51,7 +51,7 @@ export default function App() {
     <>
       <Header />
       <Routes>
-        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/landing" element={<Navigate to="/" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/" element={<HomeRedirect />} />

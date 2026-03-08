@@ -9,52 +9,90 @@ The primary language of the codebase (comments, docs, UI text, API messages) is 
 ## Build & Run
 
 ```powershell
-# Install dependencies
-uv sync
-
-# Run all services (app + PostgreSQL + Qdrant + Ollama)
+# Run all services via Docker (preferred)
 docker-compose up --build -d
 
-# Run app locally (requires PostgreSQL on localhost)
-$env:DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/hh_parser"
+# Or run locally — requires PostgreSQL, Qdrant, Ollama on localhost
+uv sync
 uv run uvicorn app.main:app --reload
+
+# Frontend dev server (proxies API to :8000)
+cd frontend && npm install && npm run dev
 ```
+
+Production builds the frontend into `app/static/dist/` and FastAPI serves the SPA via a catch-all route. No separate frontend container.
 
 ## Testing
 
-Tests require a running PostgreSQL instance on `localhost:5432` (credentials: `postgres:postgres`). The test DB `hh_parser_test` is auto-created by fixtures.
+Tests require PostgreSQL on `localhost:5432` (credentials: `postgres:postgres`). The test DB `hh_parser_test` is auto-created by fixtures.
 
 ```powershell
-# Run all tests
+# All backend tests
 uv run pytest tests/ -v
 
-# Run a single test
+# Single test
 uv run pytest tests/test_students.py::test_create_student_simple -v
+
+# Frontend E2E (requires app running on :8000)
+cd frontend && npx playwright test
+
+# Lint (uses default ruff config)
+uv run ruff check app/
 ```
 
-pytest is configured with `asyncio_mode = auto` — no need for `@pytest.mark.asyncio` on test functions, though the existing tests do use it.
+`asyncio_mode = auto` in pytest.ini — no need for `@pytest.mark.asyncio` on test functions.
 
 ## Architecture
 
-**Three-database architecture:**
-- **PostgreSQL** — vacancies, tags, students, disciplines, users, chat messages (SQLAlchemy async ORM)
+### Three-database system
+- **PostgreSQL** — all relational data: users, students, vacancies, tags, chat messages, employer profiles (SQLAlchemy async ORM)
 - **Qdrant** — vector embeddings of hh.ru skills for semantic search (cosine distance, 768-dim)
 - **Ollama** — generates embeddings via `nomic-embed-text` model (multilingual, supports Russian)
 
-**Authentication:** JWT-based (passlib + PyJWT). Three roles: `admin`, `student`, `employer`. Protected via `get_current_user` and `require_role()` FastAPI dependencies in `app/auth.py`.
+### Valuation flow
+Student disciplines → Ollama embeddings → Qdrant similarity search → match to hh.ru tags → weighted salary estimate from PostgreSQL. Formula: `similarity × log1p(vacancy_count) × grade_coefficient`.
 
-**Valuation flow:** Student disciplines → Ollama embeddings → Qdrant similarity search → match to hh.ru tags → weighted salary estimate from PostgreSQL. Weighting formula: `similarity × log1p(vacancy_count) × grade_coefficient`.
+### Authentication
+JWT-based (passlib + PyJWT), HS256. Three roles: `admin`, `student`, `employer`. Access tokens expire in 30 min, refresh tokens in 7 days. Dependencies `get_current_user` and `require_role()` in `app/auth.py`.
 
-**Key services are module-level singletons:** `vector_store`, `embedding_service`, `hh_parser`, `settings` — instantiated at import time, not via DI.
+### SPA serving
+Vite builds frontend to `app/static/dist/`. FastAPI mounts `/assets` for JS/CSS, `/static/uploads` for photos, and a catch-all `/{path}` returns `index.html`. The admin panel at `/admin` is a separate static HTML file, not part of the React SPA.
 
-## Code Conventions
+### Key singletons
+`vector_store`, `embedding_service`, `hh_parser`, `settings` — instantiated at module import time, not via DI. Initialized in the FastAPI lifespan handler.
 
-- **Package manager:** `uv` (not pip). Use `uv sync`, `uv run`.
-- **Async everywhere:** All DB access uses SQLAlchemy async (`AsyncSession`). All HTTP calls use `httpx.AsyncClient`.
-- **Models use SQLAlchemy 2.0 mapped columns:** `Mapped[type]` with `mapped_column()`, not legacy `Column()`.
-- **Schemas use Pydantic v2:** `model_config` or `class Config` with `from_attributes = True`.
-- **Configuration via `pydantic-settings`:** All settings in `app/config.py` as a single `Settings` class, loaded from env vars / `.env`.
-- **Router structure:** All API routes under `/api/v1/`, split into `routers/auth.py`, `routers/vacancies.py`, `routers/students.py`, `routers/evaluation.py`.
-- **Auth pattern:** Admin-only endpoints use `dependencies=[Depends(require_role(UserRole.admin))]` on the router. Per-endpoint auth uses `Depends(require_role(...))` as a parameter.
-- **DB sessions via FastAPI `Depends(get_db)`:** Session auto-commits on success, auto-rollbacks on exception.
-- **Tests override `get_db`** with a savepoint-based session for isolation; tables are created/dropped per test function. Auth helper fixtures (`admin_headers`, `student_headers`, `employer_headers`) are in `conftest.py`.
+## Backend Conventions
+
+- **Package manager:** `uv` (not pip). Always use `uv sync`, `uv run`.
+- **Async everywhere:** All DB access uses `AsyncSession`. All HTTP calls use `httpx.AsyncClient`.
+- **SQLAlchemy 2.0 style:** `Mapped[type]` with `mapped_column()`, not legacy `Column()`.
+- **Pydantic v2 schemas:** Use `from_attributes = True` in model config for ORM mode.
+- **Settings:** Single `Settings(BaseSettings)` class in `app/config.py`, loaded from env vars / `.env`.
+- **Router prefix:** All API routes under `/api/v1/`. WebSocket chat at `/ws/chat/{id}`.
+- **Auth on routers:** Admin-only routers use `dependencies=[Depends(require_role(UserRole.admin))]`. Per-endpoint auth uses `Depends(require_role(...))` as a parameter.
+- **DB sessions:** `Depends(get_db)` yields an auto-committing session. Tests override `get_db` with a savepoint-based session that rolls back after each test.
+- **Schema distinction:** `StudentResponse` has basic fields; `StudentProfileResponse` adds `about_me`, `photo_url`, `work_ready_date`. Use the correct one based on endpoint context.
+- **Flush, don't commit in middleware:** After adding related rows (e.g., `StudentDiscipline`), use `db.flush()` + `db.expire_all()` before querying — not `db.commit()`.
+- **Auth endpoints:** Register returns HTTP 201, login returns 200 with `access_token` + `refresh_token`.
+
+## Frontend Conventions
+
+- **Stack:** React 19 + TypeScript + Vite. No Tailwind — uses custom CSS with CSS variables (dark theme).
+- **State:** React Context (`AuthContext`) for auth; no Redux/Zustand. JWT stored in `localStorage`.
+- **API client:** Axios instance in `frontend/src/api/client.ts` with `baseURL: '/api/v1'`. Interceptors auto-attach JWT and refresh on 401.
+- **Types:** TypeScript interfaces in `frontend/src/api/types.ts` mirror backend Pydantic schemas.
+- **Build output:** `npm run build` → `../app/static/dist/` (consumed by backend). Vite base is `/`.
+- **Form inputs:** Login/register forms use `<input type="email">` / `<input type="password">` without label `for`/`id` linking — use type selectors in Playwright, not `getByLabel`.
+
+## Testing Conventions
+
+- **Fixtures in `tests/conftest.py`:** `admin_headers`, `student_headers`, `employer_headers` create users via API and return `{"Authorization": "Bearer ..."}` dicts.
+- **DB isolation:** Each test gets its own transaction that rolls back. Tables are created/dropped per test function.
+- **E2E tests:** Playwright specs in `frontend/e2e/`. Config targets `http://127.0.0.1:8000`.
+- **Test DB URL:** Derived from `DATABASE_URL` env var; defaults to `localhost:5432`. In Docker, set `DATABASE_URL=...@db:5432`.
+
+## Workflow
+
+- Always write tests and self-validate changes.
+- Run E2E tests via Playwright MCP after changes.
+- All services run in Docker (`docker-compose up --build -d`).
