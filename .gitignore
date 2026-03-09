@@ -8,3 +8,6 @@ frontend/node_modules/
 app/static/dist/
 app/static/uploads/
 .pytest_cache/
+.idea/
+*.png
+test_screenshots/
