@@ -11,3 +11,4 @@ app/static/uploads/
 .idea/
 *.png
 test_screenshots/
+tmp_clone_repro_*/
