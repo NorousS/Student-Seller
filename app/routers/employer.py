@@ -30,6 +30,7 @@ from app.schemas import (
     EmployerProfileResponse,
     EmployerProfileUpdate,
     EmployerSearchRequest,
+    SkillMatchResponse,
 )
 from app.valuation import DisciplineWithGrade, evaluate_student
 
@@ -72,6 +73,12 @@ async def update_employer_profile(
         profile.company_name = data.company_name
     if data.position is not None:
         profile.position = data.position
+    if data.contact_info is not None:
+        profile.contact_info = data.contact_info
+    if data.about_company is not None:
+        profile.about_company = data.about_company
+    if data.website_url is not None:
+        profile.website_url = data.website_url
     await db.commit()
     await db.refresh(profile)
     return profile
@@ -82,7 +89,7 @@ async def update_employer_profile(
 
 def _build_disciplines_response(student: Student) -> list[DisciplineResponse]:
     return [
-        DisciplineResponse(id=sd.discipline.id, name=sd.discipline.name, grade=sd.grade)
+        DisciplineResponse(id=sd.discipline.id, name=sd.discipline.name, grade=sd.grade, category=sd.discipline.category)
         for sd in student.student_disciplines
     ]
 
@@ -127,6 +134,20 @@ async def search_students(
         except Exception:
             continue
 
+        skill_matches = [
+            SkillMatchResponse(
+                discipline=m.discipline,
+                skill_name=m.skill_name,
+                similarity=m.similarity,
+                avg_salary=m.avg_salary,
+                vacancy_count=m.vacancy_count,
+                grade=m.grade,
+                grade_coeff=m.grade_coeff,
+                excluded=m.excluded,
+            )
+            for m in valuation.skill_matches
+        ]
+
         results.append(AnonymizedStudentResult(
             student_id=student.id,
             photo_url=student.photo_path,
@@ -135,6 +156,7 @@ async def search_students(
             confidence=valuation.confidence,
             matched_disciplines=valuation.matched_disciplines,
             total_disciplines=valuation.total_disciplines,
+            skill_matches=skill_matches,
         ))
 
     # Sort: confidence desc, then salary desc
@@ -177,12 +199,21 @@ async def get_anonymized_student_profile(
     contact_status = contact_req.status.value if contact_req else None
     show_about_me = contact_req and contact_req.status == ContactRequestStatus.accepted
 
+    # Get employer profile for partnership status
+    emp_result = await db.execute(
+        select(EmployerProfile).where(EmployerProfile.user_id == current_user.id)
+    )
+    emp_profile = emp_result.scalar_one_or_none()
+    partnership = emp_profile.partnership_status.value if emp_profile else None
+
     return AnonymizedStudentProfile(
         student_id=student.id,
         photo_url=student.photo_path,
         disciplines=_build_disciplines_response(student),
         about_me=student.about_me if show_about_me else None,
         contact_status=contact_status,
+        partnership_status=partnership,
+        work_ready_date=student.work_ready_date.isoformat() if student.work_ready_date else None,
     )
 
 

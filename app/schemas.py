@@ -16,6 +16,11 @@ class UserRoleEnum(str, Enum):
     employer = "employer"
 
 
+class PartnershipStatusEnum(str, Enum):
+    partner = "partner"
+    non_partner = "non_partner"
+
+
 class RegisterRequest(BaseModel):
     """Запрос на регистрацию."""
     email: str = Field(..., min_length=5, max_length=255, description="Email пользователя")
@@ -194,6 +199,7 @@ class DisciplineResponse(DisciplineBase):
     """Схема для ответа с данными дисциплины."""
     id: int
     grade: int = Field(default=5, description="Оценка: 3, 4 или 5")
+    category: str | None = None
     
     class Config:
         from_attributes = True
@@ -223,6 +229,7 @@ class StudentProfileResponse(StudentResponse):
     """Расширенная схема профиля студента (включает about_me, photo_url)."""
     about_me: str | None = None
     photo_url: str | None = None
+    work_ready_date: str | None = None
 
 
 class AddDisciplinesRequest(BaseModel):
@@ -239,6 +246,10 @@ class EmployerProfileResponse(BaseModel):
     user_id: int
     company_name: str | None
     position: str | None
+    contact_info: str | None = None
+    about_company: str | None = None
+    website_url: str | None = None
+    partnership_status: PartnershipStatusEnum = PartnershipStatusEnum.non_partner
 
     class Config:
         from_attributes = True
@@ -248,6 +259,9 @@ class EmployerProfileUpdate(BaseModel):
     """Обновление профиля работодателя."""
     company_name: str | None = Field(None, max_length=200)
     position: str | None = Field(None, max_length=200)
+    contact_info: str | None = Field(None, max_length=2000)
+    about_company: str | None = Field(None, max_length=5000)
+    website_url: str | None = Field(None, max_length=500)
 
 
 class EmployerSearchRequest(BaseModel):
@@ -266,6 +280,9 @@ class AnonymizedStudentResult(BaseModel):
     confidence: float
     matched_disciplines: int
     total_disciplines: int
+    skill_matches: list[SkillMatchResponse] = Field(
+        default_factory=list, description="Детальная разбивка по навыкам"
+    )
 
 
 class AnonymizedStudentProfile(BaseModel):
@@ -275,6 +292,9 @@ class AnonymizedStudentProfile(BaseModel):
     disciplines: list[DisciplineResponse]
     about_me: str | None = None  # Только если контакт accepted
     contact_status: str | None = None  # pending/accepted/rejected/null
+    partnership_status: str | None = None
+    work_ready_date: str | None = None
+    competence_blocks: list["CompetenceBlockResponse"] = Field(default_factory=list)
 
 
 class ContactRequestCreate(BaseModel):
@@ -306,3 +326,62 @@ class ContactRequestResponse(BaseModel):
 class ContactRequestRespondRequest(BaseModel):
     """Запрос на ответ на запрос контакта."""
     accept: bool = Field(..., description="True = принять, False = отклонить")
+
+
+# --- Partnership ---
+
+
+class PartnershipUpdateRequest(BaseModel):
+    partnership_status: PartnershipStatusEnum
+
+
+class DisciplineCategoryUpdate(BaseModel):
+    """Обновление категории дисциплины."""
+    category: str = Field(..., max_length=100, description="Категория дисциплины")
+
+
+# --- Landing / Competence / Valuation ---
+
+
+class TopStudentCard(BaseModel):
+    """Карточка для лендинга."""
+    student_id: int
+    photo_url: str | None
+    estimated_salary: float | None
+    competency_summary: str
+
+
+class CompetenceBlockResponse(BaseModel):
+    """Блок компетенций для работодателя."""
+    block_name: str
+    avg_grade: float
+    market_value: float | None
+    strong_points: int
+    top_tags: list[str]
+    achievements_summary: str
+
+
+class FactorBreakdown(BaseModel):
+    """Вклад фактора в оценку."""
+    factor_name: str
+    contribution: float
+
+
+class EnhancedEvaluationResponse(EvaluationResponse):
+    """Расширенный ответ оценки с разбивкой по факторам."""
+    factor_breakdown: list[FactorBreakdown] = Field(default_factory=list)
+    competence_blocks: list[CompetenceBlockResponse] = Field(default_factory=list)
+
+
+class PaywallOption(BaseModel):
+    """Вариант доступа для непартнеров."""
+    id: str
+    title: str
+    description: str
+    action_url: str
+
+
+class FunnelEventCreate(BaseModel):
+    """Создание события воронки."""
+    event_type: str
+    student_id: int | None = None

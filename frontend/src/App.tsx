@@ -1,9 +1,10 @@
-import { Routes, Route, Navigate, Link } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './store/AuthContext'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import StudentPanel from './pages/student/StudentPanel'
 import EmployerPanel from './pages/employer/EmployerPanel'
+import LandingPage from './pages/landing/LandingPage'
 
 // Note: /admin is served as static HTML by the backend (app/static/admin.html)
 // It is NOT part of the React SPA
@@ -35,8 +36,11 @@ function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?
 function HomeRedirect() {
   const { user, loading } = useAuth()
   if (loading) return <div className="container"><div className="spinner" /></div>
-  if (!user) return <Navigate to="/login" replace />
-  if (user.role === 'admin') return <Navigate to="/admin" replace />
+  if (!user) return <LandingPage />
+  if (user.role === 'admin') {
+    window.location.href = '/admin'
+    return <div className="container"><div className="spinner" /></div>
+  }
   if (user.role === 'student') return <Navigate to="/student" replace />
   if (user.role === 'employer') return <Navigate to="/employer" replace />
   return <Navigate to="/login" replace />
@@ -47,6 +51,7 @@ export default function App() {
     <>
       <Header />
       <Routes>
+        <Route path="/landing" element={<Navigate to="/" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/" element={<HomeRedirect />} />

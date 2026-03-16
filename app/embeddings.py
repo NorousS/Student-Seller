@@ -3,9 +3,30 @@
 Использует модель nomic-embed-text для создания векторных представлений текста.
 """
 
+import re
+
 import httpx
 
 from app.config import settings
+
+
+def normalize_text(text: str) -> str:
+    """
+    Нормализует текст перед генерацией эмбеддинга:
+    - trim (удаление пробелов по краям)
+    - collapse multiple spaces (схлопывание множественных пробелов)
+    - lowercase (приведение к нижнему регистру)
+
+    Args:
+        text: Входной текст
+
+    Returns:
+        Нормализованный текст
+    """
+    normalized = text.strip()
+    normalized = re.sub(r"\s+", " ", normalized)
+    normalized = normalized.lower()
+    return normalized
 
 
 class EmbeddingService:
@@ -29,10 +50,11 @@ class EmbeddingService:
         Returns:
             Вектор размерности 768
         """
+        normalized_text = normalize_text(text)
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
                 f"{self.base_url}/api/embeddings",
-                json={"model": self.model, "prompt": text},
+                json={"model": self.model, "prompt": normalized_text},
             )
             response.raise_for_status()
             data = response.json()
@@ -52,9 +74,10 @@ class EmbeddingService:
         embeddings = []
         async with httpx.AsyncClient(timeout=60.0) as client:
             for text in texts:
+                normalized_text = normalize_text(text)
                 response = await client.post(
                     f"{self.base_url}/api/embeddings",
-                    json={"model": self.model, "prompt": text},
+                    json={"model": self.model, "prompt": normalized_text},
                 )
                 response.raise_for_status()
                 data = response.json()

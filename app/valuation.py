@@ -30,6 +30,54 @@ SPECIALTY_SIMILARITY_THRESHOLD = 0.7
 # Коэффициенты оценок
 GRADE_COEFFICIENTS = {3: 0.75, 4: 0.85, 5: 1.0}
 
+# Количество лучших совпадений для confidence
+# Фиксированное значение защищает от влияния общего числа навыков студента.
+CONFIDENCE_TOP_MATCHES = 3
+
+# Раскрытие аббревиатур для улучшения качества эмбеддингов
+ABBREVIATION_MAP: dict[str, str] = {
+    "ООП": "ООП: Объектно-ориентированное программирование",
+    "БД": "БД: Базы данных",
+    "ИИ": "ИИ: Искусственный интеллект",
+    "МЛ": "МЛ: Машинное обучение",
+    "ОС": "ОС: Операционные системы",
+    "КС": "КС: Компьютерные сети",
+    "СУБД": "СУБД: Система управления базами данных",
+    "АСУ": "АСУ: Автоматизированная система управления",
+    "ВМ": "ВМ: Виртуальная машина",
+    "API": "API: Программный интерфейс приложения",
+    "SQL": "SQL: Язык структурированных запросов",
+    "HTML": "HTML: Язык гипертекстовой разметки",
+    "CSS": "CSS: Каскадные таблицы стилей",
+    "JS": "JS: JavaScript язык программирования",
+    "ИБ": "ИБ: Информационная безопасность",
+    "ТПР": "ТПР: Теория принятия решений",
+    "ЭВМ": "ЭВМ: Электронная вычислительная машина",
+    "ТФКП": "ТФКП: Теория функций комплексного переменного",
+    "МФТИ": "МФТИ: Математическая физика и теория информации",
+    "ДМ": "ДМ: Дискретная математика",
+    "ТВиМС": "ТВиМС: Теория вероятностей и математическая статистика",
+}
+
+
+def expand_abbreviations(text: str) -> str:
+    """Раскрывает аббревиатуры в тексте дисциплины для улучшения эмбеддингов."""
+    upper = text.strip().upper()
+    if upper in ABBREVIATION_MAP:
+        return ABBREVIATION_MAP[upper]
+    # Check individual words
+    words = text.split()
+    expanded = []
+    changed = False
+    for word in words:
+        upper_word = word.upper()
+        if upper_word in ABBREVIATION_MAP:
+            expanded.append(ABBREVIATION_MAP[upper_word])
+            changed = True
+        else:
+            expanded.append(word)
+    return " ".join(expanded) if changed else text
+
 
 @dataclass
 class DisciplineWithGrade:
@@ -52,6 +100,13 @@ class SkillMatch:
 
 
 @dataclass
+class FactorContribution:
+    """Вклад фактора в оценку."""
+    factor_name: str
+    contribution: float
+
+
+@dataclass
 class ValuationResult:
     """Результат оценки стоимости студента."""
     estimated_salary: float | None
@@ -59,6 +114,11 @@ class ValuationResult:
     skill_matches: list[SkillMatch]
     total_disciplines: int
     matched_disciplines: int
+    factor_breakdown: list[FactorContribution] = None
+
+    def __post_init__(self):
+        if self.factor_breakdown is None:
+            self.factor_breakdown = []
 
 
 async def get_matching_search_queries(
@@ -178,10 +238,20 @@ async def evaluate_student(
 
         # Семантический поиск ближайших навыков hh.ru
         similar_skills = await vector_store.search_similar_skills(
-            text=disc.name,
+            text=expand_abbreviations(disc.name),
             top_k=top_k,
             score_threshold=settings.similarity_threshold,
         )
+
+        # Дедупликация: Qdrant может вернуть дубли одного навыка
+        seen_skills: set[str] = set()
+        unique_skills: list[dict] = []
+        for s in similar_skills:
+            key = s["name"].lower()
+            if key not in seen_skills:
+                seen_skills.add(key)
+                unique_skills.append(s)
+        similar_skills = unique_skills
 
         discipline_has_match = False
 
@@ -226,11 +296,51 @@ async def evaluate_student(
     if weight_sum > 0:
         estimated_salary = round(weighted_salary_sum / weight_sum, 2)
 
-    confidence = (
-        matched_disciplines / len(disciplines)
-        if disciplines
-        else 0.0
-    )
+    # Compute factor breakdown
+    factor_breakdown = []
+    if weight_sum > 0 and estimated_salary:
+        similarity_contrib = 0.0
+        vacancy_contrib = 0.0
+        grade_contrib = 0.0
+        for m in all_matches:
+            if not m.excluded and m.avg_salary and m.vacancy_count >= MIN_TAG_COUNT:
+                sim_part = m.similarity * m.avg_salary / weight_sum
+                vac_part = math.log1p(m.vacancy_count) * m.avg_salary * m.similarity / weight_sum
+                grade_part = m.grade_coeff * m.avg_salary * m.similarity / weight_sum
+
+                similarity_contrib += sim_part
+                vacancy_contrib += vac_part
+                grade_contrib += grade_part
+
+        raw_total = similarity_contrib + vacancy_contrib + grade_contrib
+        if raw_total > 0:
+            scale = estimated_salary / raw_total
+            factor_breakdown = [
+                FactorContribution("similarity", round(similarity_contrib * scale, 2)),
+                FactorContribution("vacancy_demand", round(vacancy_contrib * scale, 2)),
+                FactorContribution("academic_grade", round(grade_contrib * scale, 2)),
+            ]
+
+    # Compute quality-based confidence from top-K best valid matches
+    # This ensures confidence reflects quality of best matches, not diluted by weak ones
+    if weight_sum > 0:
+        # Collect all valid contributing matches with their weighted scores
+        valid_matches: list[tuple[float, SkillMatch]] = []
+        for m in all_matches:
+            if not m.excluded and m.avg_salary and m.vacancy_count >= MIN_TAG_COUNT:
+                score = m.similarity * m.grade_coeff
+                valid_matches.append((score, m))
+        
+        if valid_matches:
+            # Sort by score descending and take top fixed count
+            valid_matches.sort(key=lambda x: x[0], reverse=True)
+            k = min(CONFIDENCE_TOP_MATCHES, len(valid_matches))
+            top_matches = valid_matches[:k]
+            confidence = sum(score for score, _ in top_matches) / k
+        else:
+            confidence = 0.0
+    else:
+        confidence = 0.0
 
     return ValuationResult(
         estimated_salary=estimated_salary,
@@ -238,4 +348,5 @@ async def evaluate_student(
         skill_matches=all_matches,
         total_disciplines=len(disciplines),
         matched_disciplines=matched_disciplines,
+        factor_breakdown=factor_breakdown,
     )

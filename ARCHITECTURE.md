@@ -46,6 +46,9 @@
 │  │  ┌──────────────┐ ┌──────────────┐ ┌────────────────────┐ │   │
 │  │  │student_profile│ │  evaluation  │ │       chat         │ │   │
 │  │  └──────────────┘ └──────────────┘ └────────────────────┘ │   │
+│  │  ┌────────────┐ ┌──────────────┐ ┌─────────────────────┐ │   │
+│  │  │partnership │ │   landing    │ │ admin_disciplines   │ │   │
+│  │  └────────────┘ └──────────────┘ └─────────────────────┘ │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                                                                     │
 │  ┌─────────────────────────────────────────────────────────────┐   │
@@ -58,6 +61,8 @@
 │  │  • auth.py — JWT токены, проверка ролей                    │   │
 │  │  • parser.py — парсинг hh.ru                               │   │
 │  │  • valuation.py — алгоритм оценки стоимости                │   │
+│  │  • categorization.py — LLM-категоризация дисциплин        │   │
+│  │  • competence.py — агрегация блоков компетенций            │   │
 │  │  • embeddings.py — Ollama клиент                           │   │
 │  │  • vector_store.py — Qdrant клиент                         │   │
 │  └─────────────────────────────────────────────────────────────┘   │
@@ -108,8 +113,13 @@
 | `student_profile.py` | `/api/v1/profile/student/` | Self-service профиля студента | Student только |
 | `employer.py` | `/api/v1/employer/` | Поиск студентов, запросы | Employer только |
 | `vacancies.py` | `/api/v1/vacancies/` | Парсинг, просмотр вакансий | Парсинг — Admin, просмотр — все |
-| `evaluation.py` | `/api/v1/evaluation/` | Оценка стоимости студента | Аутентифицированные |
+| `evaluation.py` | `/api/v1/students/` | Оценка стоимости и навыков студента | Admin/Employer |
+| `diagnostics.py` | `/api/v1/diagnostics/` | Диагностика аномалий similarity эмбеддингов | Admin только |
+| `admin.py` | `/api/v1/admin/` | Админ-операции векторного индекса (reindex + диагностика) | Admin только |
 | `chat.py` | `/api/v1/chat/` | История сообщений | Student/Employer |
+| `partnership.py` | `/api/v1/admin/partnership/` | Управление статусом партнёрства работодателей | Admin только |
+| `landing.py` | `/api/v1/landing/` | Публичный лендинг, топ-студенты | Публичный |
+| `admin_disciplines.py` | `/api/v1/admin/disciplines/` | Управление дисциплинами и категоризация | Admin только |
 
 #### WebSocket Handler
 - **Эндпоинт**: `/ws/chat/{request_id}?token=<jwt>`
@@ -144,6 +154,10 @@
 **embeddings.py**
 - Интеграция с Ollama API
 - Модель: `nomic-embed-text` (768-dim, мультиязычная)
+- Нормализация текста перед генерацией эмбеддингов:
+  - `trim` — удаление пробелов по краям
+  - `collapse spaces` — схлопывание множественных пробелов в один
+  - `lowercase` — приведение к нижнему регистру
 - Async batch embeddings
 - Error handling и retry logic
 
@@ -194,6 +208,23 @@ contact_requests         messages
 - `vacancies.hh_id` (unique), `vacancies.experience` (index), `vacancies.search_query` (index)
 - `tags.name` (unique index)
 - `students.full_name` (index)
+
+**Новые модели (расширение)**:
+
+| Модель | Назначение | Ключевые поля |
+|--------|-----------|---------------|
+| `EmployerPartnershipAudit` | Журнал изменений статуса партнёрства | employer_id, old_status, new_status, changed_by, reason, timestamp |
+| `FunnelEvent` | События воронки аналитики | event_type, employer_id, student_id, metadata, timestamp |
+| `CompetenceBlock` | Блок компетенций | name, discipline_ids, average_similarity |
+
+**Новые Enum**:
+- `PartnershipStatus` — `basic`, `partner`, `blocked`
+- `FunnelEventType` — `view_profile`, `send_invite`, `accept_invite`, `reject_invite`, `view_contacts`, `paywall_shown`
+
+**Новые поля в существующих моделях**:
+- `EmployerProfile.partnership_status` — статус партнёрства (default: `basic`)
+- `Student.work_ready_date` — дата готовности к работе
+- `Discipline.category` — категория компетенции (для группировки)
 
 #### Qdrant (Векторная БД)
 
@@ -252,6 +283,19 @@ PostgreSQL
 Frontend ← { total_parsed, tags, average_salary }
 ```
 
+Отдельно для синхронизации векторного индекса используется админ-эндпоинт:
+
+```
+Frontend (/admin) → POST /api/v1/admin/reindex-skills
+    ↓ JWT проверка (только admin)
+FastAPI (admin router)
+    ├─ PostgreSQL → SELECT всех Tag
+    ├─ Ollama → Batch эмбеддинги всех навыков
+    ├─ Qdrant → upsert всех точек в hh_skills
+    └─ detect_anomalies(первые 100 навыков, threshold=0.99)
+       → diagnostics / diagnostics_error в ответе
+```
+
 ### 3. Студент редактирует профиль
 
 ```
@@ -293,51 +337,64 @@ Frontend ← { updated disciplines list }
 ### 5. Оценка рыночной стоимости студента
 
 ```
-Frontend → POST /api/v1/evaluation/evaluate
-    ?student_id=5&specialty=Python&top_k=5&experience=noExperience
+Frontend → POST /api/v1/students/{student_id}/evaluate
+    ?specialty=Python&top_k=5&experience=noExperience
     ↓
-FastAPI (evaluation router)
+FastAPI (evaluation router, доступ: admin/employer)
     ↓
 valuation.py
     ├─ Шаг 1: Загрузка дисциплин студента (PostgreSQL)
-    │         SELECT * FROM student_disciplines WHERE student_id = 5
+    │         SELECT student_disciplines + disciplines WHERE student_id = ...
     │
     ├─ Шаг 2: Семантический фильтр вакансий по специальности
-    │         Ollama → Эмбеддинг "Python разработчик"
-    │         Qdrant → Поиск похожих search_query
-    │         PostgreSQL → WHERE id IN (relevant_vacancy_ids)
+    │         PostgreSQL → SELECT DISTINCT search_query
+    │         Ollama → Эмбеддинг specialty + search_query
+    │         Python → cosine similarity >= 0.7
     │
     ├─ Шаг 3: Для каждой дисциплины студента
+    │   ├─ expand_abbreviations (например, "ООП" → расшифровка)
+    │   ├─ embeddings.py: trim + collapse spaces + lowercase
     │   ├─ Ollama → Эмбеддинг дисциплины "Программирование на Python"
     │   ├─ Qdrant → Top-5 ближайших навыков (similarity score)
     │   │         Результат: [("Python", 0.92), ("FastAPI", 0.78), ...]
     │   │
     │   └─ PostgreSQL → Средняя зарплата по каждому навыку
-    │             SELECT AVG((salary_from + salary_to)/2)
+    │             SELECT AVG(COALESCE(salary_from, salary_to))
     │             FROM vacancies v
     │             JOIN vacancy_tag vt ON v.id = vt.vacancy_id
     │             JOIN tags t ON vt.tag_id = t.id
     │             WHERE t.name = 'Python'
-    │               AND v.id IN (relevant_vacancy_ids)
+    │               AND v.salary_currency = 'RUR'
+    │               AND (salary_from IS NOT NULL OR salary_to IS NOT NULL)
+    │               AND search_query IN (matching_queries, если есть)
+    │               AND experience = ... (если задан)
     │
     ├─ Шаг 4: Взвешенный расчёт
-    │         weighted_salary = Σ (similarity × log1p(vacancy_count) × grade_coef × salary)
-    │         confidence = 1 - exp(-total_matches / 20)
+    │         Учитываются только валидные совпадения:
+    │         avg_salary != null, vacancy_count >= 3, excluded = false
+    │         weight = similarity × log1p(vacancy_count) × grade_coeff
+    │         estimated_salary = Σ(avg_salary × weight) / Σ(weight)
+    │
+    ├─ Шаг 5: Confidence
+    │         score = similarity × grade_coeff
+    │         confidence = average(top-3 score среди валидных совпадений)
+    │         если валидных совпадений нет → 0.0
     │
     └─ Возврат результата
         {
           "estimated_salary": 185000,
-          "confidence": 0.89,
-          "skills": [
+          "confidence": 0.9,
+          "skill_matches": [
             {
-              "skill": "Python",
+              "skill_name": "Python",
               "similarity": 0.92,
               "avg_salary": 200000,
               "vacancy_count": 450,
-              "from_discipline": "Программирование на Python"
+              "discipline": "Программирование на Python"
             },
             ...
-          ]
+          ],
+          "matched_disciplines": 2
         }
 ```
 
@@ -424,6 +481,34 @@ FastAPI → Broadcast всем активным соединениям в чат
     ↓
 Frontend (оба участника) → Отображение сообщения в чате
 ```
+
+### 10. Система партнёрства работодателей
+
+Работодатели имеют три уровня доступа:
+- **basic** — стандартный доступ, invite через paywall
+- **partner** — прямой invite без paywall, полный доступ к контактам
+- **blocked** — доступ заблокирован
+
+Изменение статуса выполняется администратором через PATCH `/api/v1/admin/partnership/{id}/status`. Каждое изменение записывается в `EmployerPartnershipAudit` с указанием причины.
+
+### 11. Лендинг и Invite-flow
+
+1. Публичный лендинг показывает топ-5 студентов (анонимизировано)
+2. Работодатель нажимает "Пригласить" → проверяется partnership_status:
+   - partner → прямое приглашение (ContactRequest создаётся сразу)
+   - basic → показывается paywall с вариантами доступа
+   - blocked → 403 Forbidden
+3. После принятия приглашения студентом работодатель получает контакты
+4. Все действия логируются как FunnelEvent
+
+### 12. LLM-категоризация дисциплин
+
+Сервис `app/categorization.py` использует эмбеддинги Ollama (nomic-embed-text, 768-dim) для автоматического распределения дисциплин по категориям компетенций:
+- Генерирует эмбеддинг названия дисциплины
+- Сравнивает cosine similarity с эталонными категориями
+- Присваивает наиболее подходящую категорию (programming, databases, math, management, etc.)
+
+Результат сохраняется в поле `Discipline.category` и используется для группировки в UI (блоки компетенций).
 
 ---
 
@@ -591,8 +676,14 @@ async def admin_route(user: User = Depends(require_role("admin"))):
 - `GET /api/v1/vacancies/tags` — Статистика тегов
 
 ### Оценка
-- `POST /api/v1/evaluation/evaluate` — Оценка стоимости
-- `GET /api/v1/evaluation/skills` — Навыки студента
+- `POST /api/v1/students/{student_id}/evaluate` — Оценка стоимости
+- `GET /api/v1/students/{student_id}/skills` — Навыки студента
+
+### Диагностика эмбеддингов (Admin)
+- `POST /api/v1/diagnostics/similarity-anomalies` — Поиск аномалий similarity
+
+### Админ-инструменты векторного индекса (Admin)
+- `POST /api/v1/admin/reindex-skills` — Полная переиндексация навыков в Qdrant + запуск диагностики
 
 ### Чат
 - `GET /api/v1/chat/{request_id}/messages` — История

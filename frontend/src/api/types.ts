@@ -38,6 +38,21 @@ export interface EmployerProfile {
   user_id: number
   company_name: string | null
   position: string | null
+  contact_info?: string | null
+  about_company?: string | null
+  website_url?: string | null
+  partnership_status: 'partner' | 'basic' | 'blocked'
+}
+
+export interface SkillMatch {
+  discipline: string
+  skill_name: string
+  similarity: number
+  avg_salary: number | null
+  vacancy_count: number
+  grade: number
+  grade_coeff: number
+  excluded: boolean
 }
 
 export interface AnonymizedStudent {
@@ -48,6 +63,7 @@ export interface AnonymizedStudent {
   confidence: number
   matched_disciplines: number
   total_disciplines: number
+  skill_matches: SkillMatch[]
 }
 
 export interface AnonymizedStudentProfile {
@@ -56,6 +72,9 @@ export interface AnonymizedStudentProfile {
   disciplines: Discipline[]
   about_me: string | null
   contact_status: string | null
+  partnership_status: string | null
+  work_ready_date: string | null
+  competence_blocks: CompetenceBlock[]
 }
 
 export interface ContactRequest {
@@ -74,4 +93,39 @@ export interface ChatMessage {
   text: string
   created_at: string
   is_read: boolean
+}
+
+export interface TopStudentCard {
+  student_id: number
+  photo_url: string | null
+  estimated_salary: number | null
+  competency_summary: string
+}
+
+export interface PaywallOption {
+  id: string
+  title: string
+  description: string
+  action_url: string
+}
+
+export interface CompetenceBlock {
+  block_name: string
+  avg_grade: number
+  market_value: number | null
+  strong_points: number
+  top_tags: string[]
+  achievements_summary: string
+}
+
+export interface FactorBreakdown {
+  factor_name: string
+  contribution: number
+}
+
+export interface InviteResponse {
+  status: 'invite_created' | 'paywall_required'
+  reason?: string
+  message?: string
+  contact_request?: any
 }

@@ -95,6 +95,7 @@
         /* Grid */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
 
         /* Form elements */
         select, input, button {
@@ -383,29 +384,13 @@
 
         /* Responsive */
         @media (max-width: 768px) {
-            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
             .container { padding: 16px; }
             .form-row { flex-direction: column; }
         }
     </style>
 </head>
 <body>
-
-<div id="login-overlay" style="position:fixed; inset:0; z-index:9999; background:#0f1117; display:flex; align-items:center; justify-content:center;">
-    <div style="background:#161b22; border:1px solid #30363d; border-radius:12px; padding:32px; width:360px;">
-        <h2 style="margin-bottom:16px; text-align:center;">🔐 Вход в админ-панель</h2>
-        <div id="login-error" style="display:none; color:#f85149; margin-bottom:12px; font-size:14px;"></div>
-        <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:13px; color:#8b949e; margin-bottom:4px;">Email</label>
-            <input id="login-email" type="email" style="width:100%; padding:8px 12px; background:#0d1117; border:1px solid #30363d; border-radius:6px; color:#e1e4e8; font-size:14px;" placeholder="admin@example.com">
-        </div>
-        <div style="margin-bottom:16px;">
-            <label style="display:block; font-size:13px; color:#8b949e; margin-bottom:4px;">Пароль</label>
-            <input id="login-password" type="password" style="width:100%; padding:8px 12px; background:#0d1117; border:1px solid #30363d; border-radius:6px; color:#e1e4e8; font-size:14px;" placeholder="••••••">
-        </div>
-        <button onclick="handleLogin()" style="width:100%; padding:10px; background:#238636; border:none; border-radius:6px; color:#fff; font-size:14px; cursor:pointer; font-weight:600;">Войти</button>
-    </div>
-</div>
 
 <div class="header">
     <h1>⚡ HH Student Evaluator</h1>
@@ -447,6 +432,15 @@
                         <option value="moreThan6">6+ лет</option>
                     </select>
                 </div>
+                <div class="form-group" style="max-width:220px;">
+                    <label>Навыков на дисциплину: <span id="top-k-value">5</span></label>
+                    <input type="range" id="eval-top-k" min="1" max="20" value="5"
+                           oninput="document.getElementById('top-k-value').textContent=this.value"
+                           style="width:100%">
+                    <div style="display:flex;justify-content:space-between;font-size:11px;color:#8b949e;">
+                        <span>1</span><span>20</span>
+                    </div>
+                </div>
                 <button class="btn btn-primary" onclick="evaluateStudent()" id="btn-evaluate" disabled>
                     Оценить стоимость
                 </button>
@@ -458,7 +452,7 @@
         </div>
 
         <div id="evaluation-results" style="display:none;">
-            <div class="grid-3" id="stat-cards"></div>
+            <div class="grid-4" id="stat-cards"></div>
 
             <div class="grid-2">
                 <div class="card">
@@ -476,16 +470,26 @@
             </div>
 
             <div class="card">
-                <h2>Детальная разбивка</h2>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <h2>Детальная разбивка</h2>
+                    <button class="btn btn-primary" onclick="evaluateStudent()" style="font-size:13px;">🔄 Пересчитать</button>
+                </div>
                 <table class="tags-table" id="eval-details-table">
                     <thead>
                         <tr>
                             <th>Дисциплина</th>
+                            <th>Навык hh.ru</th>
+                            <th style="cursor:pointer;user-select:none;" onclick="setEvalSort('similarity')">
+                                Сходство <span id="eval-sort-similarity">↓</span>
+                            </th>
+                            <th style="cursor:pointer;user-select:none;" onclick="setEvalSort('avg_salary')">
+                                Ср. ЗП <span id="eval-sort-avg_salary">↕</span>
+                            </th>
+                            <th style="cursor:pointer;user-select:none;" onclick="setEvalSort('vacancy_count')">
+                                Вакансий <span id="eval-sort-vacancy_count">↕</span>
+                            </th>
                             <th>Оценка</th>
-                            <th>Навык HH.ru</th>
-                            <th>Сходство</th>
-                            <th>Средняя ЗП</th>
-                            <th>Вакансий</th>
+                            <th>Исключить</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -639,9 +643,15 @@
                         <table class="tags-table" id="tags-full-table">
                             <thead>
                                 <tr>
-                                    <th>Навык</th>
-                                    <th>Кол-во</th>
-                                    <th>Доля</th>
+                                    <th style="cursor:pointer;user-select:none;" onclick="setTagsSort('name')">
+                                        Навык <span id="tags-sort-name">↕</span>
+                                    </th>
+                                    <th style="cursor:pointer;user-select:none;" onclick="setTagsSort('count')">
+                                        Кол-во <span id="tags-sort-count">↓</span>
+                                    </th>
+                                    <th style="cursor:pointer;user-select:none;" onclick="setTagsSort('pct')">
+                                        Доля <span id="tags-sort-pct">↕</span>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -662,66 +672,20 @@
 const API = '';  // same origin
 
 // JWT Auth
-let token = localStorage.getItem('admin_token');
+let token = localStorage.getItem('access_token');
 
 function authHeaders() {
     return token ? { 'Authorization': 'Bearer ' + token } : {};
 }
 
-async function adminLogin(email, password) {
-    const res = await fetch(API + '/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-    });
-    if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.detail || 'Ошибка входа');
-    }
-    const data = await res.json();
-    const meRes = await fetch(API + '/api/v1/auth/me', {
-        headers: { 'Authorization': 'Bearer ' + data.access_token }
-    });
-    const me = await meRes.json();
-    if (me.role !== 'admin') throw new Error('Доступ только для администраторов');
-    token = data.access_token;
-    localStorage.setItem('admin_token', token);
-    return me;
-}
-
 function adminLogout() {
     token = null;
-    localStorage.removeItem('admin_token');
-    showLogin();
+    localStorage.clear();
+    window.location.href = '/login';
 }
 
 function showLogin() {
-    document.getElementById('login-overlay').style.display = 'flex';
-    document.querySelector('.header').style.display = 'none';
-    document.querySelector('.tabs').style.display = 'none';
-    document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
-}
-
-function showApp() {
-    document.getElementById('login-overlay').style.display = 'none';
-    document.querySelector('.header').style.display = '';
-    document.querySelector('.tabs').style.display = '';
-    document.querySelectorAll('.page').forEach(el => el.style.display = '');
-}
-
-async function handleLogin() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    const errEl = document.getElementById('login-error');
-    try {
-        errEl.style.display = 'none';
-        await adminLogin(email, password);
-        showApp();
-        loadStudents();
-    } catch(e) {
-        errEl.textContent = e.message;
-        errEl.style.display = 'block';
-    }
+    window.location.href = '/login';
 }
 
 async function checkAuth() {
@@ -731,11 +695,10 @@ async function checkAuth() {
         if (!res.ok) throw new Error();
         const me = await res.json();
         if (me.role !== 'admin') throw new Error();
-        showApp();
         loadStudents();
     } catch {
         token = null;
-        localStorage.removeItem('admin_token');
+        localStorage.removeItem('access_token');
         showLogin();
     }
 }
@@ -753,6 +716,59 @@ function switchTab(name) {
 let charts = {};
 function destroyChart(id) {
     if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+// ============ EXCLUDED SKILLS ============
+let excludedSkills = new Set();
+let lastEvalData = null;
+let evalSortField = 'similarity';
+let evalSortDirection = 'desc';
+let tagsSortField = 'count';
+let tagsSortDirection = 'desc';
+let lastTagsData = null;
+
+function updateSortIcons(prefix, currentField, currentDirection, fields) {
+    fields.forEach(field => {
+        const icon = document.getElementById(`${prefix}-${field}`);
+        if (!icon) return;
+        if (field !== currentField) {
+            icon.textContent = '↕';
+        } else {
+            icon.textContent = currentDirection === 'asc' ? '↑' : '↓';
+        }
+    });
+}
+
+function setEvalSort(field) {
+    if (evalSortField === field) {
+        evalSortDirection = evalSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        evalSortField = field;
+        evalSortDirection = 'desc';
+    }
+    if (lastEvalData) renderEvaluation(lastEvalData);
+    else updateSortIcons('eval-sort', evalSortField, evalSortDirection, ['similarity', 'avg_salary', 'vacancy_count']);
+}
+
+function setTagsSort(field) {
+    if (tagsSortField === field) {
+        tagsSortDirection = tagsSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        tagsSortField = field;
+        tagsSortDirection = field === 'name' ? 'asc' : 'desc';
+    }
+    if (lastTagsData) renderTagsTable(lastTagsData.allTags, lastTagsData.totalCount);
+    else updateSortIcons('tags-sort', tagsSortField, tagsSortDirection, ['name', 'count', 'pct']);
+}
+
+function toggleExcluded(discipline, skillName) {
+    const key = `${discipline}:${skillName}`;
+    if (excludedSkills.has(key)) {
+        excludedSkills.delete(key);
+    } else {
+        excludedSkills.add(key);
+    }
+    if (lastEvalData) renderEvaluation(lastEvalData);
 }
 
 // ============ STUDENTS ============
@@ -956,6 +972,7 @@ async function evaluateStudent() {
     const studentId = document.getElementById('student-select').value;
     const specialty = document.getElementById('eval-specialty').value.trim();
     const experience = document.getElementById('eval-experience').value;
+    const topK = document.getElementById('eval-top-k').value;
 
     if (!studentId) return;
     if (!specialty) { alert('Введите специальность для оценки'); return; }
@@ -967,6 +984,11 @@ async function evaluateStudent() {
     try {
         const params = new URLSearchParams({ specialty });
         if (experience) params.set('experience', experience);
+        params.set('top_k', topK);
+        excludedSkills.forEach(s => {
+            const skillName = s.substring(s.indexOf(':') + 1);
+            params.append('excluded_skills', skillName);
+        });
 
         const res = await fetch(API + `/api/v1/students/${studentId}/evaluate?${params}`, {
             method: 'POST',
@@ -989,6 +1011,7 @@ async function evaluateStudent() {
 }
 
 function renderEvaluation(data) {
+    lastEvalData = data;
     document.getElementById('evaluation-empty').style.display = 'none';
     document.getElementById('evaluation-results').style.display = 'block';
 
@@ -1013,8 +1036,12 @@ function renderEvaluation(data) {
             <div class="label">Уверенность оценки</div>
         </div>
         <div class="stat-card">
-            <div class="value match-value">${data.matched_disciplines}/${data.total_disciplines}</div>
-            <div class="label">Совпавших дисциплин</div>
+            <div class="value">${data.total_disciplines}</div>
+            <div class="label">Всего дисциплин</div>
+        </div>
+        <div class="stat-card">
+            <div class="value match-value">${data.matched_disciplines}</div>
+            <div class="label">Совпало дисциплин</div>
         </div>
     `;
 
@@ -1124,14 +1151,28 @@ function renderEvaluation(data) {
     });
 
     // Detail table
+    updateSortIcons('eval-sort', evalSortField, evalSortDirection, ['similarity', 'avg_salary', 'vacancy_count']);
+    const sortedMatches = [...matches].sort((a, b) => {
+        let cmp = 0;
+        if (evalSortField === 'similarity') {
+            cmp = (a.similarity || 0) - (b.similarity || 0);
+        } else if (evalSortField === 'avg_salary') {
+            cmp = (a.avg_salary || 0) - (b.avg_salary || 0);
+        } else if (evalSortField === 'vacancy_count') {
+            cmp = (a.vacancy_count || 0) - (b.vacancy_count || 0);
+        }
+        return evalSortDirection === 'asc' ? cmp : -cmp;
+    });
+
     const tbody = document.querySelector('#eval-details-table tbody');
-    tbody.innerHTML = matches.map(m => {
+    tbody.innerHTML = sortedMatches.map(m => {
         const isFiltered = m.vacancy_count < 3;
         const gc = m.grade === 5 ? 'g5' : m.grade === 4 ? 'g4' : 'g3';
+        const exKey = `${m.discipline}:${m.skill_name}`;
+        const isExcluded = excludedSkills.has(exKey);
         return `
-        <tr${isFiltered ? ' class="filtered-tag"' : ''}>
+        <tr style="${isExcluded ? 'text-decoration:line-through;background:rgba(239,68,68,0.1);' : ''}"${isFiltered && !isExcluded ? ' class="filtered-tag"' : ''}>
             <td><span class="tag-badge">${m.discipline}</span></td>
-            <td><span class="grade-badge ${gc}">${m.grade}</span> <span style="color:#8b949e;font-size:12px;">×${m.grade_coeff}</span></td>
             <td>${m.skill_name}</td>
             <td>
                 <div class="tag-bar-bg"><div class="tag-bar" style="width:${m.similarity*100}%"></div></div>
@@ -1139,6 +1180,12 @@ function renderEvaluation(data) {
             </td>
             <td>${m.avg_salary ? Math.round(m.avg_salary).toLocaleString('ru-RU') + ' ₽' : '—'}</td>
             <td>${m.vacancy_count}${isFiltered ? ' ⚠️' : ''}</td>
+            <td>${m.grade != null ? `<span class="grade-badge ${gc}">${m.grade}</span> <span style="color:#8b949e;font-size:12px;">×${m.grade_coeff}</span>` : '—'}</td>
+            <td style="text-align:center;">
+                <input type="checkbox" ${isExcluded ? 'checked' : ''}
+                    onchange="toggleExcluded('${m.discipline.replace(/'/g, "\\'")}','${m.skill_name.replace(/'/g, "\\'")}')"
+                    style="cursor:pointer;width:18px;height:18px;">
+            </td>
         </tr>
     `}).join('');
 }
@@ -1322,26 +1369,46 @@ async function loadTags() {
             }
         });
 
-        // Full table — show ALL tags, but mark count=1 as dimmed
         const totalCount = allTags.reduce((s, t) => s + t.count, 0);
-        const tbody = document.querySelector('#tags-full-table tbody');
-        tbody.innerHTML = allTags.map(t => {
-            const pct = totalCount > 0 ? ((t.count / totalCount) * 100).toFixed(1) : 0;
-            const dim = t.count <= 1 ? 'style="opacity:0.45;"' : '';
-            return `
-                <tr ${dim}>
-                    <td><span class="tag-badge">${t.name}</span></td>
-                    <td>${t.count}</td>
-                    <td>
-                        <div class="tag-bar-bg"><div class="tag-bar" style="width:${pct}%"></div></div>
-                        ${pct}%
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        lastTagsData = { allTags, totalCount };
+        renderTagsTable(allTags, totalCount);
     } catch (e) {
         alert('Ошибка: ' + e.message);
     }
+}
+
+function renderTagsTable(allTags, totalCount) {
+    updateSortIcons('tags-sort', tagsSortField, tagsSortDirection, ['name', 'count', 'pct']);
+
+    const sortedTags = [...allTags].sort((a, b) => {
+        let cmp = 0;
+        if (tagsSortField === 'name') {
+            cmp = a.name.localeCompare(b.name, 'ru');
+        } else if (tagsSortField === 'count') {
+            cmp = (a.count || 0) - (b.count || 0);
+        } else if (tagsSortField === 'pct') {
+            const pctA = totalCount > 0 ? (a.count / totalCount) * 100 : 0;
+            const pctB = totalCount > 0 ? (b.count / totalCount) * 100 : 0;
+            cmp = pctA - pctB;
+        }
+        return tagsSortDirection === 'asc' ? cmp : -cmp;
+    });
+
+    const tbody = document.querySelector('#tags-full-table tbody');
+    tbody.innerHTML = sortedTags.map(t => {
+        const pct = totalCount > 0 ? ((t.count / totalCount) * 100).toFixed(1) : 0;
+        const dim = t.count <= 1 ? 'style="opacity:0.45;"' : '';
+        return `
+            <tr ${dim}>
+                <td><span class="tag-badge">${t.name}</span></td>
+                <td>${t.count}</td>
+                <td>
+                    <div class="tag-bar-bg"><div class="tag-bar" style="width:${pct}%"></div></div>
+                    ${pct}%
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // ============ DISCIPLINE MANAGEMENT (Form) ============

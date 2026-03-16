@@ -21,6 +21,14 @@
 17. [Инфраструктура (Docker)](#инфраструктура-docker)
 18. [Тестирование](#тестирование)
 19. [Развёртывание](#развёртывание)
+20. [Система партнёрства работодателей](#система-партнёрства-работодателей)
+21. [Лендинг и Invite-flow](#лендинг-и-invite-flow)
+22. [Paywall и монетизация](#paywall-и-монетизация)
+23. [LLM-категоризация дисциплин](#llm-категоризация-дисциплин)
+24. [Блоки компетенций](#блоки-компетенций)
+25. [Расширенная оценка (факторная декомпозиция)](#расширенная-оценка-факторная-декомпозиция)
+26. [Воронка аналитики (Funnel Events)](#воронка-аналитики-funnel-events)
+27. [E2E-тестирование (Playwright)](#e2e-тестирование-playwright)
 
 ---
 
@@ -61,7 +69,15 @@
 ✅ **Real-time чат** — WebSocket-чат между студентом и работодателем после принятия запроса  
 ✅ **React-фронтенд** — современный SPA на React 18 + TypeScript + Vite с роутингом по ролям  
 ✅ **Админ-панель** — standalone HTML панель по адресу `/admin` с JWT-аутентификацией и 4 вкладками  
-✅ **Comprehensive tests** — 64 теста на pytest с покрытием всех ключевых функций
+✅ **Comprehensive tests** — 143+ тестов на pytest с покрытием всех ключевых функций  
+✅ **Система партнёрства** — уровни доступа работодателей (basic / partner / blocked) с аудит-логом  
+✅ **Публичный лендинг** — топ-студенты с анонимизированными данными, invite-flow, SEO  
+✅ **Paywall и монетизация** — модальное окно с тарифами для basic-работодателей  
+✅ **LLM-категоризация** — автоматическая классификация дисциплин через Ollama-эмбеддинги  
+✅ **Блоки компетенций** — группировка дисциплин по категориям с визуальными карточками  
+✅ **Факторная декомпозиция** — расширенная оценка с разбивкой по трём факторам (similarity, vacancy demand, grade)  
+✅ **Воронка аналитики** — fire-and-forget логирование событий (view_profile, send_invite, paywall_shown и др.)  
+✅ **E2E-тесты** — 17 Playwright-сценариев (регистрация, навигация, лендинг, админ-панель)
 
 ---
 
@@ -2786,7 +2802,7 @@ exit
 
 ### Структура тестов
 
-**64 теста**, организованных по модулям:
+**143+ тестов**, организованных по модулям:
 
 ```
 tests/
@@ -3070,6 +3086,158 @@ Internet
 
 ---
 
+## Система партнёрства работодателей
+
+### Уровни доступа
+- **basic** — стандартный доступ. Invite через paywall. Не видит полные контакты.
+- **partner** — привилегированный доступ. Прямой invite, полный доступ к контактам, партнёрский бейдж в UI.
+- **blocked** — заблокирован администратором. Не может отправлять invite. 403 на все invite-эндпоинты.
+
+### API
+- `PATCH /api/v1/admin/partnership/{employer_id}/status` — изменение статуса (admin only)
+  - Тело: `{ "status": "partner", "reason": "Подписан договор" }`
+- `GET /api/v1/admin/partnership/{employer_id}/audit` — журнал изменений
+
+### Модель данных
+- `EmployerProfile.partnership_status` (enum: basic, partner, blocked)
+- `EmployerPartnershipAudit` (employer_id, old_status, new_status, changed_by, reason, created_at)
+
+### UI
+- Партнёрский бейдж в панели работодателя
+- Оверлей с ограничениями для blocked
+- CTA для basic → partner
+
+---
+
+## Лендинг и Invite-flow
+
+### Публичный лендинг
+- `GET /api/v1/landing/top-students` — возвращает топ-5 студентов с анонимизированными данными
+- Карточки: имя (без фамилии), университет, средний similarity, estimated_salary
+- SEO-метатеги в index.html
+
+### Invite-flow
+1. Работодатель нажимает "Пригласить" на карточке студента
+2. `POST /api/v1/landing/invite/{student_id}` → бэкенд проверяет partnership_status:
+   - **partner** → создаёт ContactRequest, возвращает `{ action: "invited" }`
+   - **basic** → возвращает `{ action: "paywall_required" }`, UI показывает модальное окно
+   - **blocked** → 403 Forbidden
+3. Студент принимает/отклоняет через свой профиль
+4. `GET /api/v1/landing/contacts/{student_id}` — контакты после принятия
+
+### Frontend
+- `LandingPage.tsx` — hero-секция + карточки студентов + CTA
+- Доступен по маршруту `/landing`
+- Неавторизованные пользователи перенаправляются на лендинг вместо логина
+
+---
+
+## Paywall и монетизация
+
+### Варианты доступа
+- `GET /api/v1/landing/paywall-options` — список доступных тарифов
+- Тарифы: Базовый (бесплатно, ограниченный просмотр), Премиум (платный, полный доступ)
+
+### UI
+- Модальное окно PaywallModal в EmployerPanel
+- Показывается при попытке invite от basic-работодателя
+
+---
+
+## LLM-категоризация дисциплин
+
+### Принцип работы
+Сервис `app/categorization.py` использует эмбеддинги Ollama для автоматической классификации дисциплин по компетенциям.
+
+1. Для каждой дисциплины генерируется вектор (nomic-embed-text, 768-dim)
+2. Вектор сравнивается с эталонными категориями по cosine similarity
+3. Присваивается категория с наибольшим сходством
+
+### Категории
+- programming, databases, math, management, networks, security, algorithms, ai_ml, и др.
+
+### API
+- `POST /api/v1/admin/disciplines/categorize` — запуск категоризации всех дисциплин (admin only)
+- `PATCH /api/v1/admin/partnership/disciplines/{id}/category` — ручное переопределение категории
+
+### Файлы
+- `app/categorization.py` — сервис категоризации
+- `app/routers/admin_disciplines.py` — API эндпоинт
+
+---
+
+## Блоки компетенций
+
+### Описание
+Дисциплины студента группируются по категории (`Discipline.category`) в визуальные блоки компетенций.
+
+### Сервис
+- `app/competence.py` → `aggregate_by_competence(disciplines)` группирует дисциплины и рассчитывает средний similarity для блока.
+
+### UI
+- Карточки компетенций в панели работодателя
+- Каждая карточка: название категории, список дисциплин, средний similarity
+
+---
+
+## Расширенная оценка (факторная декомпозиция)
+
+### Endpoint
+- `POST /api/v1/evaluation/{student_id}/evaluate-enhanced` — оценка с детальной разбивкой по факторам
+- `GET /api/v1/evaluation/{student_id}/export` — экспорт результатов оценки
+
+### Факторная декомпозиция
+Для каждого навыка рассчитывается вклад трёх факторов:
+- **similarity_contribution** — вклад семантического сходства
+- **vacancy_demand_contribution** — вклад востребованности (log1p vacancy_count)
+- **academic_grade_contribution** — вклад академической оценки (grade_coeff)
+
+### Модель данных
+- `FactorBreakdown` — { similarity_pct, vacancy_demand_pct, academic_grade_pct }
+- `EnhancedEvaluationResponse` — расширенный ответ с factor_breakdown
+
+---
+
+## Воронка аналитики (Funnel Events)
+
+### Типы событий
+- `view_profile` — работодатель просмотрел профиль студента
+- `send_invite` — отправлено приглашение
+- `accept_invite` — студент принял приглашение
+- `reject_invite` — студент отклонил приглашение
+- `view_contacts` — просмотр контактов
+- `paywall_shown` — показан paywall
+
+### Логирование
+События записываются fire-and-forget (try/catch) в таблицу `funnel_events`.
+
+### Модель
+- `FunnelEvent` (event_type, employer_id, student_id, metadata JSON, created_at)
+
+---
+
+## E2E-тестирование (Playwright)
+
+### Конфигурация
+- `frontend/playwright.config.ts` — настройки Playwright
+- `frontend/e2e/app.spec.ts` — 17 тестовых сценариев
+
+### Запуск
+```powershell
+cd frontend
+npx playwright test
+```
+
+### Покрытие
+- Регистрация и вход (student, employer, admin)
+- Навигация по панелям
+- Профиль студента (редактирование, фото)
+- Панель работодателя (поиск, контакт-реквесты)
+- Лендинг (отображение, карточки)
+- Админ-панель (студенты, теги)
+
+---
+
 ## Заключение
 
 **HH.ru Student Evaluator** — это полнофункциональная платформа с современной архитектурой, включающая:
@@ -3079,8 +3247,14 @@ Internet
 ✅ Self-service профили студентов и работодателей  
 ✅ Real-time чат через WebSocket  
 ✅ React SPA + legacy admin panel  
-✅ Comprehensive test suite (64 теста)  
+✅ Comprehensive test suite (143+ тестов)  
 ✅ Docker-based инфраструктура  
+✅ Система партнёрства работодателей (basic / partner / blocked)  
+✅ Публичный лендинг с invite-flow и paywall  
+✅ LLM-категоризация дисциплин и блоки компетенций  
+✅ Факторная декомпозиция оценки  
+✅ Воронка аналитики (Funnel Events)  
+✅ E2E-тестирование через Playwright (17 сценариев)
 
 Система готова к дальнейшему развитию и масштабированию.
 
@@ -3092,6 +3266,6 @@ Internet
 
 ---
 
-**Версия документации**: 2.0  
-**Дата обновления**: 2025-01-16  
+**Версия документации**: 3.0  
+**Дата обновления**: 2025-07-15  
 **Автор**: HH.ru Student Evaluator Team

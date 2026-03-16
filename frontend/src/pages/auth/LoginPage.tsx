@@ -28,11 +28,11 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
           </div>
           <div className="form-group">
             <label>Пароль</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" />
           </div>
           <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Войти</button>
         </form>
