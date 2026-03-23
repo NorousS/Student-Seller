@@ -13,6 +13,14 @@ from app.models import Student, UserRole
 from app.valuation import evaluate_student, DisciplineWithGrade
 from app.formulas import FormulaRegistry
 from app.grouping import SkillClusterer, DisciplineClusterer
+from app.analysis import (
+    FormulaMetrics,
+    evaluate_formula_quality,
+    generate_test_students,
+    get_all_discipline_sets,
+    get_weak_students,
+    get_strong_students,
+)
 
 router = APIRouter(
     prefix="/api/v1/analysis",
@@ -70,6 +78,25 @@ class DisciplineClusteringResponse(BaseModel):
     student_id: int
     student_name: str
     clusters: list[DisciplineClusterResponse]
+
+
+class FormulaMetricsResponse(BaseModel):
+    """Метрики качества формулы."""
+    formula_name: str
+    stability_score: float = Field(..., description="Стабильность при изменении top_k")
+    consistency_score: float = Field(..., description="Консистентность для похожих студентов")
+    coverage_ratio: float = Field(..., description="Доля дисциплин с найденными навыками")
+    discrimination_power: float = Field(..., description="Способность различать студентов")
+    avg_confidence: float = Field(..., description="Средняя уверенность оценок")
+    sample_size: int = Field(..., description="Количество оценок в выборке")
+
+
+class FormulaQualityComparisonResponse(BaseModel):
+    """Сравнение качества всех формул."""
+    specialty: str
+    metrics: list[FormulaMetricsResponse]
+    best_formula: str
+    recommendation: str
 
 
 # === Endpoints ===
@@ -225,4 +252,83 @@ async def cluster_student_disciplines(
         student_id=student.id,
         student_name=student.full_name,
         clusters=clusters,
+    )
+
+
+@router.post("/evaluate-formulas", response_model=FormulaQualityComparisonResponse)
+async def evaluate_all_formulas(
+    specialty: str = Query(..., min_length=1, description="Специальность для оценки"),
+    sample_size: int = Query(default=5, ge=1, le=20, description="Размер выборки на профиль"),
+    top_k: int = Query(default=5, ge=1, le=20),
+    seed: int = Query(default=42, description="Seed для воспроизводимости"),
+    db: AsyncSession = Depends(get_db),
+) -> FormulaQualityComparisonResponse:
+    """
+    Комплексное сравнение качества всех формул на синтетических данных.
+    
+    Генерирует тестовых студентов разных профилей (backend, data_science, devops, 
+    fullstack, theorist) с разной силой (weak, average, strong) и оценивает
+    каждую формулу по метрикам:
+    
+    - **stability_score**: Стабильность при изменении top_k ±1
+    - **consistency_score**: Похожие студенты получают похожие оценки
+    - **coverage_ratio**: Доля дисциплин с найденными навыками
+    - **discrimination_power**: Способность различать слабых и сильных студентов
+    - **avg_confidence**: Средняя уверенность оценок
+    """
+    # Генерируем тестовых студентов
+    test_students = generate_test_students(profiles_per_type=sample_size, seed=seed)
+    
+    all_disciplines = get_all_discipline_sets(test_students)
+    weak = get_weak_students(test_students)
+    strong = get_strong_students(test_students)
+    
+    metrics_list = []
+    
+    for formula_name in FormulaRegistry.list_formulas():
+        metrics = await evaluate_formula_quality(
+            db=db,
+            formula_name=formula_name,
+            test_students=all_disciplines,
+            specialty=specialty,
+            weak_students=weak,
+            strong_students=strong,
+            top_k=top_k,
+        )
+        
+        metrics_list.append(FormulaMetricsResponse(
+            formula_name=metrics.formula_name,
+            stability_score=metrics.stability_score,
+            consistency_score=metrics.consistency_score,
+            coverage_ratio=metrics.coverage_ratio,
+            discrimination_power=metrics.discrimination_power,
+            avg_confidence=metrics.avg_confidence,
+            sample_size=metrics.sample_size,
+        ))
+    
+    # Выбираем лучшую формулу по комбинированному скору
+    def combined_score(m: FormulaMetricsResponse) -> float:
+        return (
+            m.stability_score * 0.2 +
+            m.consistency_score * 0.2 +
+            m.coverage_ratio * 0.2 +
+            m.discrimination_power * 0.3 +
+            m.avg_confidence * 0.1
+        )
+    
+    best = max(metrics_list, key=combined_score)
+    
+    # Генерируем рекомендацию
+    if best.discrimination_power > 0.7:
+        recommendation = f"Рекомендуется {best.formula_name}: хорошо различает сильных и слабых студентов"
+    elif best.stability_score > 0.8:
+        recommendation = f"Рекомендуется {best.formula_name}: стабильные оценки"
+    else:
+        recommendation = f"Рекомендуется {best.formula_name} как лучший компромисс"
+    
+    return FormulaQualityComparisonResponse(
+        specialty=specialty,
+        metrics=metrics_list,
+        best_formula=best.formula_name,
+        recommendation=recommendation,
     )
