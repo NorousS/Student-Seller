@@ -245,7 +245,7 @@ function EvaluationTab() {
   useEffect(() => {
     api.get('/profile/student/disciplines')
       .then(r => setStudentDisciplines(r.data || []))
-      .catch(() => setStudentDisciplines([])
+      .catch(() => setStudentDisciplines([]))
     
     api.get('/profile/student/formulas')
       .then(r => setAvailableFormulas(r.data || []))
