@@ -1,0 +1,78 @@
+{
+  "project": "HH Parser",
+  "branchName": "ralph/reproducible-docker-compose-clone",
+  "description": "Воспроизводимый запуск проекта после чистого git clone через docker-compose up --build.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Воспроизвести проблему в чистом клоне",
+      "description": "As a developer, I want to reproduce the startup issue in a clean clone so that I can identify the exact versioning root cause.",
+      "acceptanceCriteria": [
+        "Создана отдельная папка и выполнен git clone репозитория",
+        "В новом клоне выполнена команда docker-compose up --build",
+        "Зафиксирована точная ошибка со стадией, на которой она возникает",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Точечно исправить .gitignore по подтвержденной причине",
+      "description": "As a developer, I want to apply a minimal .gitignore fix so that clean clones no longer depend on untracked local artifacts.",
+      "acceptanceCriteria": [
+        "Изменены только подтвержденно проблемные правила в .gitignore",
+        "Секретные и локально-чувствительные файлы не добавлены в отслеживание",
+        "git status показывает только релевантные изменения по задаче",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Сделать commit и push в текущую ветку",
+      "description": "As a maintainer, I want to commit and push the fix so that the reproducibility fix is available to everyone.",
+      "acceptanceCriteria": [
+        "Выполнен commit только с релевантными изменениями",
+        "Выполнен git push в текущую ветку",
+        "Релевантные изменения доступны в remote-репозитории",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Проверить docker-compose в новом чистом клоне после push",
+      "description": "As a developer, I want to verify docker-compose startup in a fresh clone so that reproducibility is proven end-to-end.",
+      "acceptanceCriteria": [
+        "После push выполнен новый git clone в отдельную папку",
+        "Команда docker-compose up --build завершается без ошибок сборки",
+        "Сервисы app, db, qdrant и ollama переходят в рабочее состояние",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Прогнать backend-тесты после успешного старта",
+      "description": "As a team, we want to run backend tests after the fix so that we can confirm no regressions were introduced.",
+      "acceptanceCriteria": [
+        "После старта окружения запущены backend-тесты",
+        "Результат тестов зафиксирован в формате passed/failed/skipped",
+        "Новые регрессии, если есть, явно выделены",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

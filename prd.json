@@ -1,0 +1,326 @@
+{
+  "project": "HH Parser - Formula Comparison & Skill Grouping",
+  "branchName": "ralph/formula-comparison-skill-grouping",
+  "description": "Разработка 6 формул расчёта схожести навыков, системы группировки компетенций и статистического анализа для выбора оптимальной формулы оценки студентов",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Создать базовый абстрактный класс формулы",
+      "description": "As a developer, I need a base class for all formula implementations to ensure consistent interface.",
+      "acceptanceCriteria": [
+        "Создать app/formulas/__init__.py с экспортами",
+        "Создать app/formulas/base.py с абстрактным классом BaseFormula",
+        "BaseFormula имеет методы: calculate_weight(similarity, vacancy_count, grade_coeff) -> float",
+        "BaseFormula имеет метод: get_name() -> str",
+        "Typecheck passes (uv run mypy app/formulas/ или ruff check)"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Реализовать F1 Baseline формулу",
+      "description": "As a developer, I need the current formula wrapped as a class for comparison.",
+      "acceptanceCriteria": [
+        "Создать app/formulas/f1_baseline.py",
+        "Класс BaselineFormula наследует BaseFormula",
+        "Формула: weight = similarity × log1p(vacancy_count) × grade_coeff",
+        "Unit test в tests/test_formulas.py проверяет расчёт",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Реализовать F2 Linear формулу",
+      "description": "As a developer, I need a linear formula without logarithm for comparison.",
+      "acceptanceCriteria": [
+        "Создать app/formulas/f2_linear.py",
+        "Класс LinearFormula наследует BaseFormula",
+        "Формула: weight = similarity × (count / max_count) × grade_coeff",
+        "Принимает max_count как параметр конструктора",
+        "Unit test проверяет расчёт",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Реализовать F3 Quadratic формулу",
+      "description": "As a developer, I need a quadratic similarity formula for comparison.",
+      "acceptanceCriteria": [
+        "Создать app/formulas/f3_quadratic.py",
+        "Класс QuadraticFormula наследует BaseFormula",
+        "Формула: weight = similarity² × log1p(vacancy_count) × grade_coeff",
+        "Unit test проверяет расчёт",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Реализовать F4 Exponential формулу",
+      "description": "As a developer, I need an exponential formula for comparison.",
+      "acceptanceCriteria": [
+        "Создать app/formulas/f4_exponential.py",
+        "Класс ExponentialFormula наследует BaseFormula",
+        "Формула: weight = exp(similarity - 0.5) × log1p(vacancy_count) × grade_coeff",
+        "Unit test проверяет расчёт",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Реализовать F5 TF-IDF формулу",
+      "description": "As a developer, I need a TF-IDF inspired formula for comparison.",
+      "acceptanceCriteria": [
+        "Создать app/formulas/f5_tfidf.py",
+        "Класс TFIDFFormula наследует BaseFormula",
+        "Формула: weight = similarity × log(total_vacancies / skill_count) × grade_coeff",
+        "Принимает total_vacancies как параметр",
+        "Unit test проверяет расчёт",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Реализовать F6 Matrix формулу с корреляциями",
+      "description": "As a developer, I need a matrix formula that considers skill correlations.",
+      "acceptanceCriteria": [
+        "Создать app/formulas/f6_matrix.py",
+        "Класс MatrixFormula наследует BaseFormula",
+        "Формула: weight = similarity × correlation_boost × log1p(count) × grade",
+        "correlation_boost = 1 + avg_cosine_similarity_to_other_skills",
+        "Принимает skill_embeddings dict для расчёта корреляций",
+        "Unit test проверяет расчёт",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Создать FormulaRegistry для управления формулами",
+      "description": "As a developer, I need a registry to get formulas by name.",
+      "acceptanceCriteria": [
+        "Добавить FormulaRegistry в app/formulas/__init__.py",
+        "Метод get_formula(name: str) -> BaseFormula",
+        "Метод list_formulas() -> list[str]",
+        "Все 6 формул зарегистрированы",
+        "Unit test проверяет registry",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Интегрировать выбор формулы в valuation.py",
+      "description": "As a developer, I need to select formula in evaluate_student function.",
+      "acceptanceCriteria": [
+        "Добавить параметр formula_name: str = 'baseline' в evaluate_student()",
+        "Использовать FormulaRegistry для получения формулы",
+        "Текущая логика работает без изменений при formula_name='baseline'",
+        "Существующие тесты проходят",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Создать DisciplineClusterer для группировки дисциплин",
+      "description": "As a developer, I need to cluster student disciplines into competency groups.",
+      "acceptanceCriteria": [
+        "Создать app/grouping/__init__.py",
+        "Создать app/grouping/discipline_clusterer.py",
+        "Класс DisciplineClusterer с методом cluster(disciplines: list[str]) -> dict[str, list[str]]",
+        "Использует эмбеддинги + K-means или Hierarchical clustering",
+        "Возвращает группы: {'Языки программирования': ['Python', 'Go'], ...}",
+        "Unit test проверяет кластеризацию",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Создать SkillClusterer для группировки навыков hh.ru",
+      "description": "As a developer, I need to cluster matched hh.ru skills into thematic groups.",
+      "acceptanceCriteria": [
+        "Создать app/grouping/skill_clusterer.py",
+        "Класс SkillClusterer с методом cluster(skills: list[dict]) -> dict[str, list[dict]]",
+        "skills имеют поля: name, similarity, embedding",
+        "Возвращает тематические группы навыков",
+        "Unit test проверяет кластеризацию",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Добавить API endpoint для группировки навыков",
+      "description": "As a user, I want to see my skills grouped by competency areas.",
+      "acceptanceCriteria": [
+        "Добавить POST /api/v1/evaluation/{student_id}/grouped-skills",
+        "Возвращает дисциплины сгруппированные по категориям",
+        "Возвращает навыки hh.ru сгруппированные по темам",
+        "Интеграционный тест проверяет endpoint",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Создать метрики качества формул",
+      "description": "As a developer, I need metrics to compare formula quality.",
+      "acceptanceCriteria": [
+        "Создать app/analysis/__init__.py",
+        "Создать app/analysis/metrics.py",
+        "Метрика stability_score(formula, student, variations) -> float",
+        "Метрика coverage_score(formula, student) -> float",
+        "Метрика discrimination_score(formula, students) -> float",
+        "Unit tests для каждой метрики",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Создать FormulaComparator",
+      "description": "As a developer, I need a comparator to evaluate all formulas on test data.",
+      "acceptanceCriteria": [
+        "Создать app/analysis/comparator.py",
+        "Класс FormulaComparator с методом compare(formulas, test_students) -> ComparisonReport",
+        "ComparisonReport содержит метрики для каждой формулы",
+        "Метод rank_formulas() возвращает отсортированный список",
+        "Unit test проверяет сравнение",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Создать генератор синтетических тестовых данных",
+      "description": "As a developer, I need synthetic student profiles for testing formulas.",
+      "acceptanceCriteria": [
+        "Создать app/analysis/test_data_generator.py",
+        "Функция generate_test_students(count: int) -> list[TestStudent]",
+        "5 профилей: Backend, Data Scientist, DevOps, Full-stack, Теоретик",
+        "Каждый профиль имеет реалистичные дисциплины и оценки",
+        "Использует типичные дисциплины IT-специальностей",
+        "Unit test проверяет генерацию",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Добавить API endpoint сравнения формул",
+      "description": "As an admin, I want to compare all formulas and see which is best.",
+      "acceptanceCriteria": [
+        "Создать app/routers/formula_comparison.py",
+        "Добавить POST /api/v1/admin/formulas/compare",
+        "Принимает список student_ids или uses synthetic data",
+        "Возвращает ComparisonReport с метриками и рекомендацией",
+        "Endpoint требует admin роль",
+        "Интеграционный тест проверяет endpoint",
+        "Typecheck passes"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Создать полный набор unit-тестов для формул",
+      "description": "As a developer, I need comprehensive tests for all formula edge cases.",
+      "acceptanceCriteria": [
+        "Файл tests/test_formulas.py с тестами для всех 6 формул",
+        "Тесты граничных случаев: similarity=0, similarity=1, count=0, count=1000000",
+        "Тесты всех grade коэффициентов",
+        "Минимум 5 тестов на формулу",
+        "uv run pytest tests/test_formulas.py -v проходит",
+        "Typecheck passes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Создать integration тесты для группировки и сравнения",
+      "description": "As a developer, I need integration tests for the full pipeline.",
+      "acceptanceCriteria": [
+        "Файл tests/test_formula_integration.py",
+        "Тест: создать студента -> оценить всеми формулами -> сравнить результаты",
+        "Тест: группировка дисциплин реального студента",
+        "Тест: API endpoint /formulas/compare",
+        "uv run pytest tests/test_formula_integration.py -v проходит",
+        "Typecheck passes"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Добавить UI для выбора формулы и просмотра групп",
+      "description": "As a user, I want to select formula and see skill groups in the interface.",
+      "acceptanceCriteria": [
+        "Добавить dropdown выбора формулы на странице оценки студента",
+        "Показывать сгруппированные навыки в collapsible секциях",
+        "При смене формулы пересчитывается оценка",
+        "Стили соответствуют существующему дизайну (CSS variables, dark theme)",
+        "Typecheck passes",
+        "Verify in browser using Playwright MCP"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "E2E тесты и финальная документация",
+      "description": "As a developer, I need E2E tests and documentation for the new features.",
+      "acceptanceCriteria": [
+        "E2E тест в frontend/e2e/: выбор формулы и проверка изменения оценки",
+        "E2E тест: просмотр сгруппированных навыков",
+        "Обновить HOW_VALUATION_WORKS.md с описанием всех формул",
+        "Добавить раздел про группировку навыков",
+        "npx playwright test проходит",
+        "Typecheck passes"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
