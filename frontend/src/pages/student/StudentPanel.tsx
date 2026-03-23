@@ -197,6 +197,7 @@ interface EvaluationResult {
   total_disciplines: number
   matched_disciplines: number
   skill_matches: SkillMatch[]
+  formula_used?: string
 }
 
 interface StudentDiscipline {
@@ -212,6 +213,8 @@ function EvaluationTab() {
   const [specialty, setSpecialty] = useState('')
   const [experience, setExperience] = useState('Любой')
   const [topK, setTopK] = useState(5)
+  const [formula, setFormula] = useState('baseline')
+  const [availableFormulas, setAvailableFormulas] = useState<{name: string, description: string}[]>([])
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<EvaluationResult | null>(null)
   const [studentDisciplines, setStudentDisciplines] = useState<StudentDiscipline[]>([])
@@ -242,7 +245,11 @@ function EvaluationTab() {
   useEffect(() => {
     api.get('/profile/student/disciplines')
       .then(r => setStudentDisciplines(r.data || []))
-      .catch(() => setStudentDisciplines([]))
+      .catch(() => setStudentDisciplines([])
+    
+    api.get('/profile/student/formulas')
+      .then(r => setAvailableFormulas(r.data || []))
+      .catch(() => setAvailableFormulas([]))
   }, [])
 
   const evaluate = async () => {
@@ -258,6 +265,7 @@ function EvaluationTab() {
       const expValue = experienceMap[experience]
       if (expValue) params.set('experience', expValue)
       params.set('top_k', String(topK))
+      params.set('formula', formula)
       excludedSkills.forEach(s => {
         const skillName = s.substring(s.indexOf(':') + 1)
         params.append('excluded_skills', skillName)
@@ -506,6 +514,23 @@ function EvaluationTab() {
               <span>20</span>
             </div>
           </div>
+          <div className="form-group" style={{ flex: '1 1 190px', marginBottom: 0 }}>
+            <label style={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>Формула расчёта</label>
+            <select value={formula} onChange={e => setFormula(e.target.value)} title={availableFormulas.find(f => f.name === formula)?.description || ''}>
+              {availableFormulas.length > 0 ? availableFormulas.map(f => (
+                <option key={f.name} value={f.name}>{f.name}</option>
+              )) : (
+                <>
+                  <option value="baseline">baseline</option>
+                  <option value="linear">linear</option>
+                  <option value="quadratic">quadratic</option>
+                  <option value="exponential">exponential</option>
+                  <option value="tfidf">tfidf</option>
+                  <option value="matrix">matrix</option>
+                </>
+              )}
+            </select>
+          </div>
           <button
             className="btn btn-primary"
             onClick={evaluate}
@@ -551,6 +576,7 @@ function EvaluationTab() {
               <div className="label">Оценочная зарплата</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
                 📌 {result.specialty} · {selectedExperience}
+                {result.formula_used && <span> · <span style={{ color: '#58a6ff' }}>{result.formula_used}</span></span>}
               </div>
             </div>
             <div className="card stat-card" style={{ marginBottom: 0 }}>

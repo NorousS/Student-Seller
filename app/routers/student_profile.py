@@ -28,6 +28,7 @@ from app.schemas import (
 )
 from app.routers.students import build_student_response, get_or_create_discipline
 from app.valuation import evaluate_student, DisciplineWithGrade
+from app.formulas import FormulaRegistry
 
 router = APIRouter(
     prefix="/api/v1/profile/student",
@@ -295,16 +296,34 @@ async def respond_to_contact_request(
 # --- Self-evaluation ---
 
 
+@router.get("/formulas")
+async def list_available_formulas():
+    """Получить список доступных формул для оценки."""
+    formulas = FormulaRegistry.get_all_formulas()
+    return [
+        {"name": f.get_name(), "description": f.get_description()}
+        for f in formulas
+    ]
+
+
 @router.post("/evaluate", response_model=EvaluationResponse)
 async def evaluate_self(
     specialty: str = Query(..., min_length=1, description="Специальность для оценки"),
     experience: ExperienceLevel | None = Query(None, description="Фильтр по опыту работы"),
     top_k: int = Query(default=5, ge=1, le=20, description="Кол-во навыков на дисциплину"),
     excluded_skills: list[str] = Query(default=[], description="Навыки для исключения из расчёта"),
+    formula: str = Query(default="baseline", description="Формула расчёта (baseline, linear, quadratic, exponential, tfidf, matrix)"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(UserRole.student)),
 ) -> EvaluationResponse:
     """Оценить свою рыночную стоимость как студент."""
+    # Валидируем формулу
+    if formula not in FormulaRegistry.list_formulas():
+        raise HTTPException(
+            status_code=400,
+            detail=f"Неизвестная формула '{formula}'. Доступные: {FormulaRegistry.list_formulas()}",
+        )
+    
     # Получаем студента через helper
     student = await _get_student_for_user(db, current_user)
     
@@ -325,6 +344,7 @@ async def evaluate_self(
         db, disciplines, specialty=specialty,
         experience=experience_value, top_k=top_k,
         excluded_skills=excluded_skills if excluded_skills else None,
+        formula_name=formula,
     )
 
     # Формируем ответ
@@ -354,4 +374,5 @@ async def evaluate_self(
         total_disciplines=valuation.total_disciplines,
         matched_disciplines=valuation.matched_disciplines,
         skill_matches=skill_matches,
+        formula_used=valuation.formula_used,
     )
