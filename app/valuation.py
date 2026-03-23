@@ -7,11 +7,12 @@
 2. Для каждой дисциплины студента → семантический поиск ближайших навыков hh.ru
 3. Отсеиваем теги с < MIN_TAG_COUNT вакансий (выбросы)
 4. Для каждого навыка → средняя ЗП из отфильтрованных вакансий
-5. Взвешенная оценка: similarity × log1p(count) × grade_coeff
+5. Взвешенная оценка: выбранная формула × grade_coeff
 """
 
 import math
 from dataclasses import dataclass
+from typing import Optional
 
 from sqlalchemy import func, select, distinct
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +21,7 @@ from app.models import Tag, Vacancy, vacancy_tag_association
 from app.vector_store import vector_store
 from app.embeddings import embedding_service
 from app.config import settings
+from app.formulas import FormulaRegistry, BaseFormula, BaselineFormula
 
 # Минимальное количество вакансий для тега, чтобы он учитывался
 MIN_TAG_COUNT = 3
@@ -115,6 +117,7 @@ class ValuationResult:
     total_disciplines: int
     matched_disciplines: int
     factor_breakdown: list[FactorContribution] = None
+    formula_used: str = "baseline"
 
     def __post_init__(self):
         if self.factor_breakdown is None:
@@ -208,6 +211,8 @@ async def evaluate_student(
     experience: str | None = None,
     top_k: int = 5,
     excluded_skills: list[str] | None = None,
+    formula_name: str = "baseline",
+    formula_params: Optional[dict] = None,
 ) -> ValuationResult:
     """
     Оценивает потенциальную рыночную стоимость студента.
@@ -219,7 +224,12 @@ async def evaluate_student(
         experience: Фильтр по опыту работы
         top_k: Сколько ближайших навыков искать на дисциплину
         excluded_skills: Навыки, которые нужно исключить из расчёта
+        formula_name: Имя формулы (baseline, linear, quadratic, exponential, tfidf, matrix)
+        formula_params: Дополнительные параметры для формулы
     """
+    # Получаем формулу
+    formula_params = formula_params or {}
+    formula = FormulaRegistry.get_formula(formula_name, **formula_params)
     # Нормализуем excluded_skills для быстрого поиска
     excluded_set = set(
         s.lower() for s in (excluded_skills or [])
@@ -284,7 +294,12 @@ async def evaluate_student(
             # и навык не в списке исключённых
             if avg_salary and vacancy_count >= MIN_TAG_COUNT and not is_excluded:
                 discipline_has_match = True
-                weight = similarity * math.log1p(vacancy_count) * grade_coeff
+                # Используем выбранную формулу для расчёта веса
+                weight = formula.calculate_weight(
+                    similarity=similarity,
+                    vacancy_count=vacancy_count,
+                    grade_coeff=grade_coeff,
+                )
                 weighted_salary_sum += avg_salary * weight
                 weight_sum += weight
 
@@ -349,4 +364,5 @@ async def evaluate_student(
         total_disciplines=len(disciplines),
         matched_disciplines=matched_disciplines,
         factor_breakdown=factor_breakdown,
+        formula_used=formula.get_name(),
     )

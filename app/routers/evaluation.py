@@ -13,6 +13,7 @@ from app.database import get_db
 from app.models import Student, User, UserRole
 from app.valuation import evaluate_student, DisciplineWithGrade
 from app.vector_store import vector_store
+from app.formulas import FormulaRegistry
 from app.schemas import (
     CompetenceBlockResponse,
     EnhancedEvaluationResponse,
@@ -37,6 +38,7 @@ async def evaluate_student_endpoint(
     experience: ExperienceLevel | None = Query(None, description="Фильтр по опыту работы"),
     top_k: int = Query(default=5, ge=1, le=20, description="Кол-во навыков на дисциплину"),
     excluded_skills: list[str] = Query(default=[], description="Навыки для исключения из расчёта"),
+    formula: str = Query(default="baseline", description="Формула расчёта веса (baseline, linear, quadratic, exponential, tfidf, matrix)"),
     db: AsyncSession = Depends(get_db),
 ) -> EvaluationResponse:
     """
@@ -44,7 +46,21 @@ async def evaluate_student_endpoint(
 
     Сопоставляет дисциплины студента с навыками hh.ru через семантический поиск.
     Фильтрует вакансии по специальности и опыту работы.
+    
+    Доступные формулы:
+    - baseline: similarity × log1p(count) × grade (по умолчанию)
+    - linear: similarity × (count/max_count) × grade
+    - quadratic: similarity² × log1p(count) × grade
+    - exponential: exp(similarity-0.5) × log1p(count) × grade
+    - tfidf: similarity × log(total/count) × grade
+    - matrix: similarity × correlation_boost × log1p(count) × grade
     """
+    # Валидируем формулу
+    if formula not in FormulaRegistry.list_formulas():
+        raise HTTPException(
+            status_code=400,
+            detail=f"Неизвестная формула '{formula}'. Доступные: {FormulaRegistry.list_formulas()}",
+        )
     # Получаем студента с дисциплинами
     result = await db.execute(
         select(Student).where(Student.id == student_id)
@@ -70,6 +86,7 @@ async def evaluate_student_endpoint(
         db, disciplines, specialty=specialty,
         experience=experience_value, top_k=top_k,
         excluded_skills=excluded_skills if excluded_skills else None,
+        formula_name=formula,
     )
 
     # Формируем ответ
@@ -99,6 +116,7 @@ async def evaluate_student_endpoint(
         total_disciplines=valuation.total_disciplines,
         matched_disciplines=valuation.matched_disciplines,
         skill_matches=skill_matches,
+        formula_used=valuation.formula_used,
     )
 
 
@@ -160,11 +178,19 @@ async def evaluate_student_enhanced(
     experience: ExperienceLevel | None = Query(None, description="Фильтр по опыту"),
     top_k: int = Query(default=5, ge=1, le=20, description="Навыков на дисциплину"),
     excluded_skills: list[str] = Query(default=[], description="Навыки для исключения"),
+    formula: str = Query(default="baseline", description="Формула расчёта веса"),
     db: AsyncSession = Depends(get_db),
 ) -> EnhancedEvaluationResponse:
     """
     Расширенная оценка с разбивкой по факторам и блокам компетенций.
     """
+    # Валидируем формулу
+    if formula not in FormulaRegistry.list_formulas():
+        raise HTTPException(
+            status_code=400,
+            detail=f"Неизвестная формула '{formula}'. Доступные: {FormulaRegistry.list_formulas()}",
+        )
+    
     result = await db.execute(select(Student).where(Student.id == student_id))
     student = result.scalar_one_or_none()
     if not student:
@@ -182,6 +208,7 @@ async def evaluate_student_enhanced(
         db, disciplines, specialty=specialty,
         experience=experience_value, top_k=top_k,
         excluded_skills=excluded_skills if excluded_skills else None,
+        formula_name=formula,
     )
 
     # Build skill matches response
@@ -237,6 +264,7 @@ async def evaluate_student_enhanced(
         skill_matches=skill_matches,
         factor_breakdown=factor_breakdown,
         competence_blocks=competence_blocks,
+        formula_used=valuation.formula_used,
     )
 
 
@@ -244,6 +272,7 @@ async def evaluate_student_enhanced(
 async def export_valuation(
     student_id: int,
     specialty: str = Query(..., min_length=1),
+    formula: str = Query(default="baseline", description="Формула расчёта"),
     db: AsyncSession = Depends(get_db),
 ):
     """Экспорт объяснения оценки в JSON."""
@@ -259,12 +288,13 @@ async def export_valuation(
     if not disciplines:
         raise HTTPException(status_code=400, detail="У студента нет дисциплин")
 
-    valuation = await evaluate_student(db, disciplines, specialty=specialty)
+    valuation = await evaluate_student(db, disciplines, specialty=specialty, formula_name=formula)
 
     return {
         "student_id": student.id,
         "student_name": student.full_name,
         "specialty": specialty,
+        "formula_used": valuation.formula_used,
         "estimated_salary": valuation.estimated_salary,
         "confidence": valuation.confidence,
         "factor_breakdown": [

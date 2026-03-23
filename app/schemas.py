@@ -167,6 +167,7 @@ class EvaluationResponse(BaseModel):
     skill_matches: list[SkillMatchResponse] = Field(
         default_factory=list, description="Детальная разбивка по навыкам"
     )
+    formula_used: str = Field(default="baseline", description="Использованная формула")
 
 
 class StudentSkillsResponse(BaseModel):
