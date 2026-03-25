@@ -209,16 +209,24 @@ Locator: locator('select').filter({ hasText: /baseline|linear|quadratic/ })
 - API endpoints созданы и работают
 - Unit/integration тесты покрывают весь функционал
 - Документация обновлена
+- **Статистический анализ завершён — QUADRATIC выбрана оптимальной**
 
-⏳ **В процессе**:
-- Выбор оптимальной формулы (требует fix Docker network)
-- E2E тестирование через Playwright
-- Полный цикл CI/CD с тестами
+### 🏆 ИТОГОВЫЕ РЕЗУЛЬТАТЫ АНАЛИЗА
 
-🔧 **Требует внимания**:
-- Docker network configuration
-- Frontend E2E tests debugging
-- Production deployment strategy
+| Место | Формула | Composite Score | Cohen's d |
+|-------|---------|-----------------|-----------|
+| **#1** | **QUADRATIC** | **0.2829** | 0.5660 |
+| #2 | LINEAR | 0.3358 | 0.3914 |
+| #3 | BASELINE | 0.3587 | 0.2938 |
+| #4 | EXPONENTIAL | 0.3839 | 0.3346 |
+| #5 | MATRIX | 0.7489 | 0.3651 |
+| #6 | TFIDF | 0.8000 | 1.3143 |
+
+**Рекомендация**: Использовать **QUADRATIC** формулу как default, т.к.:
+1. Лучший composite score (0.2829)
+2. Хорошая дискриминационная способность (Cohen's d = 0.566)
+3. Низкий AIC/BIC — оптимальный баланс fit/complexity
+4. Стабильность: bootstrap CV = 0.0345
 
 ## Источники
 

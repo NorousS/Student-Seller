@@ -11,6 +11,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      ollama:
+        condition: service_started
+      qdrant:
+        condition: service_started
+    networks:
+      - app-network
     restart: unless-stopped
 
   db:
@@ -28,6 +34,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
     restart: unless-stopped
 
   qdrant:
@@ -37,6 +45,8 @@ services:
       - "6334:6334"
     volumes:
       - qdrant_data:/qdrant/storage
+    networks:
+      - app-network
     restart: unless-stopped
 
   ollama:
@@ -45,7 +55,13 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+    networks:
+      - app-network
     restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   postgres_data:

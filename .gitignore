@@ -12,3 +12,8 @@ app/static/uploads/
 *.png
 test_screenshots/
 tmp_clone_repro_*/
+frontend/test-results/
+tmp_*.json
+*.log
+.DS_Store
+Thumbs.db
