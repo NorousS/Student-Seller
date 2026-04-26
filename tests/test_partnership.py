@@ -36,10 +36,20 @@ async def test_admin_can_update_partnership(client: AsyncClient, admin_headers: 
 @pytest.mark.asyncio
 async def test_admin_can_list_employers(client: AsyncClient, admin_headers: dict):
     """Админ видит список работодателей и статус партнерства."""
+    register_resp = await client.post("/api/v1/auth/register", json={
+        "email": "listed-employer@test.com",
+        "password": "employer123",
+        "role": "employer",
+        "company_name": "Listed Corp",
+    })
+    assert register_resp.status_code == 201
+
     resp = await client.get("/api/v1/admin/employers", headers=admin_headers)
     assert resp.status_code == 200
     employers = resp.json()
-    assert len(employers) >= 1
+    listed = next(e for e in employers if e["email"] == "listed-employer@test.com")
+    assert listed["company_name"] == "Listed Corp"
+    assert listed["partnership_status"] == "non_partner"
     first = employers[0]
     assert "employer_user_id" in first
     assert "email" in first
