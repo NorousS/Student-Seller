@@ -8,6 +8,9 @@ services:
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
       - OLLAMA_BASE_URL=http://ollama:11434
+      - HH_API_BASE_URL=${HH_API_BASE_URL:-https://api.hh.ru}
+      - HH_USER_AGENT=${HH_USER_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36}
+      - HH_ACCESS_TOKEN=${HH_ACCESS_TOKEN:-}
     depends_on:
       db:
         condition: service_healthy
@@ -28,9 +31,6 @@ services:
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
       - OLLAMA_BASE_URL=http://ollama:11434
-      - HH_API_BASE_URL=${HH_API_BASE_URL:-https://api.hh.ru}
-      - HH_USER_AGENT=${HH_USER_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36}
-      - HH_ACCESS_TOKEN=${HH_ACCESS_TOKEN:-}
       - HH_API_BASE_URL=${HH_API_BASE_URL:-https://api.hh.ru}
       - HH_USER_AGENT=${HH_USER_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36}
       - HH_ACCESS_TOKEN=${HH_ACCESS_TOKEN:-}
