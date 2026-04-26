@@ -5,7 +5,7 @@
 
 from collections import Counter
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,7 +13,7 @@ from app.auth import require_role
 from app.database import get_db
 from app.logging_config import get_logger
 from app.models import Tag, Vacancy, User, UserRole
-from app.parser import hh_parser
+from app.parser import HHParserError, hh_parser
 from app.vector_store import vector_store
 from app.schemas import (
     ExperienceLevel,
@@ -51,11 +51,25 @@ async def parse_vacancies(
     )
 
     # Парсим вакансии с hh.ru
-    parsed_vacancies = await hh_parser.search_vacancies(
-        query=request.query,
-        count=request.count,
-        experience=request.experience.value if request.experience else None,
-    )
+    try:
+        parsed_vacancies = await hh_parser.search_vacancies(
+            query=request.query,
+            count=request.count,
+            experience=request.experience.value if request.experience else None,
+        )
+    except HHParserError as e:
+        logger.warning(
+            "Парсинг hh.ru завершился ошибкой",
+            query=request.query,
+            error=e.message,
+            hh_status_code=e.status_code,
+            hh_request_id=e.request_id,
+            hh_error_type=e.error_type,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=e.to_detail(),
+        ) from e
     logger.info("Получены вакансии от hh.ru", fetched_count=len(parsed_vacancies), query=request.query)
     
     # Счётчик тегов и данные для расчёта средней зарплаты

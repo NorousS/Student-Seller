@@ -16,6 +16,7 @@ export default function AdminDashboard() {
   const [query, setQuery] = useState('python')
   const [count, setCount] = useState(20)
   const [parseResult, setParseResult] = useState<any>(null)
+  const [parseError, setParseError] = useState<string | null>(null)
   const [parsing, setParsing] = useState(false)
 
   const loadStudents = async () => {
@@ -41,11 +42,23 @@ export default function AdminDashboard() {
 
   const parseVacancies = async () => {
     setParsing(true)
+    setParseError(null)
     try {
       const { data } = await api.post('/parse', { query, count })
       setParseResult(data)
     } catch (e: any) {
-      alert(e.response?.data?.detail || 'Ошибка парсинга')
+      const detail = e.response?.data?.detail
+      if (typeof detail === 'object' && detail !== null) {
+        const parts = [
+          detail.message || 'Ошибка парсинга HH',
+          detail.status_code ? `HTTP ${detail.status_code}` : null,
+          detail.error_type ? `type: ${detail.error_type}` : null,
+          detail.request_id ? `request_id: ${detail.request_id}` : null,
+        ].filter(Boolean)
+        setParseError(parts.join(' | '))
+      } else {
+        setParseError(detail || 'Ошибка парсинга')
+      }
     }
     setParsing(false)
   }
@@ -122,6 +135,12 @@ export default function AdminDashboard() {
           <button className="btn btn-primary" onClick={parseVacancies} disabled={parsing}>
             {parsing ? <span className="spinner" /> : '🚀 Парсить'}
           </button>
+
+          {parseError && (
+            <div className="alert-error" style={{ marginTop: 16 }}>
+              {parseError}
+            </div>
+          )}
 
           {parseResult && (
             <div style={{ marginTop: 24 }}>

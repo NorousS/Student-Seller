@@ -16,6 +16,7 @@ from app.database import get_db
 from app.embedding_diagnostics import detect_anomalies, DiagnosticsResult
 from app.embeddings import embedding_service
 from app.models import Tag, User
+from app.parser import hh_parser
 from app.vector_store import vector_store, HH_SKILLS_COLLECTION
 from qdrant_client.models import PointStruct
 
@@ -48,6 +49,17 @@ class ReindexResponse(BaseModel):
 
 
 # --- Эндпоинты ---
+
+
+@router.get("/parser/health")
+async def parser_health(current_user: User = Depends(get_current_user)):
+    """Проверить доступность API hh.ru для справочника и поиска вакансий."""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Доступ запрещен. Требуется роль admin.",
+        )
+    return await hh_parser.check_health()
 
 
 @router.post(

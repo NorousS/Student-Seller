@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     
     # Базовый URL API hh.ru
     hh_api_base_url: str = "https://api.hh.ru"
+    hh_user_agent: str = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    )
+    hh_access_token: str | None = None
     
     # Qdrant
     qdrant_host: str = "qdrant"
