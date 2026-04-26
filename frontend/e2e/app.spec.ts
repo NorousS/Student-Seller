@@ -20,7 +20,7 @@ async function registerViaAPI(
   page: Page,
   email: string,
   password: string,
-  role: 'employer' | 'student',
+  role: 'employer' | 'student' | 'admin',
   extra: Record<string, string> = {},
 ) {
   const res = await page.request.post(`${BASE}/api/v1/auth/register`, {
@@ -286,5 +286,43 @@ test.describe('API: Partnership admin', () => {
       data: { partnership_status: 'partner' },
     });
     expect(res.status()).toBe(403);
+  });
+});
+
+/* ============================================================
+   7. Админка
+   ============================================================ */
+
+test.describe('Admin panel', () => {
+  test('tags tab opens and renders tag statistics', async ({ page }) => {
+    const email = `e2e_admin_tags_${TS}@test.com`;
+    const password = 'Admin123!';
+    await registerViaAPI(page, email, password, 'admin');
+
+    await loginViaUI(page, email, password);
+    await page.waitForURL(/\/admin/, { timeout: 5000 });
+
+    await page.getByRole('tab', { name: /теги/i }).click();
+    await expect(page.getByText('Навыки и теги')).toBeVisible();
+    await expect(page.locator('.stat-card').filter({ hasText: 'Вакансий' })).toBeVisible();
+    await expect(page.locator('.stat-card').filter({ hasText: 'Тегов' })).toBeVisible();
+    await expect(page.locator('.tags-table')).toBeVisible();
+  });
+
+  test('employers tab opens and can grant partnership', async ({ page }) => {
+    const adminEmail = `e2e_admin_partner_${TS}@test.com`;
+    const employerEmail = `e2e_affiliate_${TS}@test.com`;
+    const password = 'Admin123!';
+    await registerViaAPI(page, adminEmail, password, 'admin');
+    await registerViaAPI(page, employerEmail, EMPLOYER_PASS, 'employer', { company_name: 'Affiliate E2E' });
+
+    await loginViaUI(page, adminEmail, password);
+    await page.waitForURL(/\/admin/, { timeout: 5000 });
+
+    await page.getByRole('tab', { name: /работодатели/i }).click();
+    const row = page.getByRole('row').filter({ hasText: employerEmail });
+    await expect(row).toBeVisible();
+    await row.getByRole('button', { name: /сделать партнером/i }).click();
+    await expect(row.getByText(/^Партнер$/)).toBeVisible({ timeout: 10000 });
   });
 });

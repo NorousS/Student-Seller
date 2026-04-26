@@ -6,7 +6,7 @@
 from collections import Counter
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import require_role
@@ -253,3 +253,28 @@ async def get_vacancies(
         tags=sorted_tags,
         average_salary=average_salary,
     )
+
+
+@router.get("/tags")
+async def get_tags(
+    limit: int = Query(default=100, ge=1, le=1000),
+    db: AsyncSession = Depends(get_db),
+):
+    """Глобальная статистика тегов по сохранённым вакансиям."""
+    total_vacancies = await db.scalar(select(func.count(Vacancy.id)))
+    stmt = (
+        select(Tag.name, func.count(Vacancy.id).label("count"))
+        .join(Tag.vacancies)
+        .group_by(Tag.id, Tag.name)
+        .order_by(func.count(Vacancy.id).desc(), Tag.name.asc())
+        .limit(limit)
+    )
+    result = await db.execute(stmt)
+    tags = [
+        {"name": name, "count": count}
+        for name, count in result.all()
+    ]
+    return {
+        "total_vacancies": total_vacancies or 0,
+        "tags": tags,
+    }

@@ -266,11 +266,9 @@ function TagsTab() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   useEffect(() => { api.get('/tags').then(r => setTags(r.data)).catch(() => {}) }, [])
-  if (!tags) return <div className="card"><div className="spinner" /></div>
-
-  const totalVacancies = tags.total_vacancies || 0
+  const totalVacancies = tags?.total_vacancies || 0
   const sortedTags = useMemo(() => {
-    const list = [...(tags.tags || [])]
+    const list = [...(tags?.tags || [])]
     return list.sort((a: any, b: any) => {
       let cmp = 0
       if (sortField === 'name') cmp = String(a.name).localeCompare(String(b.name), 'ru')
@@ -283,6 +281,8 @@ function TagsTab() {
       return sortDirection === 'asc' ? cmp : -cmp
     })
   }, [tags, sortField, sortDirection, totalVacancies])
+
+  if (!tags) return <div className="card"><div className="spinner" /></div>
 
   const setSort = (field: 'name' | 'count' | 'percent') => {
     if (sortField === field) {
