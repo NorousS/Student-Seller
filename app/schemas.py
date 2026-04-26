@@ -2,6 +2,7 @@
 Pydantic схемы для валидации запросов и ответов API.
 """
 
+from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel, Field
@@ -270,6 +271,17 @@ class EmployerProfileUpdate(BaseModel):
     contact_info: str | None = Field(None, max_length=2000)
     about_company: str | None = Field(None, max_length=5000)
     website_url: str | None = Field(None, max_length=500)
+
+
+class AdminEmployerResponse(BaseModel):
+    """Работодатель в админском списке партнерства."""
+    employer_user_id: int
+    profile_id: int
+    email: str
+    company_name: str | None
+    position: str | None
+    partnership_status: PartnershipStatusEnum
+    created_at: datetime
 
 
 class EmployerSearchRequest(BaseModel):

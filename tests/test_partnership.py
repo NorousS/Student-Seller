@@ -34,6 +34,26 @@ async def test_admin_can_update_partnership(client: AsyncClient, admin_headers: 
 
 
 @pytest.mark.asyncio
+async def test_admin_can_list_employers(client: AsyncClient, admin_headers: dict):
+    """Админ видит список работодателей и статус партнерства."""
+    resp = await client.get("/api/v1/admin/employers", headers=admin_headers)
+    assert resp.status_code == 200
+    employers = resp.json()
+    assert len(employers) >= 1
+    first = employers[0]
+    assert "employer_user_id" in first
+    assert "email" in first
+    assert first["partnership_status"] in {"partner", "non_partner"}
+
+
+@pytest.mark.asyncio
+async def test_non_admin_cannot_list_employers(client: AsyncClient, student_headers: dict):
+    """Список работодателей доступен только администратору."""
+    resp = await client.get("/api/v1/admin/employers", headers=student_headers)
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_employer_cannot_update_own_partnership(client: AsyncClient, employer_headers: dict):
     """Работодатель не может сам изменить статус."""
     resp = await client.get("/api/v1/auth/me", headers=employer_headers)

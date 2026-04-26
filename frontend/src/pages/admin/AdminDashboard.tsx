@@ -1,11 +1,14 @@
 import { useState, useEffect, useMemo } from 'react'
 import api from '../../api/client'
-import type { Student } from '../../api/types'
+import type { AdminEmployer, Student } from '../../api/types'
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState<'students' | 'parse' | 'tags'>('students')
+  const [tab, setTab] = useState<'students' | 'employers' | 'parse' | 'tags'>('students')
   const [students, setStudents] = useState<Student[]>([])
+  const [employers, setEmployers] = useState<AdminEmployer[]>([])
   const [loading, setLoading] = useState(false)
+  const [employersLoading, setEmployersLoading] = useState(false)
+  const [updatingEmployerId, setUpdatingEmployerId] = useState<number | null>(null)
 
   // --- Create student state ---
   const [newName, setNewName] = useState('')
@@ -28,7 +31,19 @@ export default function AdminDashboard() {
     setLoading(false)
   }
 
-  useEffect(() => { loadStudents() }, [])
+  const loadEmployers = async () => {
+    setEmployersLoading(true)
+    try {
+      const { data } = await api.get('/admin/employers')
+      setEmployers(data)
+    } catch { /* ignore */ }
+    setEmployersLoading(false)
+  }
+
+  useEffect(() => {
+    loadStudents()
+    loadEmployers()
+  }, [])
 
   const createStudent = async () => {
     if (!newName.trim()) return
@@ -63,10 +78,28 @@ export default function AdminDashboard() {
     setParsing(false)
   }
 
+  const toggleEmployerPartnership = async (employer: AdminEmployer) => {
+    const nextStatus = employer.partnership_status === 'partner' ? 'non_partner' : 'partner'
+    setUpdatingEmployerId(employer.employer_user_id)
+    try {
+      await api.patch(`/admin/partnership/employer/${employer.employer_user_id}`, {
+        partnership_status: nextStatus,
+      })
+      setEmployers(prev => prev.map(item => (
+        item.employer_user_id === employer.employer_user_id
+          ? { ...item, partnership_status: nextStatus }
+          : item
+      )))
+    } finally {
+      setUpdatingEmployerId(null)
+    }
+  }
+
   return (
     <div className="container">
       <div className="tabs">
         <div className={`tab ${tab === 'students' ? 'active' : ''}`} onClick={() => setTab('students')} role="tab" tabIndex={0}>👩‍🎓 Студенты</div>
+        <div className={`tab ${tab === 'employers' ? 'active' : ''}`} onClick={() => setTab('employers')} role="tab" tabIndex={0}>🏢 Работодатели</div>
         <div className={`tab ${tab === 'parse' ? 'active' : ''}`} onClick={() => setTab('parse')} role="tab" tabIndex={0}>🔍 Парсинг</div>
         <div className={`tab ${tab === 'tags' ? 'active' : ''}`} onClick={() => setTab('tags')} role="tab" tabIndex={0}>🏷️ Теги</div>
       </div>
@@ -116,6 +149,58 @@ export default function AdminDashboard() {
             )}
           </div>
         </>
+      )}
+
+      {/* === Employers tab === */}
+      {tab === 'employers' && (
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 16 }}>
+            <h3>Работодатели ({employers.length})</h3>
+            <button className="btn" onClick={loadEmployers} disabled={employersLoading}>
+              {employersLoading ? <span className="spinner" /> : 'Обновить'}
+            </button>
+          </div>
+          {employersLoading ? <div className="spinner" /> : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Компания</th>
+                  <th>Должность</th>
+                  <th>Статус</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {employers.map(employer => (
+                  <tr key={employer.employer_user_id}>
+                    <td>{employer.email}</td>
+                    <td>{employer.company_name || '—'}</td>
+                    <td>{employer.position || '—'}</td>
+                    <td>
+                      <span className={`badge ${employer.partnership_status === 'partner' ? 'badge-green' : 'badge-yellow'}`}>
+                        {employer.partnership_status === 'partner' ? 'Партнер' : 'Не партнер'}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className={`btn ${employer.partnership_status === 'partner' ? '' : 'btn-primary'}`}
+                        onClick={() => toggleEmployerPartnership(employer)}
+                        disabled={updatingEmployerId === employer.employer_user_id}
+                      >
+                        {updatingEmployerId === employer.employer_user_id
+                          ? <span className="spinner" />
+                          : employer.partnership_status === 'partner'
+                          ? 'Снять статус'
+                          : 'Сделать партнером'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       )}
 
       {/* === Parse tab === */}

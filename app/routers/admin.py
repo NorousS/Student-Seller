@@ -11,12 +11,13 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth import get_current_user
+from app.auth import get_current_user, require_role
 from app.database import get_db
 from app.embedding_diagnostics import detect_anomalies, DiagnosticsResult
 from app.embeddings import embedding_service
-from app.models import Tag, User
+from app.models import EmployerProfile, Tag, User, UserRole
 from app.parser import hh_parser
+from app.schemas import AdminEmployerResponse
 from app.vector_store import vector_store, HH_SKILLS_COLLECTION
 from qdrant_client.models import PointStruct
 
@@ -60,6 +61,32 @@ async def parser_health(current_user: User = Depends(get_current_user)):
             detail="Доступ запрещен. Требуется роль admin.",
         )
     return await hh_parser.check_health()
+
+
+@router.get("/employers", response_model=list[AdminEmployerResponse])
+async def list_employers(
+    current_user: User = Depends(require_role(UserRole.admin)),
+    db: AsyncSession = Depends(get_db),
+) -> list[AdminEmployerResponse]:
+    """Получить список работодателей и их текущий статус партнерства."""
+    result = await db.execute(
+        select(EmployerProfile, User)
+        .join(User, EmployerProfile.user_id == User.id)
+        .order_by(EmployerProfile.created_at.desc())
+    )
+    rows = result.all()
+    return [
+        AdminEmployerResponse(
+            employer_user_id=user.id,
+            profile_id=profile.id,
+            email=user.email,
+            company_name=profile.company_name,
+            position=profile.position,
+            partnership_status=profile.partnership_status,
+            created_at=profile.created_at,
+        )
+        for profile, user in rows
+    ]
 
 
 @router.post(

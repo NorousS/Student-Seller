@@ -52,6 +52,16 @@ export interface EmployerProfile {
   partnership_status: 'partner' | 'non_partner'
 }
 
+export interface AdminEmployer {
+  employer_user_id: number
+  profile_id: number
+  email: string
+  company_name: string | null
+  position: string | null
+  partnership_status: 'partner' | 'non_partner'
+  created_at: string
+}
+
 export interface SkillMatch {
   discipline: string
   skill_name: string
