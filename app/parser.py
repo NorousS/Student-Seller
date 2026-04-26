@@ -11,6 +11,7 @@ from dataclasses import dataclass
 import httpx
 
 from app.config import settings
+from app.middleware.external_api_metrics import track_external_api_call
 
 
 @dataclass
@@ -114,7 +115,8 @@ class HHParser:
                 params["experience"] = experience
             
             try:
-                response = await client.get("/vacancies", params=params)
+                async with track_external_api_call("hh", "search_vacancies"):
+                    response = await client.get("/vacancies", params=params)
                 response.raise_for_status()
                 data = response.json()
                 
@@ -140,7 +142,8 @@ class HHParser:
         Получает детальную информацию о вакансии, включая key_skills.
         """
         async with self._semaphore:  # Ограничиваем параллельные запросы
-            response = await client.get(f"/vacancies/{vacancy_id}")
+            async with track_external_api_call("hh", "vacancy_details"):
+                response = await client.get(f"/vacancies/{vacancy_id}")
             response.raise_for_status()
             data = response.json()
             

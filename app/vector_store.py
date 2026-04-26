@@ -13,6 +13,7 @@ from qdrant_client.models import (
 
 from app.config import settings
 from app.embeddings import embedding_service
+from app.middleware.external_api_metrics import track_external_api_call
 
 
 # Имена коллекций
@@ -34,17 +35,19 @@ class VectorStore:
 
     async def init_collections(self) -> None:
         """Создаёт коллекции, если их нет."""
-        collections = await self.client.get_collections()
+        async with track_external_api_call("qdrant", "get_collections"):
+            collections = await self.client.get_collections()
         existing = {c.name for c in collections.collections}
 
         if HH_SKILLS_COLLECTION not in existing:
-            await self.client.create_collection(
-                collection_name=HH_SKILLS_COLLECTION,
-                vectors_config=VectorParams(
-                    size=self.dimension,
-                    distance=Distance.COSINE,
-                ),
-            )
+            async with track_external_api_call("qdrant", "create_collection"):
+                await self.client.create_collection(
+                    collection_name=HH_SKILLS_COLLECTION,
+                    vectors_config=VectorParams(
+                        size=self.dimension,
+                        distance=Distance.COSINE,
+                    ),
+                )
             print(f"Коллекция '{HH_SKILLS_COLLECTION}' создана")
 
     async def upsert_skills(self, skills: list[str]) -> int:
@@ -65,10 +68,11 @@ class VectorStore:
         new_skills = []
         for skill in skills:
             point_id = self._skill_id(skill)
-            points = await self.client.retrieve(
-                collection_name=HH_SKILLS_COLLECTION,
-                ids=[point_id],
-            )
+            async with track_external_api_call("qdrant", "retrieve"):
+                points = await self.client.retrieve(
+                    collection_name=HH_SKILLS_COLLECTION,
+                    ids=[point_id],
+                )
             if not points:
                 new_skills.append(skill)
 
@@ -88,10 +92,11 @@ class VectorStore:
             for skill, embedding in zip(new_skills, embeddings)
         ]
 
-        await self.client.upsert(
-            collection_name=HH_SKILLS_COLLECTION,
-            points=points,
-        )
+        async with track_external_api_call("qdrant", "upsert"):
+            await self.client.upsert(
+                collection_name=HH_SKILLS_COLLECTION,
+                points=points,
+            )
 
         return len(points)
 
@@ -118,12 +123,13 @@ class VectorStore:
         query_vector = await embedding_service.get_embedding(text)
 
         # qdrant-client >= 1.12 использует query_points вместо search
-        response: QueryResponse = await self.client.query_points(
-            collection_name=HH_SKILLS_COLLECTION,
-            query=query_vector,
-            limit=top_k,
-            score_threshold=threshold,
-        )
+        async with track_external_api_call("qdrant", "query_points"):
+            response: QueryResponse = await self.client.query_points(
+                collection_name=HH_SKILLS_COLLECTION,
+                query=query_vector,
+                limit=top_k,
+                score_threshold=threshold,
+            )
 
         return [
             {"name": hit.payload["name"], "score": hit.score}
@@ -132,7 +138,8 @@ class VectorStore:
 
     async def get_skills_count(self) -> int:
         """Возвращает количество навыков в коллекции."""
-        info = await self.client.get_collection(HH_SKILLS_COLLECTION)
+        async with track_external_api_call("qdrant", "get_collection"):
+            info = await self.client.get_collection(HH_SKILLS_COLLECTION)
         return info.points_count
 
     @staticmethod

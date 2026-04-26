@@ -5,7 +5,8 @@ from sqlalchemy.orm import selectinload
 
 from app.auth import require_role
 from app.database import get_db
-from app.models import Student, Discipline, StudentDiscipline, User, UserRole
+from app.logging_config import get_logger
+from app.models import Student, Discipline, StudentDiscipline, UserRole
 from app.schemas import StudentCreate, StudentResponse, DisciplineResponse, AddDisciplinesRequest
 
 router = APIRouter(
@@ -13,6 +14,7 @@ router = APIRouter(
     tags=["Students"],
     dependencies=[Depends(require_role(UserRole.admin))],
 )
+logger = get_logger(__name__)
 
 
 async def get_or_create_discipline(db: AsyncSession, name: str) -> Discipline:
@@ -51,11 +53,13 @@ def build_student_response(student: Student) -> StudentResponse:
 @router.get("/", response_model=list[StudentResponse])
 async def list_students(db: AsyncSession = Depends(get_db)):
     """Получить список всех студентов."""
+    logger.info("Запрос списка студентов")
     stmt = select(Student).options(
         selectinload(Student.student_disciplines).selectinload(StudentDiscipline.discipline)
     )
     result = await db.execute(stmt)
     students = result.scalars().all()
+    logger.info("Список студентов получен", total=len(students))
     return [build_student_response(s) for s in students]
 
 
@@ -65,6 +69,12 @@ async def create_student(student_in: StudentCreate, db: AsyncSession = Depends(g
     Создать нового студента с (опционально) списком дисциплин.
     Если дисциплины не существуют, они будут созданы.
     """
+    logger.info(
+        "Создание студента",
+        full_name=student_in.full_name,
+        group_name=student_in.group_name,
+        disciplines_count=len(student_in.disciplines or []),
+    )
     # 1. Создаем студента
     new_student = Student(
         full_name=student_in.full_name,
@@ -81,6 +91,7 @@ async def create_student(student_in: StudentCreate, db: AsyncSession = Depends(g
             db.add(link)
 
     await db.commit()
+    logger.info("Студент успешно создан", student_id=new_student.id)
     
     # 3. Возвращаем с подгруженными связями
     stmt = select(Student).options(
@@ -97,6 +108,7 @@ async def get_student(student_id: int, db: AsyncSession = Depends(get_db)):
     """
     Получить профиль студента по ID.
     """
+    logger.info("Запрос профиля студента", student_id=student_id)
     stmt = select(Student).options(
         selectinload(Student.student_disciplines).selectinload(StudentDiscipline.discipline)
     ).where(Student.id == student_id)
@@ -104,8 +116,9 @@ async def get_student(student_id: int, db: AsyncSession = Depends(get_db)):
     student = result.scalar_one_or_none()
     
     if not student:
+        logger.warning("Студент не найден", student_id=student_id)
         raise HTTPException(status_code=404, detail="Student not found")
-        
+    logger.info("Профиль студента получен", student_id=student_id)
     return build_student_response(student)
 
 
@@ -118,16 +131,23 @@ async def add_disciplines_to_student(
     """
     Добавить дисциплины существующему студенту.
     """
+    logger.info(
+        "Добавление дисциплин студенту",
+        student_id=student_id,
+        disciplines_count=len(request.disciplines),
+    )
     # Проверяем студента
     stmt = select(Student).where(Student.id == student_id)
     result = await db.execute(stmt)
     student = result.scalar_one_or_none()
     
     if not student:
+        logger.warning("Невозможно добавить дисциплины: студент не найден", student_id=student_id)
         raise HTTPException(status_code=404, detail="Student not found")
 
     # Добавляем дисциплины
     seen_names: set[str] = set()
+    processed_count = 0
     for disc in request.disciplines:
         if disc.name in seen_names:
             continue
@@ -149,6 +169,7 @@ async def add_disciplines_to_student(
         else:
             new_link = StudentDiscipline(student_id=student_id, discipline_id=discipline.id, grade=disc.grade)
             db.add(new_link)
+        processed_count += 1
             
     await db.flush()
     db.expire_all()
@@ -159,5 +180,9 @@ async def add_disciplines_to_student(
     ).where(Student.id == student_id)
     result = await db.execute(stmt)
     student_loaded = result.scalar_one()
-    
+    logger.info(
+        "Дисциплины студента обновлены",
+        student_id=student_id,
+        processed_count=processed_count,
+    )
     return build_student_response(student_loaded)

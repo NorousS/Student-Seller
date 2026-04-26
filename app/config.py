@@ -45,6 +45,11 @@ class Settings(BaseSettings):
     # Uploads
     upload_dir: str = "app/static/uploads"
     max_photo_size_mb: int = 5
+
+    # Observability
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "json"
+    PROMETHEUS_ENABLED: bool = True
     
     class Config:
         env_file = ".env"

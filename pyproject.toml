@@ -18,6 +18,9 @@ dependencies = [
     "PyJWT>=2.8.0",
     "python-multipart>=0.0.6",
     "websockets>=12.0",
+    "scikit-learn>=1.3.0",
+    "scipy>=1.11.0",
+    "numpy>=1.24.0",
 ]
 
 [project.optional-dependencies]

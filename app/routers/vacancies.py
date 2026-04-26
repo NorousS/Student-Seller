@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import require_role
 from app.database import get_db
+from app.logging_config import get_logger
 from app.models import Tag, Vacancy, User, UserRole
 from app.parser import hh_parser
 from app.vector_store import vector_store
@@ -24,6 +25,7 @@ from app.schemas import (
 )
 
 router = APIRouter(prefix="/api/v1", tags=["vacancies"])
+logger = get_logger(__name__)
 
 
 @router.post("/parse", response_model=ParseResponse)
@@ -40,18 +42,27 @@ async def parse_vacancies(
     - Теги с количеством упоминаний
     - Средняя зарплата
     """
+    logger.info(
+        "Запуск парсинга вакансий",
+        query=request.query,
+        count=request.count,
+        experience=request.experience.value if request.experience else None,
+        initiated_by=current_user.id,
+    )
+
     # Парсим вакансии с hh.ru
     parsed_vacancies = await hh_parser.search_vacancies(
         query=request.query,
         count=request.count,
         experience=request.experience.value if request.experience else None,
     )
+    logger.info("Получены вакансии от hh.ru", fetched_count=len(parsed_vacancies), query=request.query)
     
     # Счётчик тегов и данные для расчёта средней зарплаты
     tag_counter: Counter[str] = Counter()
     salaries: list[int] = []
     saved_count = 0
-    all_tag_names: list[str] = []
+    skipped_duplicates = 0
     
     for parsed in parsed_vacancies:
         # Проверяем, нет ли уже такой вакансии
@@ -59,6 +70,7 @@ async def parse_vacancies(
             select(Vacancy).where(Vacancy.hh_id == parsed.hh_id)
         )
         if existing.scalar_one_or_none():
+            skipped_duplicates += 1
             continue
         
         # Создаём объект вакансии
@@ -101,6 +113,12 @@ async def parse_vacancies(
         saved_count += 1
     
     await db.commit()  # Явно фиксируем изменения
+    logger.info(
+        "Парсинг вакансий завершён",
+        query=request.query,
+        saved_count=saved_count,
+        duplicate_count=skipped_duplicates,
+    )
     
     # Индексируем теги в Qdrant для семантического поиска
     all_tag_names = list(tag_counter.keys())
@@ -108,9 +126,13 @@ async def parse_vacancies(
         try:
             indexed = await vector_store.upsert_skills(all_tag_names)
             if indexed:
-                print(f"Проиндексировано {indexed} новых навыков в Qdrant")
+                logger.info("Навыки проиндексированы в Qdrant", indexed_count=indexed)
         except Exception as e:
-            print(f"Ошибка индексации в Qdrant (не критично): {e}")
+            logger.warning(
+                "Ошибка индексации навыков в Qdrant (некритично)",
+                error=str(e),
+                exc_info=True,
+            )
     
     # Формируем ответ
     # Сортируем теги по убыванию популярности
@@ -148,6 +170,12 @@ async def get_vacancies(
     Returns:
         Список вакансий со статистикой (теги, средняя ЗП)
     """
+    logger.info(
+        "Запрос списка вакансий",
+        query=query,
+        experience=experience.value if experience else None,
+        limit=limit,
+    )
     stmt = select(Vacancy).limit(limit)
     
     if query:
@@ -198,6 +226,12 @@ async def get_vacancies(
     average_salary = None
     if salaries:
         average_salary = sum(salaries) / len(salaries)
+
+    logger.info(
+        "Список вакансий сформирован",
+        total_count=len(vacancies),
+        unique_tags=len(tag_counter),
+    )
     
     return VacanciesWithStatsResponse(
         total_count=len(vacancies),
