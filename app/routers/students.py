@@ -5,6 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from app.auth import require_role
 from app.database import get_db
+from app.discipline_groups import OTHER, display_discipline_category, infer_discipline_group
 from app.logging_config import get_logger
 from app.models import Student, Discipline, StudentDiscipline, UserRole
 from app.schemas import StudentCreate, StudentResponse, DisciplineResponse, AddDisciplinesRequest
@@ -26,7 +27,11 @@ async def get_or_create_discipline(db: AsyncSession, name: str) -> Discipline:
     discipline = result.scalar_one_or_none()
     
     if not discipline:
-        discipline = Discipline(name=name)
+        inferred_category = infer_discipline_group(name)
+        discipline = Discipline(
+            name=name,
+            category=inferred_category if inferred_category != OTHER else None,
+        )
         db.add(discipline)
         await db.flush()  # We need the ID
         
@@ -41,6 +46,7 @@ def build_student_response(student: Student) -> StudentResponse:
             id=sd.discipline.id,
             name=sd.discipline.name,
             grade=sd.grade,
+            category=display_discipline_category(sd.discipline.name, sd.discipline.category),
         ))
     return StudentResponse(
         id=student.id,

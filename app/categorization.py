@@ -6,22 +6,15 @@
 import math
 import logging
 
+from app.discipline_groups import CANONICAL_DISCIPLINE_GROUPS, OTHER, infer_discipline_group
 from app.embeddings import embedding_service
 
 logger = logging.getLogger(__name__)
 
 # Предопределённые категории (блоки компетенций)
-DEFAULT_CATEGORIES: list[str] = [
-    "Программирование",
-    "Базы данных",
-    "Математика",
-    "Машинное обучение",
-    "Сети и безопасность",
-    "Проектирование ПО",
-    "Общие компетенции",
-]
+DEFAULT_CATEGORIES: list[str] = list(CANONICAL_DISCIPLINE_GROUPS)
 
-FALLBACK_CATEGORY = "Общие компетенции"
+FALLBACK_CATEGORY = OTHER
 
 
 def _cosine_similarity(a: list[float], b: list[float]) -> float:
@@ -52,18 +45,33 @@ async def categorize_disciplines(
         return {}
 
     cats = categories or DEFAULT_CATEGORIES
+    result: dict[str, str] = {}
+    names_for_embedding = discipline_names
+
+    if categories is None:
+        names_for_embedding = []
+        for name in discipline_names:
+            inferred = infer_discipline_group(name)
+            if inferred != OTHER:
+                result[name] = inferred
+            else:
+                names_for_embedding.append(name)
+
+        if not names_for_embedding:
+            return result
 
     try:
         # Получаем эмбеддинги категорий
         category_embeddings = await embedding_service.get_embeddings_batch(cats)
         # Получаем эмбеддинги дисциплин
-        discipline_embeddings = await embedding_service.get_embeddings_batch(discipline_names)
+        discipline_embeddings = await embedding_service.get_embeddings_batch(names_for_embedding)
     except Exception as e:
         logger.warning("Ollama недоступен, fallback на '%s': %s", FALLBACK_CATEGORY, e)
-        return {name: FALLBACK_CATEGORY for name in discipline_names}
+        for name in names_for_embedding:
+            result[name] = FALLBACK_CATEGORY
+        return result
 
-    result: dict[str, str] = {}
-    for name, d_emb in zip(discipline_names, discipline_embeddings):
+    for name, d_emb in zip(names_for_embedding, discipline_embeddings):
         best_cat = FALLBACK_CATEGORY
         best_sim = -1.0
         for cat, c_emb in zip(cats, category_embeddings):
