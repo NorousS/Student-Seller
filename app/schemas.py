@@ -205,6 +205,14 @@ class DisciplineResponse(DisciplineBase):
         from_attributes = True
 
 
+class DisciplineGroupResponse(BaseModel):
+    """Группа дисциплин для employer-facing профиля."""
+    group_name: str = Field(..., description="Каноническая группа навыков")
+    disciplines: list[DisciplineResponse] = Field(default_factory=list, description="Дисциплины внутри группы")
+    total_count: int = Field(..., description="Количество дисциплин в группе")
+    avg_grade: float = Field(..., description="Средний балл по группе")
+
+
 class StudentBase(BaseModel):
     """Базовая схема студента."""
     full_name: str = Field(..., min_length=1, max_length=200, description="ФИО студента")
@@ -276,6 +284,7 @@ class AnonymizedStudentResult(BaseModel):
     student_id: int
     photo_url: str | None
     disciplines: list[DisciplineResponse]
+    discipline_groups: list[DisciplineGroupResponse] = Field(default_factory=list)
     estimated_salary: float | None
     confidence: float
     matched_disciplines: int
@@ -290,6 +299,7 @@ class AnonymizedStudentProfile(BaseModel):
     student_id: int
     photo_url: str | None
     disciplines: list[DisciplineResponse]
+    discipline_groups: list[DisciplineGroupResponse] = Field(default_factory=list)
     about_me: str | None = None  # Только если контакт accepted
     contact_status: str | None = None  # pending/accepted/rejected/null
     partnership_status: str | None = None

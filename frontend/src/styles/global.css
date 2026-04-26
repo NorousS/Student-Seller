@@ -113,6 +113,109 @@ input:focus, select:focus, textarea:focus {
 .badge-red { background: rgba(248,81,73,0.15); color: var(--red); }
 .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent); }
 
+.discipline-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.discipline-group-card {
+  position: relative;
+  min-height: 86px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(88, 166, 255, 0.06);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.discipline-group-card:hover,
+.discipline-group-card:focus-visible,
+.discipline-group-card.open {
+  border-color: var(--accent);
+  background: rgba(88, 166, 255, 0.12);
+  outline: none;
+}
+
+.discipline-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.discipline-group-title {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.discipline-group-count {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.discipline-group-meta {
+  display: block;
+  margin-top: 7px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.discipline-group-details {
+  display: none;
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: calc(100% - 4px);
+  z-index: 30;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.28);
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.discipline-group-card:hover .discipline-group-details,
+.discipline-group-card:focus-visible .discipline-group-details,
+.discipline-group-card.open .discipline-group-details {
+  display: flex;
+}
+
+.discipline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(139, 148, 158, 0.14);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.discipline-pill strong {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.discipline-pill.g5 { background: rgba(63,185,80,0.16); }
+.discipline-pill.g4 { background: rgba(210,153,34,0.18); }
+.discipline-pill.g3 { background: rgba(248,81,73,0.16); }
+
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
 

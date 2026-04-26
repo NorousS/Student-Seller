@@ -19,6 +19,14 @@ export interface Discipline {
   id: number
   name: string
   grade: number
+  category: string | null
+}
+
+export interface DisciplineGroup {
+  group_name: string
+  disciplines: Discipline[]
+  total_count: number
+  avg_grade: number
 }
 
 export interface Student {
@@ -41,7 +49,7 @@ export interface EmployerProfile {
   contact_info?: string | null
   about_company?: string | null
   website_url?: string | null
-  partnership_status: 'partner' | 'basic' | 'blocked'
+  partnership_status: 'partner' | 'non_partner'
 }
 
 export interface SkillMatch {
@@ -59,6 +67,7 @@ export interface AnonymizedStudent {
   student_id: number
   photo_url: string | null
   disciplines: Discipline[]
+  discipline_groups: DisciplineGroup[]
   estimated_salary: number | null
   confidence: number
   matched_disciplines: number
@@ -70,6 +79,7 @@ export interface AnonymizedStudentProfile {
   student_id: number
   photo_url: string | null
   disciplines: Discipline[]
+  discipline_groups: DisciplineGroup[]
   about_me: string | null
   contact_status: string | null
   partnership_status: string | null
