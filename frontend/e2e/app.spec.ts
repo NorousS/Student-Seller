@@ -198,9 +198,9 @@ test.describe('Employer panel', () => {
    ============================================================ */
 
 test.describe('SPA routing', () => {
-  test('unknown routes redirect unauthenticated to /landing', async ({ page }) => {
+  test('root renders landing for unauthenticated users', async ({ page }) => {
     await page.goto(`${BASE}/`);
-    await page.waitForURL(/\/(landing|login)/, { timeout: 5000 });
+    await expect(page.getByText('Найдите лучших выпускников')).toBeVisible();
   });
 
   test('/employer redirects unauthenticated to /login', async ({ page }) => {
