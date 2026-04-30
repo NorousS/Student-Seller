@@ -1,0 +1,2385 @@
+{
+    "vacancies": [
+        {
+            "url": "https://hh.ru/vacancy/124421529",
+            "tags": [
+            ],
+            "hh_id": "124421529",
+            "title": "Хостес",
+            "salary_to": 150000,
+            "created_at": "2026-03-25T09:30:55.095295",
+            "experience": "noExperience",
+            "salary_from": 100000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/125832004",
+            "tags": [
+                "Docker",
+                "Git",
+                "Linux",
+                "Pytest",
+                "Python",
+                "Автоматизация тестирования"
+            ],
+            "hh_id": "125832004",
+            "title": "Инженер по автоматизации тестирования, Python, API, Ozon Bank",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.335886",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/126836794",
+            "tags": [
+                "Python",
+                "React",
+                "TypeScript"
+            ],
+            "hh_id": "126836794",
+            "title": "Python developer (Fullstack)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.36026",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/127530981",
+            "tags": [
+            ],
+            "hh_id": "127530981",
+            "title": "Официант",
+            "salary_to": 150000,
+            "created_at": "2026-03-25T09:30:55.094184",
+            "experience": "noExperience",
+            "salary_from": 50000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/128162814",
+            "tags": [
+                "Atlassian Jira",
+                "Celery",
+                "Django Rest Framework",
+                "Gitlab",
+                "Linux",
+                "PostgreSQL",
+                "Python",
+                "REST API",
+                "RabbitMQ",
+                "Оптимизация кода"
+            ],
+            "hh_id": "128162814",
+            "title": "Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.145528",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/128538405",
+            "tags": [
+                "CSS",
+                "HTML",
+                "JavaScript",
+                "Lua",
+                "Python",
+                "Roblox",
+                "Онлайн",
+                "Преподаватель",
+                "Программирование",
+                "Учитель"
+            ],
+            "hh_id": "128538405",
+            "title": "Преподаватель Python и Roblox в онлайн-школу программирования",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:55.090417",
+            "experience": "noExperience",
+            "salary_from": 50000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/128756947",
+            "tags": [
+            ],
+            "hh_id": "128756947",
+            "title": "Разработчик С++/Qt (Backend)",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:54.663672",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "с++",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/128757129",
+            "tags": [
+            ],
+            "hh_id": "128757129",
+            "title": "Разработчик С++/Qt (UI/UX)",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:54.667508",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "с++",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/128757867",
+            "tags": [
+            ],
+            "hh_id": "128757867",
+            "title": "Разработчик С++/Qt",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:54.63776",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "с++",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/129813533",
+            "tags": [
+                "Atlassian Jira",
+                "Backend",
+                "C/C++",
+                "PostgreSQL",
+                "SQL"
+            ],
+            "hh_id": "129813533",
+            "title": "Middle+ / Senior Python разработчик",
+            "salary_to": 200000,
+            "created_at": "2026-03-25T09:30:34.723737",
+            "experience": "moreThan6",
+            "salary_from": 130000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/129813946",
+            "tags": [
+                "Автоматизированное тестирование"
+            ],
+            "hh_id": "129813946",
+            "title": "Middle+ / Senior инженер автоматизированного тестирования (AQA Python)",
+            "salary_to": 200000,
+            "created_at": "2026-03-25T09:30:35.295285",
+            "experience": "moreThan6",
+            "salary_from": 120000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/129860934",
+            "tags": [
+                "Python",
+                "Selenium"
+            ],
+            "hh_id": "129860934",
+            "title": "Тестировщик-автоматизатор (Python)",
+            "salary_to": 180000,
+            "created_at": "2026-03-25T09:30:33.94743",
+            "experience": "between1And3",
+            "salary_from": 120000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/130176533",
+            "tags": [
+                "Django Framework",
+                "FastAPI",
+                "Kubernetes",
+                "Python"
+            ],
+            "hh_id": "130176533",
+            "title": "Python Developer (Web, «Мир кораблей»)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.935735",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/130413372",
+            "tags": [
+                "C++"
+            ],
+            "hh_id": "130413372",
+            "title": "Разработчик C++ (Junior)",
+            "salary_to": 95000,
+            "created_at": "2026-03-25T10:18:54.688386",
+            "experience": "between1And3",
+            "salary_from": 60000,
+            "search_query": "с++",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/130602052",
+            "tags": [
+                "CSS",
+                "HTML",
+                "JavaScript",
+                "Lua",
+                "Python",
+                "Roblox",
+                "Онлайн",
+                "Преподаватель",
+                "Программирование",
+                "Учитель"
+            ],
+            "hh_id": "130602052",
+            "title": "Преподаватель Roblox и Python в онлайн-школу программирования",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:55.069684",
+            "experience": "noExperience",
+            "salary_from": 50000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/130605319",
+            "tags": [
+                "Apache Airflow",
+                "Apache Kafka",
+                "Docker",
+                "FastAPI",
+                "Linux",
+                "PostgreSQL",
+                "Python"
+            ],
+            "hh_id": "130605319",
+            "title": "Python разработчик (Software Engineer)",
+            "salary_to": 400000,
+            "created_at": "2026-03-25T09:30:34.877444",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/130699299",
+            "tags": [
+                "C++",
+                "Docker",
+                "Linux",
+                "Python"
+            ],
+            "hh_id": "130699299",
+            "title": "Тестировщик С++",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:54.632378",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "с++",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/130704607",
+            "tags": [
+                "API",
+                "Django",
+                "Django Framework",
+                "Docker",
+                "Docker-compose",
+                "Flask",
+                "Git",
+                "Linux",
+                "PostgreSQL",
+                "Python",
+                "REST API",
+                "Алгоритмы и структуры данных"
+            ],
+            "hh_id": "130704607",
+            "title": "Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.983687",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/130744663",
+            "tags": [
+            ],
+            "hh_id": "130744663",
+            "title": "Team Lead (Python)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.669918",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/130751786",
+            "tags": [
+                "C/C++",
+                "Git",
+                "Pytest",
+                "Python",
+                "Сбор требований",
+                "Тестирование ПО"
+            ],
+            "hh_id": "130751786",
+            "title": "Python-разработчик автоматизации тестирования",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.21658",
+            "experience": "between3And6",
+            "salary_from": 150000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/130764448",
+            "tags": [
+                "Apache Airflow",
+                "Clickhouse",
+                "Matplotlib",
+                "Numpy",
+                "Plotly",
+                "Python",
+                "SQL",
+                "asyncio",
+                "multithreading / multiprocessing",
+                "Математическая статистика"
+            ],
+            "hh_id": "130764448",
+            "title": "Senior Data Engineer (Python)",
+            "salary_to": 380000,
+            "created_at": "2026-03-25T09:30:34.802536",
+            "experience": "between3And6",
+            "salary_from": 350000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/130768959",
+            "tags": [
+                "C++",
+                "Decorator",
+                "Qt",
+                "Оптимизация кода"
+            ],
+            "hh_id": "130768959",
+            "title": "С++ Разработчик",
+            "salary_to": 150000,
+            "created_at": "2026-03-25T10:18:54.675349",
+            "experience": "between1And3",
+            "salary_from": 90000,
+            "search_query": "с++",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/130784956",
+            "tags": [
+            ],
+            "hh_id": "130784956",
+            "title": "Tech Lead / Руководитель команды разработки Python",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.126365",
+            "experience": "moreThan6",
+            "salary_from": 400000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/130790339",
+            "tags": [
+                "FastAPI",
+                "HTTPX",
+                "MongoDB",
+                "MySQL",
+                "NoSQL",
+                "PostgreSQL",
+                "Pytest",
+                "Python",
+                "Twisted",
+                "Unit Testing",
+                "asyncio"
+            ],
+            "hh_id": "130790339",
+            "title": "Python Developer (Backend)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.696594",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/130790483",
+            "tags": [
+                "Bash",
+                "CI/CD",
+                "Django Framework",
+                "Docker",
+                "FastAPI",
+                "Grafana",
+                "Linux",
+                "PostgreSQL",
+                "Prometheus",
+                "Python",
+                "drf",
+                "microservices"
+            ],
+            "hh_id": "130790483",
+            "title": "Senior Backend Developer (Python)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:33.996572",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/130823311",
+            "tags": [
+                "C++",
+                "Python"
+            ],
+            "hh_id": "130823311",
+            "title": "Программист-разработчик (Python / C++)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.031816",
+            "experience": "between1And3",
+            "salary_from": 150000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/130899293",
+            "tags": [
+                "Asyncio",
+                "BGP",
+                "Bash",
+                "Docker",
+                "MC-LAG",
+                "OSFP",
+                "Pytest",
+                "Python",
+                "SQLAlchemy",
+                "STP",
+                "Sphinx",
+                "TCP/IP",
+                "VxLAN"
+            ],
+            "hh_id": "130899293",
+            "title": "Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.854536",
+            "experience": "moreThan6",
+            "salary_from": 300000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/130915611",
+            "tags": [
+                "API",
+                "Docker",
+                "Git",
+                "PostgreSQL",
+                "Python",
+                "REST API"
+            ],
+            "hh_id": "130915611",
+            "title": "Python-разработчик",
+            "salary_to": 200000,
+            "created_at": "2026-03-25T09:30:34.209747",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/130922877",
+            "tags": [
+            ],
+            "hh_id": "130922877",
+            "title": "Senior Python Developer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.633006",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/130925491",
+            "tags": [
+            ],
+            "hh_id": "130925491",
+            "title": "Senior/Middle Python (GigaChat Enterprise)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.122785",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/130954822",
+            "tags": [
+                "ARM",
+                "C++",
+                "Linux",
+                "Qt",
+                "SQL"
+            ],
+            "hh_id": "130954822",
+            "title": "Программист С++",
+            "salary_to": 250000,
+            "created_at": "2026-03-25T10:18:54.608434",
+            "experience": "between3And6",
+            "salary_from": 180000,
+            "search_query": "с++",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/130957964",
+            "tags": [
+                "C++",
+                "Java",
+                "Python",
+                "Scrum"
+            ],
+            "hh_id": "130957964",
+            "title": "Senior C++/Java Software Engineer",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:54.714561",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "с++",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131044389",
+            "tags": [
+                "AWS",
+                "Java",
+                "MS SQL",
+                "Python"
+            ],
+            "hh_id": "131044389",
+            "title": "Senior Python developer",
+            "salary_to": 6000,
+            "created_at": "2026-03-25T09:30:34.006394",
+            "experience": "moreThan6",
+            "salary_from": 4000,
+            "search_query": "python",
+            "salary_currency": "USD"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131049963",
+            "tags": [
+                "Celery",
+                "Django Rest Framework",
+                "FastAPI",
+                "GitHub",
+                "PyCharm",
+                "Python",
+                "REST API"
+            ],
+            "hh_id": "131049963",
+            "title": "Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.953953",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131054002",
+            "tags": [
+            ],
+            "hh_id": "131054002",
+            "title": "Senior Python Developer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.668362",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131056071",
+            "tags": [
+                "Python",
+                "pandas"
+            ],
+            "hh_id": "131056071",
+            "title": "Senior Python Engineer (AI & Automation)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.012268",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131056841",
+            "tags": [
+            ],
+            "hh_id": "131056841",
+            "title": "Python Developer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.125128",
+            "experience": "moreThan6",
+            "salary_from": 5000,
+            "search_query": "python",
+            "salary_currency": "USD"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131058426",
+            "tags": [
+                "Clickhouse",
+                "FastAPI",
+                "GitHub",
+                "Gitlab",
+                "NoSQL",
+                "Python",
+                "gRPC"
+            ],
+            "hh_id": "131058426",
+            "title": "Middle/Middle+ Python разработчик",
+            "salary_to": 300000,
+            "created_at": "2026-03-25T09:30:34.476065",
+            "experience": "moreThan6",
+            "salary_from": 250000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131071656",
+            "tags": [
+                "AWS",
+                "Python",
+                "Английский язык"
+            ],
+            "hh_id": "131071656",
+            "title": "Python engineer/Python-разработчик (AI GEN Team)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.015163",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131072281",
+            "tags": [
+                "Docker",
+                "EKS/ECS",
+                "Git",
+                "GitHub",
+                "Gitlab",
+                "JSON",
+                "Kubernetes",
+                "MS SQL",
+                "PostgreSQL",
+                "Python",
+                "REST",
+                "SQL",
+                "Знание библиотек для ML и автоматизации",
+                "Контейнеризация",
+                "Манипуляция данными",
+                "Оркестрация",
+                "Разработка продакшн-кода",
+                "Сложные запросы"
+            ],
+            "hh_id": "131072281",
+            "title": "Разработчик на Python уровня Middle",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.088769",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131082982",
+            "tags": [
+            ],
+            "hh_id": "131082982",
+            "title": "Backend / AI Product Engineer (Python)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.093093",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131124833",
+            "tags": [
+            ],
+            "hh_id": "131124833",
+            "title": "Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.016035",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131125665",
+            "tags": [
+            ],
+            "hh_id": "131125665",
+            "title": "Python-разработчик",
+            "salary_to": 110000,
+            "created_at": "2026-03-25T09:30:35.014836",
+            "experience": "noExperience",
+            "salary_from": 90000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131129211",
+            "tags": [
+                "C#",
+                "CI/CD",
+                "GameDev",
+                "Java",
+                "Python",
+                "Unity",
+                "Автоматизированное тестирование",
+                "ООП"
+            ],
+            "hh_id": "131129211",
+            "title": "Automation QA-Engineer Java/Python/C# (GameDev)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:55.048539",
+            "experience": "noExperience",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131135208",
+            "tags": [
+                "API",
+                "Django Framework",
+                "Git",
+                "Linux",
+                "PostgreSQL",
+                "Python",
+                "REST API",
+                "Английский язык",
+                "ООП"
+            ],
+            "hh_id": "131135208",
+            "title": "Python Trainee",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:55.116464",
+            "experience": "noExperience",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131169026",
+            "tags": [
+                "API",
+                "Docker",
+                "FastAPI",
+                "Git",
+                "PostgreSQL",
+                "Python",
+                "RabbitMQ",
+                "SQLAlchemy",
+                "Scrum"
+            ],
+            "hh_id": "131169026",
+            "title": "Инженер-разработчик (Python)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.629886",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131169298",
+            "tags": [
+                "API",
+                "Docker",
+                "FastAPI",
+                "Git",
+                "PostgreSQL",
+                "Python",
+                "RabbitMQ",
+                "SQLAlchemy",
+                "Scrum"
+            ],
+            "hh_id": "131169298",
+            "title": "Инженер-разработчик (Python)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.606173",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131179497",
+            "tags": [
+                "GitHub",
+                "Python",
+                "SQL",
+                "Алгоритмы и структуры данных"
+            ],
+            "hh_id": "131179497",
+            "title": "Python-разработчик (интеграции маркетплейсов, автоматизация, ИИ)",
+            "salary_to": 120000,
+            "created_at": "2026-03-25T09:30:35.165397",
+            "experience": "between1And3",
+            "salary_from": 80000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131191450",
+            "tags": [
+                "C++",
+                "Linux",
+                "Multithread Programming",
+                "Python",
+                "STL"
+            ],
+            "hh_id": "131191450",
+            "title": "Инженер - разработчик С++",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:54.651331",
+            "experience": "between1And3",
+            "salary_from": 200000,
+            "search_query": "с++",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131197646",
+            "tags": [
+            ],
+            "hh_id": "131197646",
+            "title": "Программист python в сео-команду",
+            "salary_to": 150000,
+            "created_at": "2026-03-25T09:30:34.054322",
+            "experience": "between1And3",
+            "salary_from": 70000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131214186",
+            "tags": [
+                "FastAPI",
+                "Python",
+                "asyncio",
+                "data science",
+                "deepeval",
+                "genai",
+                "highload",
+                "langchain",
+                "langfuse",
+                "llm api",
+                "machine learning",
+                "milvus",
+                "nlp",
+                "oss models",
+                "pgvector",
+                "quadrant",
+                "rag",
+                "vllm"
+            ],
+            "hh_id": "131214186",
+            "title": "Python developer в GenAI Evaluation",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.247339",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131273496",
+            "tags": [
+                "Clickhouse",
+                "Docker",
+                "Git",
+                "HTML",
+                "Numpy",
+                "Playwright",
+                "PostgreSQL",
+                "Python",
+                "RabbitMQ",
+                "SQL",
+                "Selenium",
+                "asyncio",
+                "bs4",
+                "extensions",
+                "multithreading",
+                "numba",
+                "pandas",
+                "processing"
+            ],
+            "hh_id": "131273496",
+            "title": "Python developer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.09536",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131283863",
+            "tags": [
+                "Django Framework",
+                "Git",
+                "PostgreSQL",
+                "Python",
+                "REST"
+            ],
+            "hh_id": "131283863",
+            "title": "Python developer",
+            "salary_to": 160000,
+            "created_at": "2026-03-25T09:30:35.179179",
+            "experience": "between1And3",
+            "salary_from": 80000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131325238",
+            "tags": [
+            ],
+            "hh_id": "131325238",
+            "title": "Python Developer (Middle+/Senior)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.110043",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131325703",
+            "tags": [
+                "Git",
+                "JSON API",
+                "ORACLE",
+                "Python",
+                "XML",
+                "Xsd",
+                "iOS",
+                "Аналитическое мышление",
+                "Интеграция программных модулей",
+                "Организаторские навыки",
+                "Постановка задач разработчикам"
+            ],
+            "hh_id": "131325703",
+            "title": "Python-разработчик, Middle",
+            "salary_to": 12000000,
+            "created_at": "2026-03-25T09:30:34.827189",
+            "experience": "between1And3",
+            "salary_from": 7000000,
+            "search_query": "python",
+            "salary_currency": "UZS"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131355168",
+            "tags": [
+                "AQA",
+                "Airflow",
+                "Apache Spark",
+                "Cassandra",
+                "Docker",
+                "GraphQL",
+                "Hadoop",
+                "Kafka",
+                "Linux",
+                "Postman",
+                "Python",
+                "REST API",
+                "SOAP",
+                "SQL",
+                "k8s"
+            ],
+            "hh_id": "131355168",
+            "title": "AQA Python",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.121539",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131360090",
+            "tags": [
+                "CI/CD",
+                "Celery",
+                "Docker",
+                "Docker-compose",
+                "FastAPI",
+                "Kubernetes",
+                "MLflow",
+                "PostgreSQL",
+                "Python",
+                "REST API",
+                "RabbitMQ",
+                "Redis",
+                "SQLAlchemy"
+            ],
+            "hh_id": "131360090",
+            "title": "Middle Backend Python Engineer",
+            "salary_to": 4000,
+            "created_at": "2026-03-25T09:30:34.27237",
+            "experience": "between3And6",
+            "salary_from": 1800,
+            "search_query": "python",
+            "salary_currency": "EUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131407808",
+            "tags": [
+                "MongoDB",
+                "PostgreSQL",
+                "Python",
+                "SQL"
+            ],
+            "hh_id": "131407808",
+            "title": "Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.120426",
+            "experience": "between1And3",
+            "salary_from": 80000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131422806",
+            "tags": [
+            ],
+            "hh_id": "131422806",
+            "title": "Программист Python",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:55.050834",
+            "experience": "noExperience",
+            "salary_from": 70000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131427107",
+            "tags": [
+            ],
+            "hh_id": "131427107",
+            "title": "Python Engineer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.938526",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131435286",
+            "tags": [
+            ],
+            "hh_id": "131435286",
+            "title": "Junior Разработчик ML (Python)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:55.093025",
+            "experience": "noExperience",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131436064",
+            "tags": [
+                "C++17+",
+                "C++20",
+                "Linux",
+                "Python",
+                "Python 3.10+",
+                "SQL",
+                "Алгоритмы и структуры данных",
+                "векторные данные"
+            ],
+            "hh_id": "131436064",
+            "title": "Senior ML/CV/LLM инженер-программист (C++/Python/анализ CAD-данных)",
+            "salary_to": 350000,
+            "created_at": "2026-03-25T09:30:34.780084",
+            "experience": "between3And6",
+            "salary_from": 300000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131451573",
+            "tags": [
+                "Python"
+            ],
+            "hh_id": "131451573",
+            "title": "Python-разработчик (Junior)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:54.996862",
+            "experience": "noExperience",
+            "salary_from": 80000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131458923",
+            "tags": [
+                "Backend",
+                "PostgreSQL",
+                "Python",
+                "SQL",
+                "Анализ данных",
+                "Базы данных",
+                "беспилотные авиационные системы",
+                "роботизация"
+            ],
+            "hh_id": "131458923",
+            "title": "Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:33.855087",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131471919",
+            "tags": [
+            ],
+            "hh_id": "131471919",
+            "title": "Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.00591",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131483711",
+            "tags": [
+                "Django Framework",
+                "Nginx",
+                "PostgreSQL",
+                "Python",
+                "Redis",
+                "SQL"
+            ],
+            "hh_id": "131483711",
+            "title": "Python backend разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.289875",
+            "experience": "between3And6",
+            "salary_from": 120000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131487424",
+            "tags": [
+                "HTTP",
+                "Linux",
+                "TCP/IP",
+                "С++"
+            ],
+            "hh_id": "131487424",
+            "title": "Разработчик С++",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:54.700044",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "с++",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131488367",
+            "tags": [
+            ],
+            "hh_id": "131488367",
+            "title": "Data Analyst/Аналитик данных (PostgreSQL, Python)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:55.000697",
+            "experience": "noExperience",
+            "salary_from": 95000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131490545",
+            "tags": [
+                "Python",
+                "Веб-программирование",
+                "Навыки переговоров",
+                "Навыки презентации",
+                "Обучение и развитие",
+                "Организация учебного процесса"
+            ],
+            "hh_id": "131490545",
+            "title": "Демо-преподаватель / наставник на вводные занятия (Web / Python)",
+            "salary_to": 400000,
+            "created_at": "2026-03-25T09:30:55.015243",
+            "experience": "noExperience",
+            "salary_from": 200000,
+            "search_query": "python",
+            "salary_currency": "KZT"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131495957",
+            "tags": [
+                "Django Rest Framework",
+                "GitHub",
+                "Gitlab",
+                "MySQL",
+                "Python",
+                "REST API",
+                "SQL",
+                "Алгоритмы и структуры данных",
+                "Английский язык"
+            ],
+            "hh_id": "131495957",
+            "title": "Junior Python Developer",
+            "salary_to": 125000,
+            "created_at": "2026-03-25T09:30:34.76098",
+            "experience": "between1And3",
+            "salary_from": 92000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131496183",
+            "tags": [
+                "Django Rest Framework",
+                "PostgreSQL",
+                "Python",
+                "SQL"
+            ],
+            "hh_id": "131496183",
+            "title": "Junior Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.737279",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131496703",
+            "tags": [
+                "Celery",
+                "FastAPI",
+                "Gitlab",
+                "Golang",
+                "Python",
+                "REST API",
+                "Redis",
+                "SQLAlchemy",
+                "gRPC"
+            ],
+            "hh_id": "131496703",
+            "title": "Backend Developer (Python + Go)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.271558",
+            "experience": "between3And6",
+            "salary_from": 200000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131498750",
+            "tags": [
+                "Apache Airflow",
+                "Clickhouse",
+                "FastAPI",
+                "PostgreSQL",
+                "Python",
+                "Redis",
+                "SQL"
+            ],
+            "hh_id": "131498750",
+            "title": "Python-разработчик (LLM, ML)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.002443",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131499107",
+            "tags": [
+            ],
+            "hh_id": "131499107",
+            "title": "Senior Python разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.699865",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131503544",
+            "tags": [
+            ],
+            "hh_id": "131503544",
+            "title": "Backend Developer (Python/FastAPI)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.87987",
+            "experience": "noExperience",
+            "salary_from": 150000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131505276",
+            "tags": [
+                "Blender 3D",
+                "Python",
+                "Unity"
+            ],
+            "hh_id": "131505276",
+            "title": "Педагог по программированию (Python/Unity)",
+            "salary_to": 140000,
+            "created_at": "2026-03-25T09:30:35.155019",
+            "experience": "between1And3",
+            "salary_from": 100000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131505945",
+            "tags": [
+            ],
+            "hh_id": "131505945",
+            "title": "Python-разработчик (Middle/Senior)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.859437",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131506622",
+            "tags": [
+            ],
+            "hh_id": "131506622",
+            "title": "Разработчик Python backend developer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.858022",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131506777",
+            "tags": [
+                "API",
+                "Backend",
+                "Django Rest Framework",
+                "Python",
+                "SQL",
+                "Работа с базами данных"
+            ],
+            "hh_id": "131506777",
+            "title": "Backend-разработчик Python / Django (цифровизация геологии и добычи) (неоплаиваемая практика)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:55.030855",
+            "experience": "noExperience",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131509624",
+            "tags": [
+                "C++",
+                "Python",
+                "Клиент-серверная архитектура",
+                "ООП"
+            ],
+            "hh_id": "131509624",
+            "title": "Python/C++ Developer (Tanks Blitz)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.107701",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131509982",
+            "tags": [
+                "Apache Kafka",
+                "Django Framework",
+                "MySQL",
+                "PostgreSQL",
+                "Python",
+                "RabbitMQ",
+                "Redis"
+            ],
+            "hh_id": "131509982",
+            "title": "Cтарший Python Разработчик (Senior Python Developer)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.581496",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131510397",
+            "tags": [
+                "Apache Kafka",
+                "FastAPI",
+                "Prometheus",
+                "Python",
+                "SQLAlchemy"
+            ],
+            "hh_id": "131510397",
+            "title": "Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.181751",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131510511",
+            "tags": [
+                "Celery",
+                "Django Framework",
+                "Django Rest Framework",
+                "PostgreSQL",
+                "Python",
+                "REST API",
+                "Redis",
+                "Интеграционное тестирование",
+                "Разработка ПО"
+            ],
+            "hh_id": "131510511",
+            "title": "Ведущий разработчик Python (id 839)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.036715",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131511893",
+            "tags": [
+                "Celery",
+                "DRF",
+                "Django",
+                "Django ORM",
+                "Django Rest Framework",
+                "Docker",
+                "Docker Compose",
+                "FastAPI",
+                "Kafka",
+                "MongoDB",
+                "MySQL",
+                "PHP",
+                "PostgreSQL",
+                "Pytest",
+                "RabbitMQ",
+                "Redis",
+                "SQL",
+                "SQLAlchemy",
+                "unittest"
+            ],
+            "hh_id": "131511893",
+            "title": "Python developer (Django)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.549496",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131513814",
+            "tags": [
+                "C++"
+            ],
+            "hh_id": "131513814",
+            "title": "С/С++ разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:54.704242",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "с++",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131515272",
+            "tags": [
+                "CI/CD",
+                "Django Framework",
+                "Django Rest Framework",
+                "Docker",
+                "FastAPI",
+                "Git",
+                "GitHub",
+                "Linux",
+                "MySQL",
+                "PostgreSQL",
+                "Python",
+                "REST API",
+                "Redis",
+                "Оптимизация кода"
+            ],
+            "hh_id": "131515272",
+            "title": "Python Django developer",
+            "salary_to": 1000,
+            "created_at": "2026-03-25T09:30:34.51031",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": "USD"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131516054",
+            "tags": [
+            ],
+            "hh_id": "131516054",
+            "title": "QA Automation Engineer (Python)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.783406",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131516610",
+            "tags": [
+                "Docker",
+                "Git",
+                "JavaScript",
+                "MySQL",
+                "Node.js",
+                "PHP",
+                "PostgreSQL",
+                "Python",
+                "SQL"
+            ],
+            "hh_id": "131516610",
+            "title": "Программист Full Stack Developer (PHP/Python)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.200794",
+            "experience": "between1And3",
+            "salary_from": 100000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131518469",
+            "tags": [
+                "FastAPI",
+                "PostgreSQL",
+                "Python"
+            ],
+            "hh_id": "131518469",
+            "title": "Senior Backend Engineer (Python)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.709683",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131519639",
+            "tags": [
+            ],
+            "hh_id": "131519639",
+            "title": "С++ developer",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:54.677238",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "с++",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131519897",
+            "tags": [
+                "Celery",
+                "FastAPI",
+                "PostgreSQL",
+                "Python",
+                "RabbitMQ",
+                "Redis"
+            ],
+            "hh_id": "131519897",
+            "title": "Middle Python разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.351783",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131520300",
+            "tags": [
+                "Python",
+                "QA",
+                "Нагрузочное тестирование"
+            ],
+            "hh_id": "131520300",
+            "title": "Middle QA Automation Python [MWS Tables]",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.132738",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131521453",
+            "tags": [
+                "GitHub",
+                "Python",
+                "Анализ кода",
+                "Анализ тестирования",
+                "Стратегия тестирования"
+            ],
+            "hh_id": "131521453",
+            "title": "Senior разработчик на Python",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.563253",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131521938",
+            "tags": [
+                "Amazon Web Services",
+                "Azure",
+                "FastAPI",
+                "Python",
+                "REST API"
+            ],
+            "hh_id": "131521938",
+            "title": "Lead Python AI Engineer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.459453",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522020",
+            "tags": [
+                "Amazon Web Services",
+                "Azure",
+                "FastAPI",
+                "Flask",
+                "Python"
+            ],
+            "hh_id": "131522020",
+            "title": "Senior Python Engineer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.143459",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522021",
+            "tags": [
+                "Amazon Web Services",
+                "Azure",
+                "FastAPI",
+                "Flask",
+                "Python"
+            ],
+            "hh_id": "131522021",
+            "title": "Senior Python Engineer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.155954",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522022",
+            "tags": [
+                "Amazon Web Services",
+                "Azure",
+                "FastAPI",
+                "Flask",
+                "Python"
+            ],
+            "hh_id": "131522022",
+            "title": "Senior Python Engineer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.168551",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522034",
+            "tags": [
+                "Amazon Web Services",
+                "Azure",
+                "Django Rest Framework",
+                "FastAPI",
+                "Pytest",
+                "REST API"
+            ],
+            "hh_id": "131522034",
+            "title": "Lead AI Python Engineer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.374749",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522035",
+            "tags": [
+                "Amazon Web Services",
+                "Azure",
+                "Django Rest Framework",
+                "FastAPI",
+                "Pytest",
+                "REST API"
+            ],
+            "hh_id": "131522035",
+            "title": "Lead AI Python Engineer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.389864",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522044",
+            "tags": [
+                "Amazon Web Services",
+                "Azure",
+                "Django Framework",
+                "FastAPI",
+                "Jupyter Notebook",
+                "Linux",
+                "Python",
+                "REST API",
+                "Алгоритмы и структуры данных"
+            ],
+            "hh_id": "131522044",
+            "title": "Senior AI Python Engineer – Life Sciences Domain",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.899523",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522045",
+            "tags": [
+                "Amazon Web Services",
+                "Azure",
+                "Django Framework",
+                "FastAPI",
+                "Jupyter Notebook",
+                "Linux",
+                "Python",
+                "REST API",
+                "Алгоритмы и структуры данных"
+            ],
+            "hh_id": "131522045",
+            "title": "Senior AI Python Engineer – Life Sciences Domain",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.924998",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522049",
+            "tags": [
+                "Amazon Web Services",
+                "Azure",
+                "Django Framework",
+                "FastAPI",
+                "Flask",
+                "Pytest",
+                "Python"
+            ],
+            "hh_id": "131522049",
+            "title": "Cloud Native Python Engineer with AI Integration Focus",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:35.054812",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522097",
+            "tags": [
+                "Amazon Web Services",
+                "Azure",
+                "Django Framework",
+                "Django Rest Framework",
+                "FastAPI",
+                "Flask",
+                "Pytest",
+                "Python",
+                "REST API",
+                "Английский язык"
+            ],
+            "hh_id": "131522097",
+            "title": "Lead Python AI Engineer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.296936",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522098",
+            "tags": [
+                "Amazon Web Services",
+                "Azure",
+                "Django Framework",
+                "Django Rest Framework",
+                "FastAPI",
+                "Flask",
+                "Pytest",
+                "Python",
+                "REST API",
+                "Английский язык"
+            ],
+            "hh_id": "131522098",
+            "title": "Lead Python AI Engineer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.320703",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522167",
+            "tags": [
+                "Docker",
+                "FastAPI",
+                "Git",
+                "HTTP",
+                "Kafka",
+                "Linux",
+                "MySQL",
+                "PostgreSQL",
+                "Python",
+                "REST API",
+                "Redis",
+                "SQL",
+                "SQLAlchemy"
+            ],
+            "hh_id": "131522167",
+            "title": "Backend-разработчик Python (Senior)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.244464",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522285",
+            "tags": [
+                "Alembic",
+                "Docker",
+                "FastAPI",
+                "GitHub",
+                "HTTP",
+                "Linux",
+                "MySQL",
+                "PostgreSQL",
+                "Pydantic",
+                "Python",
+                "REST API",
+                "SQLAlchemy",
+                "WebSocket",
+                "Понимание асинхронности"
+            ],
+            "hh_id": "131522285",
+            "title": "Python разработчик | Middle | Senior в Fintech",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.664252",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131522904",
+            "tags": [
+            ],
+            "hh_id": "131522904",
+            "title": "C++ разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:54.690108",
+            "experience": "between1And3",
+            "salary_from": 70000,
+            "search_query": "с++",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131525569",
+            "tags": [
+                "Django Framework",
+                "FastAPI",
+                "Python"
+            ],
+            "hh_id": "131525569",
+            "title": "Senior Python-разработчик",
+            "salary_to": 300000,
+            "created_at": "2026-03-25T09:30:34.025227",
+            "experience": "moreThan6",
+            "salary_from": 250000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131526082",
+            "tags": [
+                "Blender 3D",
+                "Python",
+                "Roblox",
+                "Scratch",
+                "Unity",
+                "Английский язык",
+                "Веб-программирование",
+                "Грамотная речь",
+                "Дистанционное обучение",
+                "Обучение",
+                "Обучение и развитие",
+                "Преподаватель",
+                "Работа с детьми"
+            ],
+            "hh_id": "131526082",
+            "title": "Преподаватель программирования (Scratch&Roblox/Python Backend/Unity)",
+            "salary_to": 90000,
+            "created_at": "2026-03-25T09:30:34.414419",
+            "experience": "noExperience",
+            "salary_from": 60000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131526083",
+            "tags": [
+                "Blender 3D",
+                "Python",
+                "Roblox",
+                "Scratch",
+                "Unity",
+                "Английский язык",
+                "Веб-программирование",
+                "Грамотная речь",
+                "Дистанционное обучение",
+                "Обучение",
+                "Обучение и развитие",
+                "Преподаватель",
+                "Работа с детьми"
+            ],
+            "hh_id": "131526083",
+            "title": "Преподаватель программирования (Scratch&Roblox/Python Backend/Unity)",
+            "salary_to": 90000,
+            "created_at": "2026-03-25T09:30:34.44391",
+            "experience": "noExperience",
+            "salary_from": 60000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131526946",
+            "tags": [
+                "Git",
+                "Numpy",
+                "Python",
+                "Selenium",
+                "pandas"
+            ],
+            "hh_id": "131526946",
+            "title": "Старший Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:33.972254",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131527876",
+            "tags": [
+                "Python",
+                "Selenium"
+            ],
+            "hh_id": "131527876",
+            "title": "Тестировщик-автоматизатор (Python)",
+            "salary_to": 120000,
+            "created_at": "2026-03-25T09:30:33.953531",
+            "experience": "noExperience",
+            "salary_from": 70000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131527877",
+            "tags": [
+                "Python",
+                "Selenium"
+            ],
+            "hh_id": "131527877",
+            "title": "Тестировщик-автоматизатор (Python)",
+            "salary_to": 120000,
+            "created_at": "2026-03-25T09:30:33.960215",
+            "experience": "noExperience",
+            "salary_from": 70000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131528356",
+            "tags": [
+                "Django Framework",
+                "Git",
+                "HTML",
+                "Python",
+                "SQL"
+            ],
+            "hh_id": "131528356",
+            "title": "Преподаватель по курсу \"Python-разработчик\" Самарканд",
+            "salary_to": 10000000,
+            "created_at": "2026-03-25T09:30:34.194205",
+            "experience": "between1And3",
+            "salary_from": 3000000,
+            "search_query": "python",
+            "salary_currency": "UZS"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131528474",
+            "tags": [
+                "C/C++",
+                "Linux",
+                "RAID",
+                "Widows"
+            ],
+            "hh_id": "131528474",
+            "title": "Senior С++ Developer",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:54.661336",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "с++",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131529471",
+            "tags": [
+                "Python",
+                "R-Pro",
+                "Visual Components"
+            ],
+            "hh_id": "131529471",
+            "title": "Инженер по имитационному моделированию (Visual Components, Python)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.217632",
+            "experience": "between1And3",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131531478",
+            "tags": [
+                "Bash",
+                "Git",
+                "Golang",
+                "Kubernetes",
+                "Linux",
+                "Python",
+                "SQL",
+                "Автоматизированное тестирование",
+                "Нагрузочное тестирование"
+            ],
+            "hh_id": "131531478",
+            "title": "QA-инженер (Go, Python)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.051228",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131532341",
+            "tags": [
+                "Django Framework",
+                "Django Rest Framework",
+                "PostgreSQL",
+                "Python",
+                "Алгоритмы и структуры данных"
+            ],
+            "hh_id": "131532341",
+            "title": "Python Django developer",
+            "salary_to": 300000,
+            "created_at": "2026-03-25T09:30:33.941304",
+            "experience": "between3And6",
+            "salary_from": 150000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131533593",
+            "tags": [
+            ],
+            "hh_id": "131533593",
+            "title": "Python-разработчик",
+            "salary_to": 300000,
+            "created_at": "2026-03-25T09:30:33.88747",
+            "experience": "between3And6",
+            "salary_from": 300000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131533710",
+            "tags": [
+                "Apache Kafka",
+                "CSS",
+                "FastAPI",
+                "HTML",
+                "HTMX",
+                "JavaScript",
+                "PostgreSQL",
+                "Python",
+                "SQLAlchemy",
+                "TypeScript",
+                "jinja2"
+            ],
+            "hh_id": "131533710",
+            "title": "Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:33.884466",
+            "experience": "moreThan6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131534648",
+            "tags": [
+                "Django Framework",
+                "Django Rest Framework",
+                "FastAPI",
+                "Flask",
+                "Git",
+                "GitHub",
+                "MongoDB",
+                "PostgreSQL",
+                "Python",
+                "REST API",
+                "SQL",
+                "Английский язык"
+            ],
+            "hh_id": "131534648",
+            "title": "Trainee/Python Developer",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:33.928795",
+            "experience": "noExperience",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131536382",
+            "tags": [
+            ],
+            "hh_id": "131536382",
+            "title": "Senior Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:33.908142",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131536719",
+            "tags": [
+                "Apache Kafka",
+                "CI/CD",
+                "FastAPI",
+                "PostgreSQL",
+                "Python"
+            ],
+            "hh_id": "131536719",
+            "title": "Lead Python-разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:33.905532",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131536812",
+            "tags": [
+                "C++",
+                "PKI",
+                "Криптография",
+                "Многопоточность"
+            ],
+            "hh_id": "131536812",
+            "title": "Разработчик C++ (PKI)",
+            "salary_to": 220000,
+            "created_at": "2026-03-25T10:18:54.68446",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "с++",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131536962",
+            "tags": [
+            ],
+            "hh_id": "131536962",
+            "title": "Python-разработчик (парсинг AutoCAD / DXF, инженерные схемы)",
+            "salary_to": 100000,
+            "created_at": "2026-03-25T09:30:34.171065",
+            "experience": "between3And6",
+            "salary_from": 80000,
+            "search_query": "python",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131537897",
+            "tags": [
+                "PostgreSQL",
+                "Python"
+            ],
+            "hh_id": "131537897",
+            "title": "Python Developer (Middle)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:33.893623",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131537944",
+            "tags": [
+            ],
+            "hh_id": "131537944",
+            "title": "Разработчик (Python / Go): сбор данных с цифровых полок (площадки, маркетплейсы)",
+            "salary_to": null,
+            "created_at": "2026-03-25T09:30:34.479062",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131538911",
+            "tags": [
+            ],
+            "hh_id": "131538911",
+            "title": "Инженер-программист С++",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:54.635631",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "с++",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131539355",
+            "tags": [
+            ],
+            "hh_id": "131539355",
+            "title": "Python разработчик",
+            "salary_to": null,
+            "created_at": "2026-03-25T10:18:41.011087",
+            "experience": "between3And6",
+            "salary_from": null,
+            "search_query": "python",
+            "salary_currency": null
+        },
+        {
+            "url": "https://hh.ru/vacancy/131540029",
+            "tags": [
+            ],
+            "hh_id": "131540029",
+            "title": "Разработчик C++",
+            "salary_to": 200000,
+            "created_at": "2026-03-25T10:18:54.664654",
+            "experience": "between3And6",
+            "salary_from": 150000,
+            "search_query": "с++",
+            "salary_currency": "RUR"
+        },
+        {
+            "url": "https://hh.ru/vacancy/131540030",
+            "tags": [
+            ],
+            "hh_id": "131540030",
+            "title": "Разработчик C++",
+            "salary_to": 200000,
+            "created_at": "2026-03-25T10:18:54.666136",
+            "experience": "between3And6",
+            "salary_from": 150000,
+            "search_query": "с++",
+            "salary_currency": "RUR"
+        }
+    ],
+    "exported_at": "2026-04-30T08:51:09.568019+00:00",
+    "exported_from": "kai-merged docker postgres",
+    "snapshot_name": "current_hh_market_snapshot"
+}
