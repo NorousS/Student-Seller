@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import api from '../../api/client'
 import { useAuth } from '../../store/AuthContext'
+<<<<<<< HEAD
 import type { AnonymizedStudent, AnonymizedStudentProfile, ContactRequest, ChatMessage, SkillMatch, PaywallOption, EmployerProfile, DisciplineGroup } from '../../api/types'
+=======
+import type { AnonymizedStudent, AnonymizedStudentProfile, ContactRequest, ChatMessage, DisciplineGroup, PaywallOption, EmployerProfile } from '../../api/types'
+>>>>>>> github/main
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,9 +36,7 @@ export default function EmployerPanel() {
 
   const partnerBadge = partnershipStatus === 'partner'
     ? <span className="badge badge-green">✅ Партнер вуза</span>
-    : partnershipStatus === 'blocked'
-    ? <span className="badge badge-red">🚫 Доступ ограничен</span>
-    : partnershipStatus === 'basic'
+    : partnershipStatus === 'non_partner'
     ? <span className="badge badge-yellow">⭐ Базовый доступ <a href="#" onClick={e => { e.preventDefault(); setTab('profile') }} style={{ fontSize: 11, marginLeft: 4 }}>Стать партнером</a></span>
     : null
 
@@ -59,6 +61,50 @@ export default function EmployerPanel() {
 
 type SortField = 'similarity' | 'avg_salary' | 'vacancy_count'
 type SortDirection = 'asc' | 'desc'
+
+function DisciplineGroupsView({ groups }: { groups: DisciplineGroup[] }) {
+  const [expanded, setExpanded] = useState<string | null>(null)
+
+  if (!groups || groups.length === 0) {
+    return <p style={{ color: 'var(--text-muted)' }}>Группы навыков пока не сформированы</p>
+  }
+
+  return (
+    <div className="discipline-groups">
+      {groups.map(group => {
+        const isOpen = expanded === group.group_name
+        return (
+          <button
+            key={group.group_name}
+            type="button"
+            className={`discipline-group-card ${isOpen ? 'open' : ''}`}
+            aria-expanded={isOpen}
+            onClick={() => setExpanded(prev => prev === group.group_name ? null : group.group_name)}
+            onFocus={() => setExpanded(group.group_name)}
+            onBlur={() => setExpanded(null)}
+            onMouseEnter={() => setExpanded(group.group_name)}
+            onMouseLeave={() => setExpanded(null)}
+            title={group.disciplines.map(d => `${d.name}: ${d.grade}`).join(', ')}
+          >
+            <span className="discipline-group-head">
+              <span className="discipline-group-title">{group.group_name}</span>
+              <span className="discipline-group-count">{group.total_count}</span>
+            </span>
+            <span className="discipline-group-meta">ср. балл {group.avg_grade.toFixed(1)}</span>
+            <span className="discipline-group-details" aria-hidden={!isOpen}>
+              {group.disciplines.map(d => (
+                <span key={d.id} className={`discipline-pill g${d.grade}`}>
+                  {d.name}
+                  <strong>{d.grade}</strong>
+                </span>
+              ))}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 function SearchTab({ partnershipStatus }: { partnershipStatus: EmployerProfile['partnership_status'] | null }) {
   const [jobTitle, setJobTitle] = useState('')
@@ -261,8 +307,12 @@ function SearchTab({ partnershipStatus }: { partnershipStatus: EmployerProfile['
                     <td>#{r.student_id}</td>
                     <td style={{ color: 'var(--green)' }}>{r.estimated_salary ? `₽${Math.round(r.estimated_salary).toLocaleString()}` : '—'}</td>
                     <td><span className={`badge ${r.confidence > 0.5 ? 'badge-green' : 'badge-yellow'}`}>{(r.confidence * 100).toFixed(0)}%</span></td>
+<<<<<<< HEAD
                     <td><GroupBadges groups={r.discipline_groups} /></td>
                     <td>{r.disciplines.length} дисц.</td>
+=======
+                    <td>{r.discipline_groups?.length || 0} групп</td>
+>>>>>>> github/main
                   </tr>
                 ))}
               </tbody>
@@ -296,8 +346,15 @@ function SearchTab({ partnershipStatus }: { partnershipStatus: EmployerProfile['
                 </div>
               </div>
 
+<<<<<<< HEAD
               <h4 style={{ marginBottom: 8 }}>Группы навыков</h4>
               <DisciplineGroupsView groups={profile.discipline_groups} fallbackDisciplines={profile.disciplines} />
+=======
+              <div style={{ marginBottom: 16 }}>
+                <h4 style={{ marginBottom: 8 }}>Группы навыков</h4>
+                <DisciplineGroupsView groups={profile.discipline_groups} />
+              </div>
+>>>>>>> github/main
 
               {profile.about_me && (
                 <div style={{ marginBottom: 16 }}>
@@ -776,12 +833,10 @@ function ProfileTab({ partnershipStatus }: { partnershipStatus: EmployerProfile[
         <div>
           {partnershipStatus === 'partner'
             ? <span className="badge badge-green">✅ Партнер вуза</span>
-            : partnershipStatus === 'blocked'
-            ? <span className="badge badge-red">🚫 Доступ ограничен</span>
             : <span className="badge badge-yellow">⭐ Базовый доступ</span>}
         </div>
       </div>
-      {partnershipStatus === 'basic' && (
+      {partnershipStatus === 'non_partner' && (
         <div className="card" style={{ padding: 16, marginBottom: 16, background: 'rgba(88,166,255,0.05)', border: '1px solid var(--border)' }}>
           <p style={{ fontWeight: 600, marginBottom: 4 }}>Хотите стать партнером вуза?</p>
           <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Свяжитесь с нами для получения полного доступа.</p>

@@ -5,7 +5,11 @@ SQLAlchemy модели для хранения вакансий, тегов, п
 import enum
 from datetime import datetime
 
+<<<<<<< HEAD
 from sqlalchemy import Boolean, Column, DateTime, Enum, Float, ForeignKey, Integer, String, Table, Text
+=======
+from sqlalchemy import DateTime, Enum, Float, ForeignKey, Integer, String, Text, Table, Column, Boolean
+>>>>>>> github/main
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -160,6 +164,8 @@ class Student(Base):
     estimated_salary: Mapped[float | None] = mapped_column(Float, nullable=True)
     valuation_updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    estimated_salary: Mapped[float | None] = mapped_column(Float, nullable=True)
+    valuation_updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     user: Mapped["User | None"] = relationship(back_populates="student")
     

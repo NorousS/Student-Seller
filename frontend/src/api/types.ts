@@ -19,6 +19,7 @@ export interface Discipline {
   id: number
   name: string
   grade: number
+<<<<<<< HEAD
   category?: string | null
 }
 
@@ -34,6 +35,16 @@ export interface DisciplineGroup {
   disciplines: DisciplineGroupItem[]
   avg_grade: number
   count: number
+=======
+  category: string | null
+}
+
+export interface DisciplineGroup {
+  group_name: string
+  disciplines: Discipline[]
+  total_count: number
+  avg_grade: number
+>>>>>>> github/main
 }
 
 export interface Student {
@@ -56,7 +67,17 @@ export interface EmployerProfile {
   contact_info?: string | null
   about_company?: string | null
   website_url?: string | null
-  partnership_status: 'partner' | 'basic' | 'blocked'
+  partnership_status: 'partner' | 'non_partner'
+}
+
+export interface AdminEmployer {
+  employer_user_id: number
+  profile_id: number
+  email: string
+  company_name: string | null
+  position: string | null
+  partnership_status: 'partner' | 'non_partner'
+  created_at: string
 }
 
 export interface SkillMatch {
@@ -153,6 +174,20 @@ export interface CompetenceBlock {
 export interface FactorBreakdown {
   factor_name: string
   contribution: number
+}
+
+export interface EvaluationResponse {
+  student_id: number
+  student_name: string
+  specialty: string
+  experience_filter: string | null
+  top_k: number
+  excluded_skills: string[]
+  estimated_salary: number | null
+  confidence: number
+  total_disciplines: number
+  matched_disciplines: number
+  skill_matches: SkillMatch[]
 }
 
 export interface InviteResponse {

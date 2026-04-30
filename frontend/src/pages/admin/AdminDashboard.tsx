@@ -1,11 +1,33 @@
 import { useState, useEffect, useMemo } from 'react'
 import api from '../../api/client'
+<<<<<<< HEAD
 import type { EvaluationResponse, Student } from '../../api/types'
+=======
+import type { AdminEmployer, Student, EvaluationResponse } from '../../api/types'
+
+// ─── Edit modal state ─────────────────────────────────────────────────────────
+
+interface EditForm {
+  full_name: string
+  group_name: string
+  disciplines: string  // "Name:grade, Name:grade" format
+}
+
+// ─── Evaluate modal state ─────────────────────────────────────────────────────
+
+interface EvalForm {
+  specialty: string
+  experience: string
+}
+>>>>>>> github/main
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState<'students' | 'parse' | 'tags'>('students')
+  const [tab, setTab] = useState<'students' | 'employers' | 'parse' | 'tags'>('students')
   const [students, setStudents] = useState<Student[]>([])
+  const [employers, setEmployers] = useState<AdminEmployer[]>([])
   const [loading, setLoading] = useState(false)
+  const [employersLoading, setEmployersLoading] = useState(false)
+  const [updatingEmployerId, setUpdatingEmployerId] = useState<number | null>(null)
 
   // --- Create student state ---
   const [newName, setNewName] = useState('')
@@ -16,8 +38,10 @@ export default function AdminDashboard() {
   const [query, setQuery] = useState('python')
   const [count, setCount] = useState(20)
   const [parseResult, setParseResult] = useState<any>(null)
+  const [parseError, setParseError] = useState<string | null>(null)
   const [parsing, setParsing] = useState(false)
 
+<<<<<<< HEAD
   // --- Edit/evaluate student state ---
   const [editingStudent, setEditingStudent] = useState<Student | null>(null)
   const [editForm, setEditForm] = useState({ full_name: '', group_name: '', disciplines: '' })
@@ -26,6 +50,18 @@ export default function AdminDashboard() {
   const [evaluatingStudent, setEvaluatingStudent] = useState<Student | null>(null)
   const [evalForm, setEvalForm] = useState({ specialty: '', experience: '' })
   const [evaluating, setEvaluating] = useState(false)
+=======
+  // --- Edit modal state ---
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null)
+  const [editForm, setEditForm] = useState<EditForm>({ full_name: '', group_name: '', disciplines: '' })
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
+  // --- Evaluate modal state ---
+  const [evaluatingStudent, setEvaluatingStudent] = useState<Student | null>(null)
+  const [evalForm, setEvalForm] = useState<EvalForm>({ specialty: '', experience: '' })
+  const [evalLoading, setEvalLoading] = useState(false)
+>>>>>>> github/main
   const [evalResult, setEvalResult] = useState<EvaluationResponse | null>(null)
   const [evalError, setEvalError] = useState<string | null>(null)
 
@@ -38,7 +74,19 @@ export default function AdminDashboard() {
     setLoading(false)
   }
 
-  useEffect(() => { loadStudents() }, [])
+  const loadEmployers = async () => {
+    setEmployersLoading(true)
+    try {
+      const { data } = await api.get('/admin/employers')
+      setEmployers(data)
+    } catch { /* ignore */ }
+    setEmployersLoading(false)
+  }
+
+  useEffect(() => {
+    loadStudents()
+    loadEmployers()
+  }, [])
 
   const createStudent = async () => {
     if (!newName.trim()) return
@@ -52,15 +100,28 @@ export default function AdminDashboard() {
 
   const parseVacancies = async () => {
     setParsing(true)
+    setParseError(null)
     try {
       const { data } = await api.post('/parse', { query, count })
       setParseResult(data)
     } catch (e: any) {
-      alert(e.response?.data?.detail || 'Ошибка парсинга')
+      const detail = e.response?.data?.detail
+      if (typeof detail === 'object' && detail !== null) {
+        const parts = [
+          detail.message || 'Ошибка парсинга HH',
+          detail.status_code ? `HTTP ${detail.status_code}` : null,
+          detail.error_type ? `type: ${detail.error_type}` : null,
+          detail.request_id ? `request_id: ${detail.request_id}` : null,
+        ].filter(Boolean)
+        setParseError(parts.join(' | '))
+      } else {
+        setParseError(detail || 'Ошибка парсинга')
+      }
     }
     setParsing(false)
   }
 
+<<<<<<< HEAD
   const openEdit = (student: Student) => {
     setEditError(null)
     setEditForm({
@@ -88,10 +149,51 @@ export default function AdminDashboard() {
     setSavingEdit(true)
     setEditError(null)
     try {
+=======
+  const toggleEmployerPartnership = async (employer: AdminEmployer) => {
+    const nextStatus = employer.partnership_status === 'partner' ? 'non_partner' : 'partner'
+    setUpdatingEmployerId(employer.employer_user_id)
+    try {
+      await api.patch(`/admin/partnership/employer/${employer.employer_user_id}`, {
+        partnership_status: nextStatus,
+      })
+      setEmployers(prev => prev.map(item => (
+        item.employer_user_id === employer.employer_user_id
+          ? { ...item, partnership_status: nextStatus }
+          : item
+      )))
+    } finally {
+      setUpdatingEmployerId(null)
+    }
+  }
+
+  // ── Edit handlers ────────────────────────────────────────────────────────────
+
+  const openEdit = (student: Student) => {
+    const discsStr = student.disciplines
+      .map(d => `${d.name}:${d.grade}`)
+      .join(', ')
+    setEditForm({
+      full_name: student.full_name,
+      group_name: student.group_name || '',
+      disciplines: discsStr,
+    })
+    setEditError(null)
+    setEditingStudent(student)
+  }
+
+  const saveEdit = async () => {
+    if (!editingStudent) return
+    setEditSaving(true)
+    setEditError(null)
+    try {
+      // 1. Patch name / group
+>>>>>>> github/main
       await api.patch(`/admin/students/${editingStudent.id}`, {
         full_name: editForm.full_name || undefined,
         group_name: editForm.group_name || null,
       })
+<<<<<<< HEAD
       await api.post(`/students/${editingStudent.id}/disciplines`, {
         disciplines: parseDisciplines(),
       }, { params: { replace: true } })
@@ -104,6 +206,32 @@ export default function AdminDashboard() {
     }
   }
 
+=======
+
+      // 2. Replace disciplines if field is non-empty
+      if (editForm.disciplines.trim()) {
+        const parsed = editForm.disciplines.split(',').map(part => {
+          const [rawName, rawGrade] = part.trim().split(':')
+          const grade = parseInt(rawGrade ?? '5', 10)
+          return { name: rawName?.trim() || '', grade: isNaN(grade) ? 5 : Math.min(5, Math.max(3, grade)) }
+        }).filter(d => d.name)
+
+        if (parsed.length > 0) {
+          await api.post(`/students/${editingStudent.id}/disciplines`, { disciplines: parsed })
+        }
+      }
+
+      setEditingStudent(null)
+      loadStudents()
+    } catch (e: any) {
+      setEditError(e.response?.data?.detail || 'Ошибка сохранения')
+    }
+    setEditSaving(false)
+  }
+
+  // ── Evaluate handlers ─────────────────────────────────────────────────────────
+
+>>>>>>> github/main
   const openEvaluate = (student: Student) => {
     setEvalForm({ specialty: '', experience: '' })
     setEvalResult(null)
@@ -111,15 +239,22 @@ export default function AdminDashboard() {
     setEvaluatingStudent(student)
   }
 
+<<<<<<< HEAD
   const runEvaluation = async () => {
     if (!evaluatingStudent) return
     setEvaluating(true)
+=======
+  const runEvaluate = async () => {
+    if (!evaluatingStudent) return
+    setEvalLoading(true)
+>>>>>>> github/main
     setEvalError(null)
     setEvalResult(null)
     try {
       const params: Record<string, string> = {}
       if (evalForm.specialty.trim()) params.specialty = evalForm.specialty.trim()
       if (evalForm.experience) params.experience = evalForm.experience
+<<<<<<< HEAD
       const { data } = await api.post(`/students/${evaluatingStudent.id}/evaluate`, {}, { params })
       setEvalResult(data)
     } catch (e: any) {
@@ -134,11 +269,28 @@ export default function AdminDashboard() {
       ? new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(salary)
       : '—'
   )
+=======
+      const { data } = await api.post<EvaluationResponse>(
+        `/students/${evaluatingStudent.id}/evaluate`,
+        {},
+        { params }
+      )
+      setEvalResult(data)
+    } catch (e: any) {
+      setEvalError(e.response?.data?.detail || 'Ошибка оценки')
+    }
+    setEvalLoading(false)
+  }
+
+  const formatSalary = (v: number | null) =>
+    v ? new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v) : '—'
+>>>>>>> github/main
 
   return (
     <div className="container">
       <div className="tabs">
         <div className={`tab ${tab === 'students' ? 'active' : ''}`} onClick={() => setTab('students')} role="tab" tabIndex={0}>👩‍🎓 Студенты</div>
+        <div className={`tab ${tab === 'employers' ? 'active' : ''}`} onClick={() => setTab('employers')} role="tab" tabIndex={0}>🏢 Работодатели</div>
         <div className={`tab ${tab === 'parse' ? 'active' : ''}`} onClick={() => setTab('parse')} role="tab" tabIndex={0}>🔍 Парсинг</div>
         <div className={`tab ${tab === 'tags' ? 'active' : ''}`} onClick={() => setTab('tags')} role="tab" tabIndex={0}>🏷️ Теги</div>
       </div>
@@ -169,7 +321,19 @@ export default function AdminDashboard() {
             <h3 style={{ marginBottom: 16 }}>Список студентов ({students.length})</h3>
             {loading ? <div className="spinner" /> : (
               <table>
+<<<<<<< HEAD
                 <thead><tr><th>ID</th><th>ФИО</th><th>Группа</th><th>Дисциплины</th><th>Действия</th></tr></thead>
+=======
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>ФИО</th>
+                    <th>Группа</th>
+                    <th>Дисциплины</th>
+                    <th>Действия</th>
+                  </tr>
+                </thead>
+>>>>>>> github/main
                 <tbody>
                   {students.map(s => (
                     <tr key={s.id}>
@@ -182,8 +346,26 @@ export default function AdminDashboard() {
                         </span>
                       ))}</td>
                       <td style={{ whiteSpace: 'nowrap' }}>
+<<<<<<< HEAD
                         <button className="btn" style={{ marginRight: 6 }} onClick={() => openEdit(s)}>✏️ Редактировать</button>
                         <button className="btn" onClick={() => openEvaluate(s)}>Оценить</button>
+=======
+                        <button
+                          className="btn"
+                          style={{ marginRight: 6 }}
+                          onClick={() => openEdit(s)}
+                          title="Редактировать"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="btn"
+                          onClick={() => openEvaluate(s)}
+                          title="Оценить стоимость"
+                        >
+                          📊
+                        </button>
+>>>>>>> github/main
                       </td>
                     </tr>
                   ))}
@@ -192,6 +374,58 @@ export default function AdminDashboard() {
             )}
           </div>
         </>
+      )}
+
+      {/* === Employers tab === */}
+      {tab === 'employers' && (
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 16 }}>
+            <h3>Работодатели ({employers.length})</h3>
+            <button className="btn" onClick={loadEmployers} disabled={employersLoading}>
+              {employersLoading ? <span className="spinner" /> : 'Обновить'}
+            </button>
+          </div>
+          {employersLoading ? <div className="spinner" /> : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Компания</th>
+                  <th>Должность</th>
+                  <th>Статус</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {employers.map(employer => (
+                  <tr key={employer.employer_user_id}>
+                    <td>{employer.email}</td>
+                    <td>{employer.company_name || '—'}</td>
+                    <td>{employer.position || '—'}</td>
+                    <td>
+                      <span className={`badge ${employer.partnership_status === 'partner' ? 'badge-green' : 'badge-yellow'}`}>
+                        {employer.partnership_status === 'partner' ? 'Партнер' : 'Не партнер'}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className={`btn ${employer.partnership_status === 'partner' ? '' : 'btn-primary'}`}
+                        onClick={() => toggleEmployerPartnership(employer)}
+                        disabled={updatingEmployerId === employer.employer_user_id}
+                      >
+                        {updatingEmployerId === employer.employer_user_id
+                          ? <span className="spinner" />
+                          : employer.partnership_status === 'partner'
+                          ? 'Снять статус'
+                          : 'Сделать партнером'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       )}
 
       {/* === Parse tab === */}
@@ -211,6 +445,12 @@ export default function AdminDashboard() {
           <button className="btn btn-primary" onClick={parseVacancies} disabled={parsing}>
             {parsing ? <span className="spinner" /> : '🚀 Парсить'}
           </button>
+
+          {parseError && (
+            <div className="alert-error" style={{ marginTop: 16 }}>
+              {parseError}
+            </div>
+          )}
 
           {parseResult && (
             <div style={{ marginTop: 24 }}>
@@ -242,10 +482,15 @@ export default function AdminDashboard() {
       {/* === Tags tab === */}
       {tab === 'tags' && <TagsTab />}
 
+<<<<<<< HEAD
+=======
+      {/* ── Edit modal ─────────────────────────────────────────────────────────── */}
+>>>>>>> github/main
       {editingStudent && (
         <div className="modal-overlay" onClick={() => setEditingStudent(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3 style={{ marginBottom: 16 }}>Редактировать студента #{editingStudent.id}</h3>
+<<<<<<< HEAD
             <div className="form-group">
               <label>ФИО</label>
               <input value={editForm.full_name} onChange={e => setEditForm(prev => ({ ...prev, full_name: e.target.value }))} />
@@ -270,36 +515,98 @@ export default function AdminDashboard() {
               <button className="btn" onClick={() => setEditingStudent(null)}>Отмена</button>
               <button className="btn btn-primary" onClick={saveEdit} disabled={savingEdit}>
                 {savingEdit ? <span className="spinner" /> : 'Сохранить'}
+=======
+
+            <div className="form-group">
+              <label>ФИО</label>
+              <input
+                value={editForm.full_name}
+                onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))}
+              />
+            </div>
+            <div className="form-group">
+              <label>Группа</label>
+              <input
+                value={editForm.group_name}
+                onChange={e => setEditForm(f => ({ ...f, group_name: e.target.value }))}
+                placeholder="ИВТ-21"
+              />
+            </div>
+            <div className="form-group">
+              <label>Дисциплины (формат: «Название:оценка, ...»)</label>
+              <textarea
+                rows={4}
+                value={editForm.disciplines}
+                onChange={e => setEditForm(f => ({ ...f, disciplines: e.target.value }))}
+                placeholder="Python:5, SQL:4, Docker:3"
+                style={{ width: '100%', fontFamily: 'inherit', fontSize: 14 }}
+              />
+              <small style={{ color: 'var(--text-muted)' }}>
+                Разделяйте дисциплины запятыми. Оценка: 3, 4 или 5. Пример: «Python:5, SQL:4»
+              </small>
+            </div>
+
+            {editError && <div className="alert-error" style={{ marginBottom: 12 }}>{editError}</div>}
+
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn" onClick={() => setEditingStudent(null)}>Отмена</button>
+              <button className="btn btn-primary" onClick={saveEdit} disabled={editSaving}>
+                {editSaving ? <span className="spinner" /> : 'Сохранить'}
+>>>>>>> github/main
               </button>
             </div>
           </div>
         </div>
       )}
 
+<<<<<<< HEAD
+=======
+      {/* ── Evaluate modal ──────────────────────────────────────────────────────── */}
+>>>>>>> github/main
       {evaluatingStudent && (
         <div className="modal-overlay" onClick={() => setEvaluatingStudent(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3 style={{ marginBottom: 16 }}>Оценка студента: {evaluatingStudent.full_name}</h3>
+<<<<<<< HEAD
+=======
+
+>>>>>>> github/main
             <div className="grid-2">
               <div className="form-group">
                 <label>Специальность (необязательно)</label>
                 <input
                   value={evalForm.specialty}
+<<<<<<< HEAD
                   onChange={e => setEvalForm(prev => ({ ...prev, specialty: e.target.value }))}
+=======
+                  onChange={e => setEvalForm(f => ({ ...f, specialty: e.target.value }))}
+>>>>>>> github/main
                   placeholder="Например: Python-разработчик"
                 />
               </div>
               <div className="form-group">
                 <label>Опыт</label>
+<<<<<<< HEAD
                 <select value={evalForm.experience} onChange={e => setEvalForm(prev => ({ ...prev, experience: e.target.value }))}>
                   <option value="">Любой</option>
                   <option value="noExperience">Без опыта</option>
                   <option value="between1And3">1-3 года</option>
                   <option value="between3And6">3-6 лет</option>
+=======
+                <select
+                  value={evalForm.experience}
+                  onChange={e => setEvalForm(f => ({ ...f, experience: e.target.value }))}
+                >
+                  <option value="">Любой</option>
+                  <option value="noExperience">Без опыта</option>
+                  <option value="between1And3">1–3 года</option>
+                  <option value="between3And6">3–6 лет</option>
+>>>>>>> github/main
                   <option value="moreThan6">Более 6 лет</option>
                 </select>
               </div>
             </div>
+<<<<<<< HEAD
             <button className="btn btn-primary" onClick={runEvaluation} disabled={evaluating} style={{ marginBottom: 16 }}>
               {evaluating ? <span className="spinner" /> : 'Рассчитать'}
             </button>
@@ -309,18 +616,51 @@ export default function AdminDashboard() {
                 <div className="grid-2" style={{ marginBottom: 16 }}>
                   <div className="card stat-card"><div className="value">{formatSalary(evalResult.estimated_salary)}</div><div className="label">Оценочная зарплата</div></div>
                   <div className="card stat-card"><div className="value">{Math.round(evalResult.confidence * 100)}%</div><div className="label">Уверенность</div></div>
+=======
+
+            <button className="btn btn-primary" onClick={runEvaluate} disabled={evalLoading} style={{ marginBottom: 16 }}>
+              {evalLoading ? <span className="spinner" /> : '📊 Рассчитать'}
+            </button>
+
+            {evalError && <div className="alert-error" style={{ marginBottom: 12 }}>{evalError}</div>}
+
+            {evalResult && (
+              <div>
+                <div className="grid-2" style={{ marginBottom: 16 }}>
+                  <div className="card stat-card">
+                    <div className="value">{formatSalary(evalResult.estimated_salary)}</div>
+                    <div className="label">Оценочная зарплата</div>
+                  </div>
+                  <div className="card stat-card">
+                    <div className="value">{Math.round(evalResult.confidence * 100)}%</div>
+                    <div className="label">Уверенность</div>
+                  </div>
+>>>>>>> github/main
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
                   Дисциплин: {evalResult.matched_disciplines} / {evalResult.total_disciplines}
                 </div>
+<<<<<<< HEAD
                 {evalResult.skill_matches.slice(0, 8).map((match, index) => (
                   <div key={`${match.discipline}-${match.skill_name}-${index}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--border)' }}>
                     <span>{match.discipline} → <strong>{match.skill_name}</strong></span>
                     <span style={{ color: 'var(--text-muted)' }}>{Math.round(match.similarity * 100)}% {match.avg_salary ? `· ${formatSalary(match.avg_salary)}` : ''}</span>
+=======
+                {evalResult.skill_matches.slice(0, 8).map((sm, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span>{sm.discipline} → <strong>{sm.skill_name}</strong></span>
+                    <span style={{ color: 'var(--text-muted)' }}>
+                      {Math.round(sm.similarity * 100)}% {sm.avg_salary ? `· ${formatSalary(sm.avg_salary)}` : ''}
+                    </span>
+>>>>>>> github/main
                   </div>
                 ))}
               </div>
             )}
+<<<<<<< HEAD
+=======
+
+>>>>>>> github/main
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
               <button className="btn" onClick={() => setEvaluatingStudent(null)}>Закрыть</button>
             </div>
@@ -337,11 +677,9 @@ function TagsTab() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   useEffect(() => { api.get('/tags').then(r => setTags(r.data)).catch(() => {}) }, [])
-  if (!tags) return <div className="card"><div className="spinner" /></div>
-
-  const totalVacancies = tags.total_vacancies || 0
+  const totalVacancies = tags?.total_vacancies || 0
   const sortedTags = useMemo(() => {
-    const list = [...(tags.tags || [])]
+    const list = [...(tags?.tags || [])]
     return list.sort((a: any, b: any) => {
       let cmp = 0
       if (sortField === 'name') cmp = String(a.name).localeCompare(String(b.name), 'ru')
@@ -354,6 +692,8 @@ function TagsTab() {
       return sortDirection === 'asc' ? cmp : -cmp
     })
   }, [tags, sortField, sortDirection, totalVacancies])
+
+  if (!tags) return <div className="card"><div className="spinner" /></div>
 
   const setSort = (field: 'name' | 'count' | 'percent') => {
     if (sortField === field) {

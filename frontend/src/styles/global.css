@@ -113,6 +113,7 @@ input:focus, select:focus, textarea:focus {
 .badge-red { background: rgba(248,81,73,0.15); color: var(--red); }
 .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent); }
 
+<<<<<<< HEAD
 .skill-group-programming {
   --group-accent: #58a6ff;
   --group-bg: rgba(88, 166, 255, 0.13);
@@ -145,6 +146,8 @@ input:focus, select:focus, textarea:focus {
   color: var(--group-accent);
 }
 
+=======
+>>>>>>> github/main
 .discipline-groups {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -155,18 +158,32 @@ input:focus, select:focus, textarea:focus {
   position: relative;
   min-height: 86px;
   padding: 12px;
+<<<<<<< HEAD
   border: 1px solid var(--group-border, var(--border));
   border-radius: 8px;
   background: var(--group-bg, rgba(88,166,255,0.08));
   color: var(--text);
   text-align: left;
   cursor: default;
+=======
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(88, 166, 255, 0.06);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+>>>>>>> github/main
 }
 
 .discipline-group-card:hover,
 .discipline-group-card:focus-visible,
 .discipline-group-card.open {
+<<<<<<< HEAD
   border-color: var(--group-accent, var(--accent));
+=======
+  border-color: var(--accent);
+  background: rgba(88, 166, 255, 0.12);
+>>>>>>> github/main
   outline: none;
 }
 
@@ -178,7 +195,10 @@ input:focus, select:focus, textarea:focus {
 }
 
 .discipline-group-title {
+<<<<<<< HEAD
   color: var(--group-accent, var(--accent));
+=======
+>>>>>>> github/main
   font-weight: 700;
   font-size: 14px;
   line-height: 1.25;
@@ -188,8 +208,13 @@ input:focus, select:focus, textarea:focus {
   width: 24px;
   height: 24px;
   border-radius: 50%;
+<<<<<<< HEAD
   background: var(--group-accent, var(--accent));
   color: #0f1117;
+=======
+  background: var(--accent);
+  color: #fff;
+>>>>>>> github/main
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -207,7 +232,20 @@ input:focus, select:focus, textarea:focus {
 
 .discipline-group-details {
   display: none;
+<<<<<<< HEAD
   margin-top: 10px;
+=======
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: calc(100% - 4px);
+  z-index: 30;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.28);
+>>>>>>> github/main
   flex-wrap: wrap;
   gap: 6px;
 }
@@ -235,9 +273,15 @@ input:focus, select:focus, textarea:focus {
   font-size: 11px;
 }
 
+<<<<<<< HEAD
 .discipline-pill.g5 { background: rgba(63, 185, 80, 0.16); }
 .discipline-pill.g4 { background: rgba(210, 153, 34, 0.17); }
 .discipline-pill.g3 { background: rgba(248, 81, 73, 0.16); }
+=======
+.discipline-pill.g5 { background: rgba(63,185,80,0.16); }
+.discipline-pill.g4 { background: rgba(210,153,34,0.18); }
+.discipline-pill.g3 { background: rgba(248,81,73,0.16); }
+>>>>>>> github/main
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
@@ -316,6 +360,16 @@ input:focus, select:focus, textarea:focus {
 
 .filtered-tag { opacity: 0.45; }
 .warning-note { color: var(--yellow); font-size: 12px; }
+
+.alert-error {
+  border: 1px solid rgba(248,81,73,0.35);
+  background: rgba(248,81,73,0.1);
+  color: #ffaaa5;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+}
 
 .chat-messages {
   max-height: 400px;
@@ -495,15 +549,25 @@ th { color: var(--text-muted); font-size: 13px; font-weight: 600; }
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
 }
+<<<<<<< HEAD
 .landing-students-grid::-webkit-scrollbar {
   height: 8px;
 }
+=======
+
+.landing-students-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+>>>>>>> github/main
 .landing-students-grid::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 4px;
 }
 
 .landing-student-card {
+  flex: 0 0 240px;
+  scroll-snap-align: start;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -621,4 +685,42 @@ th { color: var(--text-muted); font-size: 13px; font-weight: 600; }
   .landing-section { padding: 40px 16px; }
   .landing-cta { padding: 48px 16px; margin: 0 12px; }
   .landing-search { grid-template-columns: 1fr; }
+}
+
+/* ── Modals ──────────────────────────────────────────────────────────────── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 32px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.alert-error {
+  background: rgba(248, 81, 73, 0.1);
+  border: 1px solid rgba(248, 81, 73, 0.4);
+  color: #f85149;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
 }

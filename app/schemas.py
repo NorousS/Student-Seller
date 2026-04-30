@@ -2,6 +2,7 @@
 Pydantic схемы для валидации запросов и ответов API.
 """
 
+from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel, Field
@@ -205,6 +206,7 @@ class DisciplineResponse(DisciplineBase):
         from_attributes = True
 
 
+<<<<<<< HEAD
 class DisciplineGroupItem(BaseModel):
     """Дисциплина внутри смысловой группы."""
     id: int
@@ -219,6 +221,20 @@ class DisciplineGroupResponse(BaseModel):
     disciplines: list[DisciplineGroupItem] = Field(default_factory=list)
     avg_grade: float
     count: int
+=======
+class DisciplineGroupResponse(BaseModel):
+    """Группа дисциплин для employer-facing профиля."""
+    group_name: str = Field(..., description="Каноническая группа навыков")
+    disciplines: list[DisciplineResponse] = Field(default_factory=list, description="Дисциплины внутри группы")
+    total_count: int = Field(..., description="Количество дисциплин в группе")
+    avg_grade: float = Field(..., description="Средний балл по группе")
+
+
+class AdminStudentUpdate(BaseModel):
+    """Частичное обновление студента администратором (ФИО и/или группа)."""
+    full_name: str | None = Field(None, min_length=1, max_length=200, description="ФИО студента")
+    group_name: str | None = Field(None, max_length=50, description="Номер группы")
+>>>>>>> github/main
 
 
 class StudentBase(BaseModel):
@@ -284,6 +300,17 @@ class EmployerProfileUpdate(BaseModel):
     contact_info: str | None = Field(None, max_length=2000)
     about_company: str | None = Field(None, max_length=5000)
     website_url: str | None = Field(None, max_length=500)
+
+
+class AdminEmployerResponse(BaseModel):
+    """Работодатель в админском списке партнерства."""
+    employer_user_id: int
+    profile_id: int
+    email: str
+    company_name: str | None
+    position: str | None
+    partnership_status: PartnershipStatusEnum
+    created_at: datetime
 
 
 class EmployerSearchRequest(BaseModel):

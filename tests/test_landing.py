@@ -33,6 +33,7 @@ async def test_top_students_max_ten(client: AsyncClient, admin_headers: dict):
     assert resp.status_code == 200
     data = resp.json()
     assert len(data) <= 10
+<<<<<<< HEAD
 
 
 @pytest.mark.asyncio
@@ -108,6 +109,8 @@ async def test_landing_search_students_public_with_groups(
     assert "full_name" not in result
     assert "group_name" not in result
     assert {group["label"] for group in result["discipline_groups"]} == {"Программирование", "Иностранные языки"}
+=======
+>>>>>>> github/main
 
 
 @pytest.mark.asyncio

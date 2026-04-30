@@ -12,13 +12,19 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.auth import get_current_user
+from app.auth import get_current_user, require_role
 from app.database import get_db
 from app.discipline_groups import infer_discipline_group_semantic, reload_centroids
 from app.embedding_diagnostics import detect_anomalies, DiagnosticsResult
 from app.embeddings import embedding_service
+<<<<<<< HEAD
 from app.models import Discipline, Student, StudentDiscipline, Tag, User, UserRole
 from app.schemas import AdminStudentUpdate, StudentResponse, DisciplineResponse
+=======
+from app.models import Discipline, EmployerProfile, Student, StudentDiscipline, Tag, User, UserRole
+from app.parser import hh_parser
+from app.schemas import AdminEmployerResponse, AdminStudentUpdate, StudentResponse
+>>>>>>> github/main
 from app.valuation_cache import refresh_all_student_valuations
 from app.vector_store import vector_store, HH_SKILLS_COLLECTION
 from qdrant_client.models import PointStruct
@@ -75,6 +81,114 @@ def _build_student_response(student: Student) -> StudentResponse:
 
 
 # --- Эндпоинты ---
+
+
+@router.get("/parser/health")
+async def parser_health(current_user: User = Depends(get_current_user)):
+    """Проверить доступность API hh.ru для справочника и поиска вакансий."""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Доступ запрещен. Требуется роль admin.",
+        )
+    return await hh_parser.check_health()
+
+
+@router.get("/students", response_model=list[StudentResponse])
+async def list_students(
+    current_user: User = Depends(require_role(UserRole.admin)),
+    db: AsyncSession = Depends(get_db),
+) -> list[StudentResponse]:
+    """Получить список всех студентов."""
+    result = await db.execute(
+        select(Student).options(
+            selectinload(Student.student_disciplines).selectinload(StudentDiscipline.discipline)
+        )
+    )
+    students = result.scalars().all()
+    return [
+        StudentResponse(
+            id=s.id,
+            full_name=s.full_name,
+            group_name=s.group_name,
+            disciplines=[
+                {"id": sd.discipline.id, "name": sd.discipline.name, "grade": sd.grade, "category": sd.discipline.category}
+                for sd in s.student_disciplines
+            ],
+        )
+        for s in students
+    ]
+
+
+@router.patch("/students/{student_id}", response_model=StudentResponse)
+async def update_student(
+    student_id: int,
+    body: AdminStudentUpdate,
+    current_user: User = Depends(require_role(UserRole.admin)),
+    db: AsyncSession = Depends(get_db),
+) -> StudentResponse:
+    """Обновить ФИО и/или группу студента."""
+    result = await db.execute(
+        select(Student)
+        .options(selectinload(Student.student_disciplines).selectinload(StudentDiscipline.discipline))
+        .where(Student.id == student_id)
+    )
+    student = result.scalar_one_or_none()
+    if student is None:
+        raise HTTPException(status_code=404, detail="Студент не найден")
+
+    if body.full_name is not None:
+        student.full_name = body.full_name
+    if body.group_name is not None:
+        student.group_name = body.group_name
+
+    await db.flush()
+
+    return StudentResponse(
+        id=student.id,
+        full_name=student.full_name,
+        group_name=student.group_name,
+        disciplines=[
+            {"id": sd.discipline.id, "name": sd.discipline.name, "grade": sd.grade, "category": sd.discipline.category}
+            for sd in student.student_disciplines
+        ],
+    )
+
+
+@router.post("/refresh-valuations")
+async def refresh_valuations(
+    current_user: User = Depends(require_role(UserRole.admin)),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Пересчитать estimated_salary для всех студентов."""
+    updated = await refresh_all_student_valuations(db)
+    return {"updated_count": updated}
+
+
+@router.get("/employers", response_model=list[AdminEmployerResponse])
+async def list_employers(
+    current_user: User = Depends(require_role(UserRole.admin)),
+    db: AsyncSession = Depends(get_db),
+) -> list[AdminEmployerResponse]:
+    """Получить список работодателей и их текущий статус партнерства."""
+    result = await db.execute(
+        select(EmployerProfile, User)
+        .join(User, EmployerProfile.user_id == User.id)
+        .order_by(EmployerProfile.created_at.desc())
+    )
+    rows = result.all()
+    return [
+        AdminEmployerResponse(
+            employer_user_id=user.id,
+            profile_id=profile.id,
+            email=user.email,
+            company_name=profile.company_name,
+            position=profile.position,
+            partnership_status=profile.partnership_status,
+            created_at=profile.created_at,
+        )
+        for profile, user in rows
+    ]
 
 
 @router.post(
@@ -203,6 +317,31 @@ async def reindex_skills(
 
     valuations_refreshed = await refresh_all_student_valuations(db)
     
+    # Пересчитываем центроиды группировки дисциплин
+    try:
+        await reload_centroids()
+    except Exception:
+        pass
+
+    # Бэкфилл категорий всех дисциплин через семантику
+    try:
+        disc_result = await db.execute(select(Discipline))
+        all_disciplines = disc_result.scalars().all()
+        for disc in all_disciplines:
+            try:
+                disc.category = await infer_discipline_group_semantic(disc.name)
+            except Exception:
+                pass
+        await db.flush()
+    except Exception:
+        pass
+
+    # Обновляем estimated_salary для всех студентов
+    try:
+        await refresh_all_student_valuations(db)
+    except Exception:
+        pass
+
     return ReindexResponse(
         total_skills=total_skills,
         reindexed_count=reindexed_count,

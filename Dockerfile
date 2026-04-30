@@ -25,7 +25,10 @@ RUN uv sync --dev --no-cache
 
 # Копируем код приложения
 COPY app ./app
+<<<<<<< HEAD
 COPY scripts ./scripts
+=======
+>>>>>>> github/main
 COPY tests ./tests
 COPY pytest.ini ./
 COPY .env* ./

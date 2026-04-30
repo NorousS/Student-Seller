@@ -11,4 +11,7 @@ app/static/uploads/
 .idea/
 *.png
 test_screenshots/
+frontend/test-results/
+frontend/playwright-report/
 tmp_clone_repro_*/
+.claude/

@@ -58,6 +58,7 @@ async def test_anonymized_student_profile_no_name(client: AsyncClient, employer_
 
 
 @pytest.mark.asyncio
+<<<<<<< HEAD
 async def test_anonymized_student_profile_includes_discipline_groups(
     client: AsyncClient,
     employer_headers: dict,
@@ -77,14 +78,43 @@ async def test_anonymized_student_profile_includes_discipline_groups(
 
     response = await client.get(
         f"/api/v1/employer/students/{student.id}/profile",
+=======
+async def test_anonymized_profile_contains_grouped_disciplines(
+    client: AsyncClient, employer_headers: dict, admin_headers: dict
+):
+    """Работодатель видит группы навыков поверх исходных дисциплин."""
+    resp = await client.post("/api/v1/students/", json={
+        "full_name": "Grouped Student",
+        "group_name": "IT-42",
+        "disciplines": [
+            {"name": "Python", "grade": 5},
+            {"name": "Английский", "grade": 4},
+            {"name": "Lean менеджмент", "grade": 5},
+            {"name": "Физика", "grade": 3},
+        ],
+    }, headers=admin_headers)
+    student_id = resp.json()["id"]
+
+    response = await client.get(
+        f"/api/v1/employer/students/{student_id}/profile",
+>>>>>>> github/main
         headers=employer_headers,
     )
 
     assert response.status_code == 200
     data = response.json()
+<<<<<<< HEAD
     assert "full_name" not in data
     assert "group_name" not in data
     assert {group["label"] for group in data["discipline_groups"]} == {"Точные науки", "Soft skills"}
+=======
+    groups = {g["group_name"]: g for g in data["discipline_groups"]}
+    assert set(groups) >= {"Программирование", "Иностранные языки", "Soft skills", "Точные науки"}
+    assert groups["Программирование"]["disciplines"][0]["name"] == "Python"
+    assert groups["Иностранные языки"]["disciplines"][0]["name"] == "Английский"
+    assert groups["Soft skills"]["disciplines"][0]["name"] == "Lean менеджмент"
+    assert groups["Точные науки"]["disciplines"][0]["name"] == "Физика"
+>>>>>>> github/main
 
 
 @pytest.mark.asyncio
