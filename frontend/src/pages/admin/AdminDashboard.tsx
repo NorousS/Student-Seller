@@ -1,6 +1,21 @@
 import { useState, useEffect, useMemo } from 'react'
 import api from '../../api/client'
-import type { AdminEmployer, Student } from '../../api/types'
+import type { AdminEmployer, Student, EvaluationResponse } from '../../api/types'
+
+// ─── Edit modal state ─────────────────────────────────────────────────────────
+
+interface EditForm {
+  full_name: string
+  group_name: string
+  disciplines: string  // "Name:grade, Name:grade" format
+}
+
+// ─── Evaluate modal state ─────────────────────────────────────────────────────
+
+interface EvalForm {
+  specialty: string
+  experience: string
+}
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState<'students' | 'employers' | 'parse' | 'tags'>('students')
@@ -21,6 +36,19 @@ export default function AdminDashboard() {
   const [parseResult, setParseResult] = useState<any>(null)
   const [parseError, setParseError] = useState<string | null>(null)
   const [parsing, setParsing] = useState(false)
+
+  // --- Edit modal state ---
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null)
+  const [editForm, setEditForm] = useState<EditForm>({ full_name: '', group_name: '', disciplines: '' })
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
+  // --- Evaluate modal state ---
+  const [evaluatingStudent, setEvaluatingStudent] = useState<Student | null>(null)
+  const [evalForm, setEvalForm] = useState<EvalForm>({ specialty: '', experience: '' })
+  const [evalLoading, setEvalLoading] = useState(false)
+  const [evalResult, setEvalResult] = useState<EvaluationResponse | null>(null)
+  const [evalError, setEvalError] = useState<string | null>(null)
 
   const loadStudents = async () => {
     setLoading(true)
@@ -95,6 +123,86 @@ export default function AdminDashboard() {
     }
   }
 
+  // ── Edit handlers ────────────────────────────────────────────────────────────
+
+  const openEdit = (student: Student) => {
+    const discsStr = student.disciplines
+      .map(d => `${d.name}:${d.grade}`)
+      .join(', ')
+    setEditForm({
+      full_name: student.full_name,
+      group_name: student.group_name || '',
+      disciplines: discsStr,
+    })
+    setEditError(null)
+    setEditingStudent(student)
+  }
+
+  const saveEdit = async () => {
+    if (!editingStudent) return
+    setEditSaving(true)
+    setEditError(null)
+    try {
+      // 1. Patch name / group
+      await api.patch(`/admin/students/${editingStudent.id}`, {
+        full_name: editForm.full_name || undefined,
+        group_name: editForm.group_name || null,
+      })
+
+      // 2. Replace disciplines if field is non-empty
+      if (editForm.disciplines.trim()) {
+        const parsed = editForm.disciplines.split(',').map(part => {
+          const [rawName, rawGrade] = part.trim().split(':')
+          const grade = parseInt(rawGrade ?? '5', 10)
+          return { name: rawName?.trim() || '', grade: isNaN(grade) ? 5 : Math.min(5, Math.max(3, grade)) }
+        }).filter(d => d.name)
+
+        if (parsed.length > 0) {
+          await api.post(`/students/${editingStudent.id}/disciplines`, { disciplines: parsed })
+        }
+      }
+
+      setEditingStudent(null)
+      loadStudents()
+    } catch (e: any) {
+      setEditError(e.response?.data?.detail || 'Ошибка сохранения')
+    }
+    setEditSaving(false)
+  }
+
+  // ── Evaluate handlers ─────────────────────────────────────────────────────────
+
+  const openEvaluate = (student: Student) => {
+    setEvalForm({ specialty: '', experience: '' })
+    setEvalResult(null)
+    setEvalError(null)
+    setEvaluatingStudent(student)
+  }
+
+  const runEvaluate = async () => {
+    if (!evaluatingStudent) return
+    setEvalLoading(true)
+    setEvalError(null)
+    setEvalResult(null)
+    try {
+      const params: Record<string, string> = {}
+      if (evalForm.specialty.trim()) params.specialty = evalForm.specialty.trim()
+      if (evalForm.experience) params.experience = evalForm.experience
+      const { data } = await api.post<EvaluationResponse>(
+        `/students/${evaluatingStudent.id}/evaluate`,
+        {},
+        { params }
+      )
+      setEvalResult(data)
+    } catch (e: any) {
+      setEvalError(e.response?.data?.detail || 'Ошибка оценки')
+    }
+    setEvalLoading(false)
+  }
+
+  const formatSalary = (v: number | null) =>
+    v ? new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(v) : '—'
+
   return (
     <div className="container">
       <div className="tabs">
@@ -130,7 +238,15 @@ export default function AdminDashboard() {
             <h3 style={{ marginBottom: 16 }}>Список студентов ({students.length})</h3>
             {loading ? <div className="spinner" /> : (
               <table>
-                <thead><tr><th>ID</th><th>ФИО</th><th>Группа</th><th>Дисциплины</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>ФИО</th>
+                    <th>Группа</th>
+                    <th>Дисциплины</th>
+                    <th>Действия</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {students.map(s => (
                     <tr key={s.id}>
@@ -142,6 +258,23 @@ export default function AdminDashboard() {
                           {d.name} ({d.grade})
                         </span>
                       ))}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        <button
+                          className="btn"
+                          style={{ marginRight: 6 }}
+                          onClick={() => openEdit(s)}
+                          title="Редактировать"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="btn"
+                          onClick={() => openEvaluate(s)}
+                          title="Оценить стоимость"
+                        >
+                          📊
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -256,6 +389,122 @@ export default function AdminDashboard() {
 
       {/* === Tags tab === */}
       {tab === 'tags' && <TagsTab />}
+
+      {/* ── Edit modal ─────────────────────────────────────────────────────────── */}
+      {editingStudent && (
+        <div className="modal-overlay" onClick={() => setEditingStudent(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3 style={{ marginBottom: 16 }}>Редактировать студента #{editingStudent.id}</h3>
+
+            <div className="form-group">
+              <label>ФИО</label>
+              <input
+                value={editForm.full_name}
+                onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))}
+              />
+            </div>
+            <div className="form-group">
+              <label>Группа</label>
+              <input
+                value={editForm.group_name}
+                onChange={e => setEditForm(f => ({ ...f, group_name: e.target.value }))}
+                placeholder="ИВТ-21"
+              />
+            </div>
+            <div className="form-group">
+              <label>Дисциплины (формат: «Название:оценка, ...»)</label>
+              <textarea
+                rows={4}
+                value={editForm.disciplines}
+                onChange={e => setEditForm(f => ({ ...f, disciplines: e.target.value }))}
+                placeholder="Python:5, SQL:4, Docker:3"
+                style={{ width: '100%', fontFamily: 'inherit', fontSize: 14 }}
+              />
+              <small style={{ color: 'var(--text-muted)' }}>
+                Разделяйте дисциплины запятыми. Оценка: 3, 4 или 5. Пример: «Python:5, SQL:4»
+              </small>
+            </div>
+
+            {editError && <div className="alert-error" style={{ marginBottom: 12 }}>{editError}</div>}
+
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn" onClick={() => setEditingStudent(null)}>Отмена</button>
+              <button className="btn btn-primary" onClick={saveEdit} disabled={editSaving}>
+                {editSaving ? <span className="spinner" /> : 'Сохранить'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Evaluate modal ──────────────────────────────────────────────────────── */}
+      {evaluatingStudent && (
+        <div className="modal-overlay" onClick={() => setEvaluatingStudent(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3 style={{ marginBottom: 16 }}>Оценка студента: {evaluatingStudent.full_name}</h3>
+
+            <div className="grid-2">
+              <div className="form-group">
+                <label>Специальность (необязательно)</label>
+                <input
+                  value={evalForm.specialty}
+                  onChange={e => setEvalForm(f => ({ ...f, specialty: e.target.value }))}
+                  placeholder="Например: Python-разработчик"
+                />
+              </div>
+              <div className="form-group">
+                <label>Опыт</label>
+                <select
+                  value={evalForm.experience}
+                  onChange={e => setEvalForm(f => ({ ...f, experience: e.target.value }))}
+                >
+                  <option value="">Любой</option>
+                  <option value="noExperience">Без опыта</option>
+                  <option value="between1And3">1–3 года</option>
+                  <option value="between3And6">3–6 лет</option>
+                  <option value="moreThan6">Более 6 лет</option>
+                </select>
+              </div>
+            </div>
+
+            <button className="btn btn-primary" onClick={runEvaluate} disabled={evalLoading} style={{ marginBottom: 16 }}>
+              {evalLoading ? <span className="spinner" /> : '📊 Рассчитать'}
+            </button>
+
+            {evalError && <div className="alert-error" style={{ marginBottom: 12 }}>{evalError}</div>}
+
+            {evalResult && (
+              <div>
+                <div className="grid-2" style={{ marginBottom: 16 }}>
+                  <div className="card stat-card">
+                    <div className="value">{formatSalary(evalResult.estimated_salary)}</div>
+                    <div className="label">Оценочная зарплата</div>
+                  </div>
+                  <div className="card stat-card">
+                    <div className="value">{Math.round(evalResult.confidence * 100)}%</div>
+                    <div className="label">Уверенность</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
+                  Дисциплин: {evalResult.matched_disciplines} / {evalResult.total_disciplines}
+                </div>
+                {evalResult.skill_matches.slice(0, 8).map((sm, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span>{sm.discipline} → <strong>{sm.skill_name}</strong></span>
+                    <span style={{ color: 'var(--text-muted)' }}>
+                      {Math.round(sm.similarity * 100)}% {sm.avg_salary ? `· ${formatSalary(sm.avg_salary)}` : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+              <button className="btn" onClick={() => setEvaluatingStudent(null)}>Закрыть</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

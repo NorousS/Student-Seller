@@ -16,7 +16,7 @@ export default function LandingPage() {
   }, [])
 
   const formatSalary = (salary: number | null) => {
-    if (!salary) return 'По запросу'
+    if (!salary) return 'Оценка скоро'
     return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(salary)
   }
 

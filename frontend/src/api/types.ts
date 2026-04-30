@@ -143,6 +143,20 @@ export interface FactorBreakdown {
   contribution: number
 }
 
+export interface EvaluationResponse {
+  student_id: number
+  student_name: string
+  specialty: string
+  experience_filter: string | null
+  top_k: number
+  excluded_skills: string[]
+  estimated_salary: number | null
+  confidence: number
+  total_disciplines: number
+  matched_disciplines: number
+  skill_matches: SkillMatch[]
+}
+
 export interface InviteResponse {
   status: 'invite_created' | 'paywall_required'
   reason?: string

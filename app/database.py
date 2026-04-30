@@ -5,6 +5,7 @@
 
 from collections.abc import AsyncGenerator
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -45,6 +46,12 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def create_tables() -> None:
-    """Создаёт все таблицы в БД."""
+    """Создаёт все таблицы в БД и применяет safe column migrations."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Safe idempotent column additions (ADD COLUMN IF NOT EXISTS ignores existing columns)
+        for sql in [
+            "ALTER TABLE students ADD COLUMN IF NOT EXISTS estimated_salary DOUBLE PRECISION",
+            "ALTER TABLE students ADD COLUMN IF NOT EXISTS valuation_updated_at TIMESTAMP",
+        ]:
+            await conn.execute(text(sql))

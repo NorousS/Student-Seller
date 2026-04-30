@@ -62,27 +62,31 @@ async def get_top_students(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Возвращает 5 лучших студентов для первого экрана лендинга.
+    Возвращает до 10 лучших студентов для первого экрана лендинга.
     Анонимизированные данные без контактов.
-    Сортировка по количеству дисциплин (как proxy для качества профиля).
+    Сортировка: сначала студенты с известной estimated_salary (desc), затем по скору.
     """
     # Get students with most disciplines as proxy for "best" profiles
     stmt = (
         select(Student)
         .options(selectinload(Student.student_disciplines).selectinload(StudentDiscipline.discipline))
-        .limit(20)  # Get more than needed, then sort
+        .limit(40)  # Get more than needed, then sort
     )
     result = await db.execute(stmt)
     students = result.scalars().all()
 
-    # Sort by avg grade * discipline count, take top 5
-    def score(s: Student) -> float:
+    # Sort: known salary first (desc), then by grade*discipline_count
+    def sort_key(s: Student):
         if not s.student_disciplines:
-            return 0
+            return (1, 0, 0)
         avg_grade = sum(sd.grade for sd in s.student_disciplines) / len(s.student_disciplines)
-        return avg_grade * len(s.student_disciplines)
+        sc = avg_grade * len(s.student_disciplines)
+        # (has_no_salary, -salary_if_any, -score)
+        has_no_salary = 0 if s.estimated_salary else 1
+        salary = s.estimated_salary or 0
+        return (has_no_salary, -salary, -sc)
 
-    students_sorted = sorted(students, key=score, reverse=True)[:5]
+    students_sorted = sorted(students, key=sort_key)[:10]
 
     cards = []
     for student in students_sorted:
@@ -96,7 +100,7 @@ async def get_top_students(
         cards.append(TopStudentCard(
             student_id=student.id,
             photo_url=student.photo_path,
-            estimated_salary=None,  # Would need valuation call, keep null for speed
+            estimated_salary=student.estimated_salary,
             competency_summary=summary,
         ))
 
