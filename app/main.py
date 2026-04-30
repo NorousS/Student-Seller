@@ -6,15 +6,24 @@ import pathlib
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+from prometheus_fastapi_instrumentator import Instrumentator
 
-from app.database import create_tables
+from app.config import settings
+from app.database import create_tables, engine
+from app.logging_config import configure_logging, get_logger
+from app.middleware.db_metrics import instrument_async_engine
+from app.middleware.request_logging import RequestLoggingMiddleware
 from app.routers import vacancies, students, evaluation, auth, student_profile, employer, chat, diagnostics, admin, partnership, landing, admin_disciplines
 from app.vector_store import vector_store
 from app.embeddings import embedding_service
 from app.schemas import HealthResponse
+
+configure_logging(settings.LOG_LEVEL, settings.LOG_FORMAT)
+logger = get_logger(__name__)
 
 
 STATIC_DIR = pathlib.Path(__file__).parent / "static"
@@ -28,16 +37,50 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     Lifespan события приложения.
     Создаём таблицы при старте, инициализируем Qdrant.
     """
+    logger.info("Запуск приложения: начинаем инициализацию сервисов")
+
+    if settings.PROMETHEUS_ENABLED:
+        instrument_async_engine(engine)
+        logger.info("Метрики SQLAlchemy-инструментирования включены")
+
+    logger.info("Инициализация PostgreSQL: создание таблиц")
     await create_tables()
+    logger.info("Инициализация PostgreSQL завершена")
+
     try:
+        logger.info("Инициализация Qdrant: проверка и создание коллекций")
         await vector_store.init_collections()
+        logger.info("Инициализация Qdrant завершена")
     except Exception as e:
-        print(f"Qdrant не доступен (можно запустить позже): {e}")
+        logger.warning(
+            "Qdrant недоступен (можно запустить позже)",
+            error=str(e),
+            exc_info=True,
+        )
+
     try:
-        await embedding_service.ensure_model_loaded()
+        logger.info("Инициализация Ollama: проверка модели эмбеддингов")
+        model_loaded = await embedding_service.ensure_model_loaded()
+        if model_loaded:
+            logger.info(
+                "Инициализация Ollama завершена",
+                model=embedding_service.model,
+            )
+        else:
+            logger.warning(
+                "Ollama недоступен или модель не подтверждена (можно запустить позже)",
+                model=embedding_service.model,
+            )
     except Exception as e:
-        print(f"Ollama не доступен (можно запустить позже): {e}")
+        logger.warning(
+            "Ollama недоступен (можно запустить позже)",
+            error=str(e),
+            exc_info=True,
+        )
+
+    logger.info("Инициализация приложения завершена")
     yield
+    logger.info("Остановка приложения: завершение lifespan")
 
 
 app = FastAPI(
@@ -46,6 +89,11 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+app.add_middleware(RequestLoggingMiddleware)
+
+if settings.PROMETHEUS_ENABLED:
+    Instrumentator().instrument(app)
+    logger.info("Prometheus-инструментирование включено")
 
 # Подключаем роутеры
 app.include_router(auth.router)
@@ -66,6 +114,13 @@ app.include_router(landing.router)
 async def health_check() -> HealthResponse:
     """Проверка здоровья сервиса."""
     return HealthResponse(status="ok")
+
+
+if settings.PROMETHEUS_ENABLED:
+    @app.get("/metrics", include_in_schema=False)
+    async def metrics() -> Response:
+        """Метрики Prometheus для скрейпинга."""
+        return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 # Статические ассеты фронтенда (JS, CSS)
@@ -93,15 +148,6 @@ async def root():
 @app.get("/admin-panel", include_in_schema=False)
 async def admin_panel():
     """Старая админ-панель (standalone HTML)."""
-    admin_html = STATIC_DIR / "admin.html"
-    if admin_html.exists():
-        return FileResponse(admin_html)
-    return HTMLResponse("<h1>Admin panel not found</h1>", status_code=404)
-
-
-@app.get("/admin", include_in_schema=False)
-async def admin():
-    """Админ-панель (standalone HTML с JWT-авторизацией)."""
     admin_html = STATIC_DIR / "admin.html"
     if admin_html.exists():
         return FileResponse(admin_html)

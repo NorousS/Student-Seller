@@ -10,13 +10,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.models import Discipline
-from app.categorization import categorize_disciplines, _cosine_similarity, FALLBACK_CATEGORY
+from app.categorization import DEFAULT_CATEGORIES, FALLBACK_CATEGORY, categorize_disciplines, _cosine_similarity
+from app.discipline_groups import (
+    EXACT_SCIENCES,
+    FOREIGN_LANGUAGES,
+    PROGRAMMING,
+    SOFT_SKILLS,
+    infer_discipline_group,
+)
 
 
 # --- Unit tests ---
 
 
 class TestCosineSimilarity:
+    pytestmark = pytest.mark.no_db
+
     def test_identical_vectors(self):
         assert _cosine_similarity([1, 0, 0], [1, 0, 0]) == pytest.approx(1.0)
 
@@ -28,6 +37,8 @@ class TestCosineSimilarity:
 
 
 class TestCategorizeDisciplines:
+    pytestmark = pytest.mark.no_db
+
     @pytest.mark.asyncio
     async def test_empty_list(self):
         result = await categorize_disciplines([])
@@ -38,8 +49,50 @@ class TestCategorizeDisciplines:
         """При недоступности Ollama возвращается категория-заглушка."""
         with patch("app.categorization.embedding_service") as mock_svc:
             mock_svc.get_embeddings_batch = AsyncMock(side_effect=Exception("Connection refused"))
-            result = await categorize_disciplines(["Алгоритмы"])
-            assert result == {"Алгоритмы": FALLBACK_CATEGORY}
+            result = await categorize_disciplines(["Тестовая дисциплина"])
+            assert result == {"Тестовая дисциплина": FALLBACK_CATEGORY}
+
+    @pytest.mark.asyncio
+    async def test_keyword_rules_match_required_groups(self):
+        """Базовые учебные дисциплины группируются без обращения к Ollama."""
+        examples = {
+            "Python": PROGRAMMING,
+            "Java": PROGRAMMING,
+            "Алгоритмы и структуры данных": PROGRAMMING,
+            "Английский": FOREIGN_LANGUAGES,
+            "Немецкий": FOREIGN_LANGUAGES,
+            "Soft skills в IT": SOFT_SKILLS,
+            "Lean менеджмент": SOFT_SKILLS,
+            "Основы психологии": SOFT_SKILLS,
+            "Управление IT проектами": SOFT_SKILLS,
+            "Информатика": EXACT_SCIENCES,
+            "Основы вычислительной техники": EXACT_SCIENCES,
+            "Линал": EXACT_SCIENCES,
+            "Матан": EXACT_SCIENCES,
+            "Матстат": EXACT_SCIENCES,
+            "Физика": EXACT_SCIENCES,
+        }
+
+        with patch("app.categorization.embedding_service") as mock_svc:
+            result = await categorize_disciplines(list(examples))
+            mock_svc.get_embeddings_batch.assert_not_called()
+            assert result == examples
+
+        for name, category in examples.items():
+            assert infer_discipline_group(name) == category
+
+    @pytest.mark.asyncio
+    async def test_embedding_fallback_for_unknown_default_category(self):
+        """Неизвестные дисциплины можно докатегоризировать embeddings fallback."""
+        with patch("app.categorization.embedding_service") as mock_svc:
+            mock_svc.get_embeddings_batch = AsyncMock(
+                side_effect=[
+                    [[1, 0, 0]] * len(DEFAULT_CATEGORIES),
+                    [[0.9, 0.1, 0]],
+                ]
+            )
+            result = await categorize_disciplines(["Неизвестная кафедральная практика"])
+            assert result == {"Неизвестная кафедральная практика": DEFAULT_CATEGORIES[0]}
 
     @pytest.mark.asyncio
     async def test_picks_best_category(self):
@@ -102,7 +155,7 @@ class TestCategorizeEndpoint:
         await db_session.flush()
         disc_id = disc.id
 
-        cat_embeddings = [[1, 0, 0]] * 7  # 7 категорий по умолчанию
+        cat_embeddings = [[1, 0, 0]] * len(DEFAULT_CATEGORIES)
         # Первая категория — "Программирование", делаем дисциплину ближе к ней
         disc_embeddings = [[0.95, 0.05, 0]]
 
@@ -138,7 +191,7 @@ class TestCategorizeEndpoint:
         db_session.add_all([disc_with, disc_without])
         await db_session.flush()
 
-        cat_embeddings = [[1, 0, 0]] * 7
+        cat_embeddings = [[1, 0, 0]] * len(DEFAULT_CATEGORIES)
         disc_embeddings = [[0.8, 0.2, 0]]
 
         with patch("app.categorization.embedding_service") as mock_svc:

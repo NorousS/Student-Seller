@@ -2,6 +2,7 @@
 Pydantic схемы для валидации запросов и ответов API.
 """
 
+from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel, Field
@@ -205,6 +206,14 @@ class DisciplineResponse(DisciplineBase):
         from_attributes = True
 
 
+class DisciplineGroupResponse(BaseModel):
+    """Группа дисциплин для employer-facing профиля."""
+    group_name: str = Field(..., description="Каноническая группа навыков")
+    disciplines: list[DisciplineResponse] = Field(default_factory=list, description="Дисциплины внутри группы")
+    total_count: int = Field(..., description="Количество дисциплин в группе")
+    avg_grade: float = Field(..., description="Средний балл по группе")
+
+
 class StudentBase(BaseModel):
     """Базовая схема студента."""
     full_name: str = Field(..., min_length=1, max_length=200, description="ФИО студента")
@@ -264,6 +273,17 @@ class EmployerProfileUpdate(BaseModel):
     website_url: str | None = Field(None, max_length=500)
 
 
+class AdminEmployerResponse(BaseModel):
+    """Работодатель в админском списке партнерства."""
+    employer_user_id: int
+    profile_id: int
+    email: str
+    company_name: str | None
+    position: str | None
+    partnership_status: PartnershipStatusEnum
+    created_at: datetime
+
+
 class EmployerSearchRequest(BaseModel):
     """Запрос на поиск студентов по должности."""
     job_title: str = Field(..., min_length=1, description="Название должности")
@@ -276,6 +296,7 @@ class AnonymizedStudentResult(BaseModel):
     student_id: int
     photo_url: str | None
     disciplines: list[DisciplineResponse]
+    discipline_groups: list[DisciplineGroupResponse] = Field(default_factory=list)
     estimated_salary: float | None
     confidence: float
     matched_disciplines: int
@@ -290,6 +311,7 @@ class AnonymizedStudentProfile(BaseModel):
     student_id: int
     photo_url: str | None
     disciplines: list[DisciplineResponse]
+    discipline_groups: list[DisciplineGroupResponse] = Field(default_factory=list)
     about_me: str | None = None  # Только если контакт accepted
     contact_status: str | None = None  # pending/accepted/rejected/null
     partnership_status: str | None = None

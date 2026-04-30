@@ -8,6 +8,9 @@ import re
 import httpx
 
 from app.config import settings
+from app.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 def normalize_text(text: str) -> str:
@@ -51,14 +54,36 @@ class EmbeddingService:
             Вектор размерности 768
         """
         normalized_text = normalize_text(text)
+        logger.debug(
+            "Генерация эмбеддинга: старт",
+            model=self.model,
+            text_len=len(normalized_text),
+        )
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                f"{self.base_url}/api/embeddings",
-                json={"model": self.model, "prompt": normalized_text},
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data["embedding"]
+            try:
+                response = await client.post(
+                    f"{self.base_url}/api/embeddings",
+                    json={"model": self.model, "prompt": normalized_text},
+                )
+                response.raise_for_status()
+                data = response.json()
+                embedding = data["embedding"]
+            except httpx.HTTPError as e:
+                logger.warning(
+                    "Генерация эмбеддинга: ошибка",
+                    model=self.model,
+                    text_len=len(normalized_text),
+                    error=str(e),
+                    exc_info=True,
+                )
+                raise
+
+        logger.debug(
+            "Генерация эмбеддинга: успешно",
+            model=self.model,
+            vector_dim=len(embedding),
+        )
+        return embedding
 
     async def get_embeddings_batch(self, texts: list[str]) -> list[list[float]]:
         """
@@ -71,17 +96,44 @@ class EmbeddingService:
         Returns:
             Список векторов
         """
+        if not texts:
+            logger.debug("Пакетная генерация эмбеддингов: пустой список")
+            return []
+
+        logger.info(
+            "Пакетная генерация эмбеддингов: старт",
+            model=self.model,
+            items_count=len(texts),
+        )
         embeddings = []
         async with httpx.AsyncClient(timeout=60.0) as client:
-            for text in texts:
+            for index, text in enumerate(texts):
                 normalized_text = normalize_text(text)
-                response = await client.post(
-                    f"{self.base_url}/api/embeddings",
-                    json={"model": self.model, "prompt": normalized_text},
-                )
-                response.raise_for_status()
-                data = response.json()
-                embeddings.append(data["embedding"])
+                try:
+                    response = await client.post(
+                        f"{self.base_url}/api/embeddings",
+                        json={"model": self.model, "prompt": normalized_text},
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    embeddings.append(data["embedding"])
+                except httpx.HTTPError as e:
+                    logger.warning(
+                        "Пакетная генерация эмбеддингов: ошибка",
+                        model=self.model,
+                        item_index=index,
+                        items_count=len(texts),
+                        text_len=len(normalized_text),
+                        error=str(e),
+                        exc_info=True,
+                    )
+                    raise
+
+        logger.info(
+            "Пакетная генерация эмбеддингов: успешно",
+            model=self.model,
+            items_count=len(texts),
+        )
         return embeddings
 
     async def ensure_model_loaded(self) -> bool:
@@ -92,6 +144,7 @@ class EmbeddingService:
         Returns:
             True если модель доступна
         """
+        logger.info("Проверка модели эмбеддингов: старт", model=self.model)
         async with httpx.AsyncClient(timeout=300.0) as client:
             # Проверяем наличие модели
             try:
@@ -102,17 +155,26 @@ class EmbeddingService:
 
                 if not any(self.model in name for name in model_names):
                     # Модель не найдена — подтягиваем
-                    print(f"Модель {self.model} не найдена, загружаем...")
+                    logger.info(
+                        "Модель эмбеддингов не найдена, запускаем pull",
+                        model=self.model,
+                    )
                     pull_response = await client.post(
                         f"{self.base_url}/api/pull",
                         json={"name": self.model},
                     )
                     pull_response.raise_for_status()
-                    print(f"Модель {self.model} загружена")
+                    logger.info("Pull модели эмбеддингов завершён", model=self.model)
 
+                logger.info("Проверка модели эмбеддингов: успешно", model=self.model)
                 return True
             except httpx.HTTPError as e:
-                print(f"Ошибка подключения к Ollama: {e}")
+                logger.warning(
+                    "Проверка модели эмбеддингов: ошибка",
+                    model=self.model,
+                    error=str(e),
+                    exc_info=True,
+                )
                 return False
 
 

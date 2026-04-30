@@ -8,10 +8,43 @@ services:
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
       - OLLAMA_BASE_URL=http://ollama:11434
+      - HH_API_BASE_URL=${HH_API_BASE_URL:-https://api.hh.ru}
+      - HH_USER_AGENT=${HH_USER_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36}
+      - HH_ACCESS_TOKEN=${HH_ACCESS_TOKEN:-}
     depends_on:
       db:
         condition: service_healthy
+      ollama:
+        condition: service_started
+      qdrant:
+        condition: service_started
+    networks:
+      - app-network
     restart: unless-stopped
+
+  test:
+    build: .
+    profiles:
+      - test
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/hh_parser
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - HH_API_BASE_URL=${HH_API_BASE_URL:-https://api.hh.ru}
+      - HH_USER_AGENT=${HH_USER_AGENT:-Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36}
+      - HH_ACCESS_TOKEN=${HH_ACCESS_TOKEN:-}
+      - PROMETHEUS_ENABLED=false
+    depends_on:
+      db:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      ollama:
+        condition: service_started
+    networks:
+      - app-network
+    command: ["uv", "run", "pytest"]
 
   db:
     image: postgres:16-alpine
@@ -28,6 +61,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
     restart: unless-stopped
 
   qdrant:
@@ -37,6 +72,8 @@ services:
       - "6334:6334"
     volumes:
       - qdrant_data:/qdrant/storage
+    networks:
+      - app-network
     restart: unless-stopped
 
   ollama:
@@ -45,7 +82,13 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+    networks:
+      - app-network
     restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   postgres_data:

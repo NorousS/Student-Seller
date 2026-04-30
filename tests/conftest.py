@@ -34,11 +34,15 @@ test_async_session_maker = async_sessionmaker(test_engine, class_=AsyncSession, 
 
 
 @pytest.fixture(scope="function", autouse=True)
-async def setup_test_db():
+async def setup_test_db(request: pytest.FixtureRequest):
     """
     Create the test database and tables before running tests.
     Drop them afterwards.
     """
+    if request.node.get_closest_marker("no_db"):
+        yield
+        return
+
     # Create the database itself requires connecting to 'postgres' db
     # and running CREATE DATABASE. This is tricky with async driver in a transaction.
     # Simplified approach: Treat existing DB as test DB or ensure it exists beforehand.

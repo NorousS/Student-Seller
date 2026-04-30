@@ -12,6 +12,7 @@ from sqlalchemy.orm import selectinload
 
 from app.auth import require_role
 from app.database import get_db
+from app.discipline_groups import display_discipline_category, ordered_group_names
 from app.models import (
     ContactRequest,
     ContactRequestStatus,
@@ -26,6 +27,7 @@ from app.schemas import (
     AnonymizedStudentResult,
     ContactRequestCreate,
     ContactRequestResponse,
+    DisciplineGroupResponse,
     DisciplineResponse,
     EmployerProfileResponse,
     EmployerProfileUpdate,
@@ -89,9 +91,35 @@ async def update_employer_profile(
 
 def _build_disciplines_response(student: Student) -> list[DisciplineResponse]:
     return [
-        DisciplineResponse(id=sd.discipline.id, name=sd.discipline.name, grade=sd.grade, category=sd.discipline.category)
+        DisciplineResponse(
+            id=sd.discipline.id,
+            name=sd.discipline.name,
+            grade=sd.grade,
+            category=display_discipline_category(sd.discipline.name, sd.discipline.category),
+        )
         for sd in student.student_disciplines
     ]
+
+
+def _build_discipline_groups(disciplines: list[DisciplineResponse]) -> list[DisciplineGroupResponse]:
+    groups: dict[str, list[DisciplineResponse]] = {}
+    for discipline in disciplines:
+        group_name = discipline.category or "Другое"
+        groups.setdefault(group_name, []).append(discipline)
+
+    responses: list[DisciplineGroupResponse] = []
+    for group_name in ordered_group_names(groups):
+        group_disciplines = groups[group_name]
+        avg_grade = sum(d.grade for d in group_disciplines) / len(group_disciplines)
+        responses.append(
+            DisciplineGroupResponse(
+                group_name=group_name,
+                disciplines=group_disciplines,
+                total_count=len(group_disciplines),
+                avg_grade=round(avg_grade, 2),
+            )
+        )
+    return responses
 
 
 @router.post("/search", response_model=list[AnonymizedStudentResult])
@@ -148,10 +176,12 @@ async def search_students(
             for m in valuation.skill_matches
         ]
 
+        discipline_responses = _build_disciplines_response(student)
         results.append(AnonymizedStudentResult(
             student_id=student.id,
             photo_url=student.photo_path,
-            disciplines=_build_disciplines_response(student),
+            disciplines=discipline_responses,
+            discipline_groups=_build_discipline_groups(discipline_responses),
             estimated_salary=valuation.estimated_salary,
             confidence=valuation.confidence,
             matched_disciplines=valuation.matched_disciplines,
@@ -206,10 +236,12 @@ async def get_anonymized_student_profile(
     emp_profile = emp_result.scalar_one_or_none()
     partnership = emp_profile.partnership_status.value if emp_profile else None
 
+    discipline_responses = _build_disciplines_response(student)
     return AnonymizedStudentProfile(
         student_id=student.id,
         photo_url=student.photo_path,
-        disciplines=_build_disciplines_response(student),
+        disciplines=discipline_responses,
+        discipline_groups=_build_discipline_groups(discipline_responses),
         about_me=student.about_me if show_about_me else None,
         contact_status=contact_status,
         partnership_status=partnership,

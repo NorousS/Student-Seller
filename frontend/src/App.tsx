@@ -5,9 +5,7 @@ import RegisterPage from './pages/auth/RegisterPage'
 import StudentPanel from './pages/student/StudentPanel'
 import EmployerPanel from './pages/employer/EmployerPanel'
 import LandingPage from './pages/landing/LandingPage'
-
-// Note: /admin is served as static HTML by the backend (app/static/admin.html)
-// It is NOT part of the React SPA
+import AdminDashboard from './pages/admin/AdminDashboard'
 
 function Header() {
   const { user, logout } = useAuth()
@@ -38,8 +36,7 @@ function HomeRedirect() {
   if (loading) return <div className="container"><div className="spinner" /></div>
   if (!user) return <LandingPage />
   if (user.role === 'admin') {
-    window.location.href = '/admin'
-    return <div className="container"><div className="spinner" /></div>
+    return <Navigate to="/admin" replace />
   }
   if (user.role === 'student') return <Navigate to="/student" replace />
   if (user.role === 'employer') return <Navigate to="/employer" replace />
@@ -57,6 +54,7 @@ export default function App() {
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/student/*" element={<ProtectedRoute roles={['student']}><StudentPanel /></ProtectedRoute>} />
         <Route path="/employer/*" element={<ProtectedRoute roles={['employer']}><EmployerPanel /></ProtectedRoute>} />
+        <Route path="/admin/*" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
       </Routes>
     </>
   )

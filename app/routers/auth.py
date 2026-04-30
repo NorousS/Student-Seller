@@ -15,6 +15,7 @@ from app.auth import (
     verify_password,
 )
 from app.database import get_db
+from app.logging_config import get_logger
 from app.models import EmployerProfile, Student, User, UserRole
 from app.schemas import (
     LoginRequest,
@@ -25,6 +26,17 @@ from app.schemas import (
 )
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
+logger = get_logger(__name__)
+
+
+def _mask_email(email: str) -> str:
+    """Маскирует email для безопасного логирования."""
+    if "@" not in email:
+        return "***"
+    local, domain = email.split("@", 1)
+    if not local:
+        return f"***@{domain}"
+    return f"{local[0]}***@{domain}"
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -34,13 +46,29 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
     При role=student автоматически создаётся Student.
     При role=employer автоматически создаётся EmployerProfile.
     """
+    logger.info(
+        "Попытка регистрации пользователя",
+        email=_mask_email(request.email),
+        role=request.role,
+    )
+
     # Проверяем, что email не занят
     existing = await db.execute(select(User).where(User.email == request.email))
     if existing.scalar_one_or_none():
+        logger.warning(
+            "Регистрация отклонена: email уже занят",
+            email=_mask_email(request.email),
+            role=request.role,
+        )
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
     # Валидация: студент должен указать ФИО
     if request.role == "student" and not request.full_name:
+        logger.warning(
+            "Регистрация отклонена: для студента не передано ФИО",
+            email=_mask_email(request.email),
+            role=request.role,
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="full_name is required for students")
 
     # Создаём пользователя
@@ -68,6 +96,7 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
         db.add(employer_profile)
 
     await db.commit()
+    logger.info("Пользователь успешно зарегистрирован", user_id=user.id, role=user.role.value)
 
     return UserResponse(
         id=user.id,
@@ -80,15 +109,19 @@ async def register(request: RegisterRequest, db: AsyncSession = Depends(get_db))
 @router.post("/login", response_model=TokenResponse)
 async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
     """Аутентификация пользователя. Возвращает JWT-токены."""
+    logger.info("Попытка входа", email=_mask_email(request.email))
     result = await db.execute(select(User).where(User.email == request.email))
     user = result.scalar_one_or_none()
 
     if not user or not verify_password(request.password, user.password_hash):
+        logger.warning("Вход отклонён: неверные учетные данные", email=_mask_email(request.email))
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
     if not user.is_active:
+        logger.warning("Вход отклонён: аккаунт деактивирован", user_id=user.id, role=user.role.value)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is deactivated")
 
+    logger.info("Вход выполнен успешно", user_id=user.id, role=user.role.value)
     return TokenResponse(
         access_token=create_access_token(user.id, user.role.value),
         refresh_token=create_refresh_token(user.id),
@@ -98,8 +131,10 @@ async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(request: RefreshRequest, db: AsyncSession = Depends(get_db)):
     """Обновление access-токена по refresh-токену."""
+    logger.info("Попытка обновления access-токена")
     payload = decode_token(request.refresh_token)
     if payload.get("type") != "refresh":
+        logger.warning("Обновление токена отклонено: неверный тип токена")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
 
     user_id = int(payload["sub"])
@@ -107,8 +142,10 @@ async def refresh_token(request: RefreshRequest, db: AsyncSession = Depends(get_
     user = result.scalar_one_or_none()
 
     if not user or not user.is_active:
+        logger.warning("Обновление токена отклонено: пользователь не найден или неактивен", user_id=user_id)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
 
+    logger.info("Access-токен успешно обновлён", user_id=user.id, role=user.role.value)
     return TokenResponse(
         access_token=create_access_token(user.id, user.role.value),
         refresh_token=create_refresh_token(user.id),

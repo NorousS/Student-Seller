@@ -14,6 +14,7 @@ from sqlalchemy.orm import selectinload
 from app.auth import require_role
 from app.database import get_db
 from app.config import settings
+from app.discipline_groups import display_discipline_category
 from app.models import Student, Discipline, StudentDiscipline, User, UserRole, ContactRequest, ContactRequestStatus, EmployerProfile
 from app.schemas import (
     AddDisciplinesRequest,
@@ -143,7 +144,12 @@ async def get_my_disciplines(
     """Получить свои дисциплины."""
     student = await _get_student_for_user(db, current_user)
     return [
-        DisciplineResponse(id=sd.discipline.id, name=sd.discipline.name, grade=sd.grade)
+        DisciplineResponse(
+            id=sd.discipline.id,
+            name=sd.discipline.name,
+            grade=sd.grade,
+            category=display_discipline_category(sd.discipline.name, sd.discipline.category),
+        )
         for sd in student.student_disciplines
     ]
 
