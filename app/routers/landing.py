@@ -26,10 +26,13 @@ from app.models import (
     UserRole,
 )
 from app.schemas import (
+    AnonymizedStudentResult,
     ContactRequestCreate,
+    LandingStudentSearchRequest,
     PaywallOption,
     TopStudentCard,
 )
+from app.student_matching import build_discipline_groups, search_matching_students
 
 router = APIRouter(prefix="/api/v1/landing", tags=["landing"])
 
@@ -62,7 +65,7 @@ async def get_top_students(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Возвращает 5 лучших студентов для первого экрана лендинга.
+    Возвращает 10 лучших студентов для первого экрана лендинга.
     Анонимизированные данные без контактов.
     Сортировка по количеству дисциплин (как proxy для качества профиля).
     """
@@ -70,19 +73,23 @@ async def get_top_students(
     stmt = (
         select(Student)
         .options(selectinload(Student.student_disciplines).selectinload(StudentDiscipline.discipline))
-        .limit(20)  # Get more than needed, then sort
+        .limit(40)  # Get more than needed, then sort
     )
     result = await db.execute(stmt)
     students = result.scalars().all()
 
-    # Sort by avg grade * discipline count, take top 5
+    # Sort by cached salary availability first, then avg grade * discipline count.
     def score(s: Student) -> float:
         if not s.student_disciplines:
             return 0
         avg_grade = sum(sd.grade for sd in s.student_disciplines) / len(s.student_disciplines)
         return avg_grade * len(s.student_disciplines)
 
-    students_sorted = sorted(students, key=score, reverse=True)[:5]
+    students_sorted = sorted(
+        students,
+        key=lambda s: (s.estimated_salary is not None, score(s)),
+        reverse=True,
+    )[:10]
 
     cards = []
     for student in students_sorted:
@@ -96,11 +103,30 @@ async def get_top_students(
         cards.append(TopStudentCard(
             student_id=student.id,
             photo_url=student.photo_path,
-            estimated_salary=None,  # Would need valuation call, keep null for speed
+            estimated_salary=student.estimated_salary,
             competency_summary=summary,
+            discipline_groups=await build_discipline_groups(student, db),
         ))
 
     return cards
+
+
+@router.post("/search-students", response_model=list[AnonymizedStudentResult])
+async def search_students_for_landing(
+    request: LandingStudentSearchRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Публичный анонимный поиск студентов под запрос работодателя.
+    Возвращает топ-10 без ФИО, группы и контактов.
+    """
+    return await search_matching_students(
+        db,
+        job_title=request.job_title,
+        experience=request.experience.value if request.experience else None,
+        top_k=request.top_k,
+        limit=10,
+    )
 
 
 @router.post("/invite/{student_id}")

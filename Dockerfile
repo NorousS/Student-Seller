@@ -20,11 +20,14 @@ WORKDIR /app
 # Копируем файлы зависимостей и README (нужен для hatchling)
 COPY pyproject.toml uv.lock* README.md ./
 
-# Устанавливаем зависимости через uv
-RUN uv sync --no-dev --no-cache
+# Устанавливаем зависимости через uv. Dev-зависимости нужны test service в docker compose.
+RUN uv sync --dev --no-cache
 
 # Копируем код приложения
 COPY app ./app
+COPY scripts ./scripts
+COPY tests ./tests
+COPY pytest.ini ./
 COPY .env* ./
 
 # Копируем собранный фронтенд (Vite builds to ../app/static/dist relative to frontend/)

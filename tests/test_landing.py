@@ -4,6 +4,10 @@
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import Discipline, Student, StudentDiscipline
+from app.valuation import SkillMatch, ValuationResult
 
 
 @pytest.mark.asyncio
@@ -15,10 +19,10 @@ async def test_top_students_returns_list(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_top_students_max_five(client: AsyncClient, admin_headers: dict):
-    """Не более 5 студентов."""
+async def test_top_students_max_ten(client: AsyncClient, admin_headers: dict):
+    """Не более 10 студентов."""
     # Create several students
-    for i in range(7):
+    for i in range(12):
         await client.post("/api/v1/students/", json={
             "full_name": f"Student {i}",
             "group_name": "GRP-1",
@@ -28,7 +32,82 @@ async def test_top_students_max_five(client: AsyncClient, admin_headers: dict):
     resp = await client.get("/api/v1/landing/top-students")
     assert resp.status_code == 200
     data = resp.json()
-    assert len(data) <= 5
+    assert len(data) <= 10
+
+
+@pytest.mark.asyncio
+async def test_top_students_returns_cached_salary(client: AsyncClient, admin_headers: dict, db_session):
+    """Карточка лендинга отдаёт сохранённую оценку зарплаты."""
+    resp = await client.post("/api/v1/students/", json={
+        "full_name": "Salary Cached",
+        "group_name": "GRP-1",
+        "disciplines": [{"name": "Salary-Landing", "grade": 5}],
+    }, headers=admin_headers)
+    student_id = resp.json()["id"]
+
+    from app.models import Student
+    from sqlalchemy import select
+
+    result = await db_session.execute(select(Student).where(Student.id == student_id))
+    student = result.scalar_one()
+    student.estimated_salary = 123456.0
+    await db_session.flush()
+
+    resp = await client.get("/api/v1/landing/top-students")
+    assert resp.status_code == 200
+    card = next(item for item in resp.json() if item["student_id"] == student_id)
+    assert card["estimated_salary"] == 123456.0
+
+
+@pytest.mark.asyncio
+async def test_landing_search_students_public_with_groups(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch,
+):
+    """Публичный поиск отдаёт топ студентов с группами навыков без персональных данных."""
+    student = Student(full_name="Private Landing Name", group_name="SECRET")
+    prog = Discipline(name="Python Landing Search", category="PROGRAMMING")
+    lang = Discipline(name="English Landing Search", category="FOREIGN_LANGUAGES")
+    db_session.add_all([student, prog, lang])
+    await db_session.flush()
+    db_session.add_all([
+        StudentDiscipline(student_id=student.id, discipline_id=prog.id, grade=5),
+        StudentDiscipline(student_id=student.id, discipline_id=lang.id, grade=4),
+    ])
+    await db_session.flush()
+
+    async def fake_evaluate_student(*args, **kwargs):
+        return ValuationResult(
+            estimated_salary=150000.0,
+            confidence=0.91,
+            skill_matches=[
+                SkillMatch(
+                    discipline="Python Landing Search",
+                    skill_name="Python",
+                    similarity=0.94,
+                    avg_salary=150000.0,
+                    vacancy_count=10,
+                    grade=5,
+                    grade_coeff=1.0,
+                )
+            ],
+            total_disciplines=2,
+            matched_disciplines=1,
+        )
+
+    monkeypatch.setattr("app.student_matching.evaluate_student", fake_evaluate_student)
+
+    resp = await client.post("/api/v1/landing/search-students", json={"job_title": "Python developer"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data) == 1
+    result = data[0]
+    assert result["estimated_salary"] == 150000.0
+    assert result["confidence"] == 0.91
+    assert "full_name" not in result
+    assert "group_name" not in result
+    assert {group["label"] for group in result["discipline_groups"]} == {"Программирование", "Иностранные языки"}
 
 
 @pytest.mark.asyncio

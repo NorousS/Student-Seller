@@ -48,3 +48,10 @@ async def create_tables() -> None:
     """Создаёт все таблицы в БД."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        if engine.dialect.name == "postgresql":
+            await conn.exec_driver_sql(
+                "ALTER TABLE students ADD COLUMN IF NOT EXISTS estimated_salary DOUBLE PRECISION"
+            )
+            await conn.exec_driver_sql(
+                "ALTER TABLE students ADD COLUMN IF NOT EXISTS valuation_updated_at TIMESTAMP"
+            )

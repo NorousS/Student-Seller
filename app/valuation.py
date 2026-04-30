@@ -128,6 +128,9 @@ async def get_matching_search_queries(
     Семантически сопоставляет specialty с search_query из вакансий.
     Возвращает список search_query, похожих на specialty.
     """
+    if not specialty.strip():
+        return []
+
     # Получаем все уникальные search_query
     stmt = select(distinct(Vacancy.search_query))
     result = await db.execute(stmt)
@@ -225,8 +228,9 @@ async def evaluate_student(
         s.lower() for s in (excluded_skills or [])
     )
 
-    # Шаг 1: Семантическая фильтрация вакансий по специальности
-    matching_queries = await get_matching_search_queries(db, specialty)
+    # Шаг 1: Семантическая фильтрация вакансий по специальности.
+    # Пустая специальность означает "без фильтра" для фонового кэша лендинга.
+    matching_queries = await get_matching_search_queries(db, specialty) if specialty.strip() else []
 
     all_matches: list[SkillMatch] = []
     weighted_salary_sum = 0.0

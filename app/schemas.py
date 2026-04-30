@@ -205,6 +205,22 @@ class DisciplineResponse(DisciplineBase):
         from_attributes = True
 
 
+class DisciplineGroupItem(BaseModel):
+    """Дисциплина внутри смысловой группы."""
+    id: int
+    name: str
+    grade: int
+
+
+class DisciplineGroupResponse(BaseModel):
+    """Смысловая группа дисциплин студента."""
+    key: str
+    label: str
+    disciplines: list[DisciplineGroupItem] = Field(default_factory=list)
+    avg_grade: float
+    count: int
+
+
 class StudentBase(BaseModel):
     """Базовая схема студента."""
     full_name: str = Field(..., min_length=1, max_length=200, description="ФИО студента")
@@ -214,6 +230,12 @@ class StudentBase(BaseModel):
 class StudentCreate(StudentBase):
     """Схема для создания студента."""
     disciplines: list[DisciplineWithGrade] = Field(default_factory=list, description="Список дисциплин с оценками")
+
+
+class AdminStudentUpdate(BaseModel):
+    """Admin update for student identity fields."""
+    full_name: str | None = Field(None, min_length=1, max_length=200)
+    group_name: str | None = Field(None, max_length=50)
 
 
 class StudentResponse(StudentBase):
@@ -271,11 +293,17 @@ class EmployerSearchRequest(BaseModel):
     top_k: int = Field(default=5, ge=1, le=20, description="Навыков на дисциплину")
 
 
+class LandingStudentSearchRequest(EmployerSearchRequest):
+    """Публичный поиск студентов на лендинге."""
+    pass
+
+
 class AnonymizedStudentResult(BaseModel):
     """Анонимизированный результат поиска студента."""
     student_id: int
     photo_url: str | None
     disciplines: list[DisciplineResponse]
+    discipline_groups: list[DisciplineGroupResponse] = Field(default_factory=list)
     estimated_salary: float | None
     confidence: float
     matched_disciplines: int
@@ -290,6 +318,7 @@ class AnonymizedStudentProfile(BaseModel):
     student_id: int
     photo_url: str | None
     disciplines: list[DisciplineResponse]
+    discipline_groups: list[DisciplineGroupResponse] = Field(default_factory=list)
     about_me: str | None = None  # Только если контакт accepted
     contact_status: str | None = None  # pending/accepted/rejected/null
     partnership_status: str | None = None
@@ -349,6 +378,7 @@ class TopStudentCard(BaseModel):
     photo_url: str | None
     estimated_salary: float | None
     competency_summary: str
+    discipline_groups: list[DisciplineGroupResponse] = Field(default_factory=list)
 
 
 class CompetenceBlockResponse(BaseModel):

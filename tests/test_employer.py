@@ -7,7 +7,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.models import Student, ContactRequest
+from app.models import Discipline, Student, ContactRequest, StudentDiscipline
 
 
 @pytest.mark.asyncio
@@ -55,6 +55,36 @@ async def test_anonymized_student_profile_no_name(client: AsyncClient, employer_
     assert data["student_id"] == student_id
     assert len(data["disciplines"]) == 1
     assert data["about_me"] is None  # No contact yet
+
+
+@pytest.mark.asyncio
+async def test_anonymized_student_profile_includes_discipline_groups(
+    client: AsyncClient,
+    employer_headers: dict,
+    db_session: AsyncSession,
+):
+    """Профиль работодателя явно отдаёт смысловые группы дисциплин."""
+    student = Student(full_name="Grouped Student", group_name="HIDDEN")
+    math = Discipline(name="Linear Algebra Employer", category="EXACT_SCIENCES")
+    soft = Discipline(name="Leadership Employer", category="SOFT_SKILLS")
+    db_session.add_all([student, math, soft])
+    await db_session.flush()
+    db_session.add_all([
+        StudentDiscipline(student_id=student.id, discipline_id=math.id, grade=5),
+        StudentDiscipline(student_id=student.id, discipline_id=soft.id, grade=4),
+    ])
+    await db_session.flush()
+
+    response = await client.get(
+        f"/api/v1/employer/students/{student.id}/profile",
+        headers=employer_headers,
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "full_name" not in data
+    assert "group_name" not in data
+    assert {group["label"] for group in data["discipline_groups"]} == {"Точные науки", "Soft skills"}
 
 
 @pytest.mark.asyncio

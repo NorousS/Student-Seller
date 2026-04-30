@@ -5,8 +5,10 @@ from sqlalchemy.orm import selectinload
 
 from app.auth import require_role
 from app.database import get_db
+from app.discipline_groups import infer_discipline_group_semantic
 from app.models import Student, Discipline, StudentDiscipline, User, UserRole
 from app.schemas import StudentCreate, StudentResponse, DisciplineResponse, AddDisciplinesRequest
+from app.valuation_cache import refresh_student_valuation
 
 router = APIRouter(
     prefix="/api/v1/students",
@@ -24,7 +26,11 @@ async def get_or_create_discipline(db: AsyncSession, name: str) -> Discipline:
     discipline = result.scalar_one_or_none()
     
     if not discipline:
-        discipline = Discipline(name=name)
+        try:
+            category = await infer_discipline_group_semantic(name)
+        except Exception:
+            category = "OTHER"
+        discipline = Discipline(name=name, category=category)
         db.add(discipline)
         await db.flush()  # We need the ID
         
@@ -39,6 +45,7 @@ def build_student_response(student: Student) -> StudentResponse:
             id=sd.discipline.id,
             name=sd.discipline.name,
             grade=sd.grade,
+            category=sd.discipline.category,
         ))
     return StudentResponse(
         id=student.id,
@@ -80,6 +87,8 @@ async def create_student(student_in: StudentCreate, db: AsyncSession = Depends(g
             link = StudentDiscipline(student_id=new_student.id, discipline_id=discipline.id, grade=disc.grade)
             db.add(link)
 
+    await db.flush()
+    await refresh_student_valuation(db, new_student.id)
     await db.commit()
     
     # 3. Возвращаем с подгруженными связями
@@ -113,6 +122,7 @@ async def get_student(student_id: int, db: AsyncSession = Depends(get_db)):
 async def add_disciplines_to_student(
     student_id: int, 
     request: AddDisciplinesRequest,
+    replace: bool = False,
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -125,6 +135,18 @@ async def add_disciplines_to_student(
     
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
+
+    incoming_names = {disc.name for disc in request.disciplines}
+    if replace:
+        existing_stmt = (
+            select(StudentDiscipline)
+            .join(Discipline, StudentDiscipline.discipline_id == Discipline.id)
+            .where(StudentDiscipline.student_id == student_id)
+        )
+        existing_res = await db.execute(existing_stmt)
+        for link in existing_res.scalars().all():
+            if link.discipline.name not in incoming_names:
+                await db.delete(link)
 
     # Добавляем дисциплины
     seen_names: set[str] = set()
@@ -151,6 +173,7 @@ async def add_disciplines_to_student(
             db.add(new_link)
             
     await db.flush()
+    await refresh_student_valuation(db, student_id)
     db.expire_all()
     
     # Reload and return

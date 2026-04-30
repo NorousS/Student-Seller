@@ -32,7 +32,7 @@ from app.schemas import (
     EmployerSearchRequest,
     SkillMatchResponse,
 )
-from app.valuation import DisciplineWithGrade, evaluate_student
+from app.student_matching import build_discipline_groups, build_disciplines_response, search_matching_students
 
 router = APIRouter(prefix="/api/v1/employer", tags=["employer"])
 
@@ -87,13 +87,6 @@ async def update_employer_profile(
 # --- Student search ---
 
 
-def _build_disciplines_response(student: Student) -> list[DisciplineResponse]:
-    return [
-        DisciplineResponse(id=sd.discipline.id, name=sd.discipline.name, grade=sd.grade, category=sd.discipline.category)
-        for sd in student.student_disciplines
-    ]
-
-
 @router.post("/search", response_model=list[AnonymizedStudentResult])
 async def search_students(
     request: EmployerSearchRequest,
@@ -105,63 +98,12 @@ async def search_students(
     Для каждого студента рассчитывает оценку и сортирует по confidence desc, salary desc.
     Возвращает анонимизированные данные (без ФИО и группы).
     """
-    # Get all students with disciplines
-    stmt = select(Student).options(
-        selectinload(Student.student_disciplines).selectinload(StudentDiscipline.discipline)
+    return await search_matching_students(
+        db,
+        job_title=request.job_title,
+        experience=request.experience.value if request.experience else None,
+        top_k=request.top_k,
     )
-    result = await db.execute(stmt)
-    students = result.scalars().all()
-
-    results: list[AnonymizedStudentResult] = []
-
-    for student in students:
-        if not student.student_disciplines:
-            continue
-
-        disciplines = [
-            DisciplineWithGrade(name=sd.discipline.name, grade=sd.grade)
-            for sd in student.student_disciplines
-        ]
-
-        try:
-            valuation = await evaluate_student(
-                db,
-                disciplines,
-                specialty=request.job_title,
-                experience=request.experience.value if request.experience else None,
-                top_k=request.top_k,
-            )
-        except Exception:
-            continue
-
-        skill_matches = [
-            SkillMatchResponse(
-                discipline=m.discipline,
-                skill_name=m.skill_name,
-                similarity=m.similarity,
-                avg_salary=m.avg_salary,
-                vacancy_count=m.vacancy_count,
-                grade=m.grade,
-                grade_coeff=m.grade_coeff,
-                excluded=m.excluded,
-            )
-            for m in valuation.skill_matches
-        ]
-
-        results.append(AnonymizedStudentResult(
-            student_id=student.id,
-            photo_url=student.photo_path,
-            disciplines=_build_disciplines_response(student),
-            estimated_salary=valuation.estimated_salary,
-            confidence=valuation.confidence,
-            matched_disciplines=valuation.matched_disciplines,
-            total_disciplines=valuation.total_disciplines,
-            skill_matches=skill_matches,
-        ))
-
-    # Sort: confidence desc, then salary desc
-    results.sort(key=lambda r: (r.confidence, r.estimated_salary or 0), reverse=True)
-    return results
 
 
 # --- Anonymized student profile ---
@@ -209,7 +151,8 @@ async def get_anonymized_student_profile(
     return AnonymizedStudentProfile(
         student_id=student.id,
         photo_url=student.photo_path,
-        disciplines=_build_disciplines_response(student),
+        disciplines=await build_disciplines_response(student, db),
+        discipline_groups=await build_discipline_groups(student, db),
         about_me=student.about_me if show_about_me else None,
         contact_status=contact_status,
         partnership_status=partnership,
