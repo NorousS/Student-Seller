@@ -61,15 +61,13 @@ test.describe('Landing page', () => {
     // Top-5 heading
     await expect(page.getByText('Топ-5 кандидатов')).toBeVisible();
 
-    // Should show student cards OR empty-state text
-    const cards = page.locator('.card');
-    const empty = page.getByText('Пока нет профилей студентов');
-    await expect(cards.first().or(empty)).toBeVisible();
+    // Either real student cards or the empty-state placeholder render as .landing-student-card
+    await expect(page.locator('.landing-student-card').first()).toBeVisible();
   });
 
   test('CTA button redirects to /register', async ({ page }) => {
     await page.goto(`${BASE}/landing`);
-    await page.getByRole('button', { name: /зарегистрироваться/i }).click();
+    await page.getByRole('button', { name: /зарегистрироваться/i }).first().click();
     await expect(page).toHaveURL(/\/register/);
   });
 
