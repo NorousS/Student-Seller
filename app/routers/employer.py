@@ -34,7 +34,7 @@ from app.schemas import (
     EmployerSearchRequest,
     SkillMatchResponse,
 )
-from app.valuation import DisciplineWithGrade, evaluate_student
+from app.student_matching import build_discipline_groups, build_disciplines_response, search_matching_students
 
 router = APIRouter(prefix="/api/v1/employer", tags=["employer"])
 
@@ -89,6 +89,8 @@ async def update_employer_profile(
 # --- Student search ---
 
 
+<<<<<<< HEAD
+=======
 def _build_disciplines_response(student: Student) -> list[DisciplineResponse]:
     return [
         DisciplineResponse(
@@ -122,6 +124,7 @@ def _build_discipline_groups(disciplines: list[DisciplineResponse]) -> list[Disc
     return responses
 
 
+>>>>>>> github/main
 @router.post("/search", response_model=list[AnonymizedStudentResult])
 async def search_students(
     request: EmployerSearchRequest,
@@ -133,10 +136,14 @@ async def search_students(
     Для каждого студента рассчитывает оценку и сортирует по confidence desc, salary desc.
     Возвращает анонимизированные данные (без ФИО и группы).
     """
-    # Get all students with disciplines
-    stmt = select(Student).options(
-        selectinload(Student.student_disciplines).selectinload(StudentDiscipline.discipline)
+    return await search_matching_students(
+        db,
+        job_title=request.job_title,
+        experience=request.experience.value if request.experience else None,
+        top_k=request.top_k,
     )
+<<<<<<< HEAD
+=======
     result = await db.execute(stmt)
     students = result.scalars().all()
 
@@ -192,6 +199,7 @@ async def search_students(
     # Sort: confidence desc, then salary desc
     results.sort(key=lambda r: (r.confidence, r.estimated_salary or 0), reverse=True)
     return results
+>>>>>>> github/main
 
 
 # --- Anonymized student profile ---
@@ -240,8 +248,13 @@ async def get_anonymized_student_profile(
     return AnonymizedStudentProfile(
         student_id=student.id,
         photo_url=student.photo_path,
+<<<<<<< HEAD
+        disciplines=await build_disciplines_response(student, db),
+        discipline_groups=await build_discipline_groups(student, db),
+=======
         disciplines=discipline_responses,
         discipline_groups=_build_discipline_groups(discipline_responses),
+>>>>>>> github/main
         about_me=student.about_me if show_about_me else None,
         contact_status=contact_status,
         partnership_status=partnership,

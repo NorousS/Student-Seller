@@ -707,7 +707,11 @@ async function checkAuth() {
 function switchTab(name) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    event.target.classList.add('active');
+    const eventTarget = event?.target;
+    const tab = eventTarget?.classList?.contains('tab')
+        ? eventTarget
+        : Array.from(document.querySelectorAll('.tab')).find(t => t.getAttribute('onclick')?.includes(`'${name}'`));
+    if (tab) tab.classList.add('active');
     document.getElementById('page-' + name).classList.add('active');
     if (name === 'students') refreshStudentsList();
 }
@@ -823,9 +827,18 @@ function refreshStudentsList() {
             </div>
             <div class="student-actions">
                 <button class="btn-sm" onclick="editStudent(${s.id})">✏️ Редактировать</button>
+                <button class="btn-sm" onclick="evaluateStudentFromList(${s.id})">📊 Оценить</button>
             </div>
         </div>
     `).join('');
+}
+
+function evaluateStudentFromList(id) {
+    const sel = document.getElementById('student-select');
+    sel.value = String(id);
+    onStudentChange();
+    switchTab('evaluation');
+    document.getElementById('eval-specialty').focus();
 }
 
 function editStudent(id) {
@@ -875,20 +888,28 @@ async function saveStudent() {
 
     try {
         if (editId) {
-            // Update: send disciplines with grades
-            if (formDisciplines.length) {
-                const res = await fetch(API + `/api/v1/students/${editId}/disciplines`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-                    body: JSON.stringify({ disciplines: formDisciplines })
-                });
-                if (!res.ok) {
-                    const err = await res.json();
-                    showFormMsg(err.detail || 'Ошибка обновления', 'error');
-                    return;
-                }
+            const identityRes = await fetch(API + `/api/v1/admin/students/${editId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', ...authHeaders() },
+                body: JSON.stringify({ full_name: fullName, group_name: groupName || null })
+            });
+            if (!identityRes.ok) {
+                const err = await identityRes.json();
+                showFormMsg(err.detail || 'Ошибка обновления студента', 'error');
+                return;
             }
-            showFormMsg('✓ Дисциплины обновлены', 'success');
+
+            const res = await fetch(API + `/api/v1/students/${editId}/disciplines?replace=true`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...authHeaders() },
+                body: JSON.stringify({ disciplines: formDisciplines })
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                showFormMsg(err.detail || 'Ошибка обновления дисциплин', 'error');
+                return;
+            }
+            showFormMsg('✓ Студент обновлен', 'success');
         } else {
             // Create new student
             const body = { full_name: fullName, disciplines: formDisciplines };
@@ -975,14 +996,14 @@ async function evaluateStudent() {
     const topK = document.getElementById('eval-top-k').value;
 
     if (!studentId) return;
-    if (!specialty) { alert('Введите специальность для оценки'); return; }
 
     const btn = document.getElementById('btn-evaluate');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>Оцениваем...';
 
     try {
-        const params = new URLSearchParams({ specialty });
+        const params = new URLSearchParams();
+        if (specialty) params.set('specialty', specialty);
         if (experience) params.set('experience', experience);
         params.set('top_k', topK);
         excludedSkills.forEach(s => {

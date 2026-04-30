@@ -17,9 +17,14 @@ from app.database import get_db
 from app.discipline_groups import infer_discipline_group_semantic, reload_centroids
 from app.embedding_diagnostics import detect_anomalies, DiagnosticsResult
 from app.embeddings import embedding_service
+<<<<<<< HEAD
+from app.models import Discipline, Student, StudentDiscipline, Tag, User, UserRole
+from app.schemas import AdminStudentUpdate, StudentResponse, DisciplineResponse
+=======
 from app.models import Discipline, EmployerProfile, Student, StudentDiscipline, Tag, User, UserRole
 from app.parser import hh_parser
 from app.schemas import AdminEmployerResponse, AdminStudentUpdate, StudentResponse
+>>>>>>> github/main
 from app.valuation_cache import refresh_all_student_valuations
 from app.vector_store import vector_store, HH_SKILLS_COLLECTION
 from qdrant_client.models import PointStruct
@@ -49,6 +54,29 @@ class ReindexResponse(BaseModel):
     diagnostics_error: str | None = Field(
         default=None,
         description="Текст ошибки диагностики, если проверка не выполнена",
+    )
+    disciplines_recategorized: int = 0
+    valuations_refreshed: int = 0
+
+
+class RefreshValuationsResponse(BaseModel):
+    refreshed_count: int
+
+
+def _build_student_response(student: Student) -> StudentResponse:
+    return StudentResponse(
+        id=student.id,
+        full_name=student.full_name,
+        group_name=student.group_name,
+        disciplines=[
+            DisciplineResponse(
+                id=sd.discipline.id,
+                name=sd.discipline.name,
+                grade=sd.grade,
+                category=sd.discipline.category,
+            )
+            for sd in student.student_disciplines
+        ],
     )
 
 
@@ -273,6 +301,21 @@ async def reindex_skills(
         diagnostics_error = f"Диагностика пропущена: {str(e)}"
     except httpx.HTTPError as e:
         diagnostics_error = f"Диагностика недоступна: {str(e)}"
+
+    disciplines_recategorized = 0
+    valuations_refreshed = 0
+    try:
+        await reload_centroids()
+        discipline_result = await db.execute(select(Discipline))
+        disciplines = discipline_result.scalars().all()
+        for discipline in disciplines:
+            discipline.category = await infer_discipline_group_semantic(discipline.name)
+        disciplines_recategorized = len(disciplines)
+        await db.flush()
+    except Exception as e:
+        diagnostics_error = f"{diagnostics_error or ''} Категоризация пропущена: {str(e)}".strip()
+
+    valuations_refreshed = await refresh_all_student_valuations(db)
     
     # Пересчитываем центроиды группировки дисциплин
     try:
@@ -304,4 +347,48 @@ async def reindex_skills(
         reindexed_count=reindexed_count,
         diagnostics=diagnostics_result,
         diagnostics_error=diagnostics_error,
+        disciplines_recategorized=disciplines_recategorized,
+        valuations_refreshed=valuations_refreshed,
     )
+
+
+@router.patch("/students/{student_id}", response_model=StudentResponse)
+async def update_student(
+    student_id: int,
+    data: AdminStudentUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> StudentResponse:
+    if current_user.role != UserRole.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Доступ запрещен. Требуется роль admin.")
+
+    stmt = (
+        select(Student)
+        .options(selectinload(Student.student_disciplines).selectinload(StudentDiscipline.discipline))
+        .where(Student.id == student_id)
+    )
+    result = await db.execute(stmt)
+    student = result.scalar_one_or_none()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    if data.full_name is not None:
+        student.full_name = data.full_name
+    if "group_name" in data.model_fields_set:
+        student.group_name = data.group_name
+
+    await db.flush()
+    await db.refresh(student)
+    result = await db.execute(stmt)
+    return _build_student_response(result.scalar_one())
+
+
+@router.post("/refresh-valuations", response_model=RefreshValuationsResponse)
+async def refresh_valuations(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> RefreshValuationsResponse:
+    if current_user.role != UserRole.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Доступ запрещен. Требуется роль admin.")
+    refreshed = await refresh_all_student_valuations(db)
+    return RefreshValuationsResponse(refreshed_count=refreshed)

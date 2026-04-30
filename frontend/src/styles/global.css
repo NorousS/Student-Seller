@@ -113,6 +113,41 @@ input:focus, select:focus, textarea:focus {
 .badge-red { background: rgba(248,81,73,0.15); color: var(--red); }
 .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent); }
 
+<<<<<<< HEAD
+.skill-group-programming {
+  --group-accent: #58a6ff;
+  --group-bg: rgba(88, 166, 255, 0.13);
+  --group-border: rgba(88, 166, 255, 0.42);
+}
+.skill-group-foreign-languages {
+  --group-accent: #3fb950;
+  --group-bg: rgba(63, 185, 80, 0.13);
+  --group-border: rgba(63, 185, 80, 0.42);
+}
+.skill-group-soft-skills {
+  --group-accent: #bc8cff;
+  --group-bg: rgba(188, 140, 255, 0.14);
+  --group-border: rgba(188, 140, 255, 0.44);
+}
+.skill-group-exact-sciences {
+  --group-accent: #d29922;
+  --group-bg: rgba(210, 153, 34, 0.14);
+  --group-border: rgba(210, 153, 34, 0.44);
+}
+.skill-group-other {
+  --group-accent: #8b949e;
+  --group-bg: rgba(139, 148, 158, 0.14);
+  --group-border: rgba(139, 148, 158, 0.38);
+}
+
+.skill-group-badge {
+  background: var(--group-bg);
+  border: 1px solid var(--group-border);
+  color: var(--group-accent);
+}
+
+=======
+>>>>>>> github/main
 .discipline-groups {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -123,19 +158,32 @@ input:focus, select:focus, textarea:focus {
   position: relative;
   min-height: 86px;
   padding: 12px;
+<<<<<<< HEAD
+  border: 1px solid var(--group-border, var(--border));
+  border-radius: 8px;
+  background: var(--group-bg, rgba(88,166,255,0.08));
+  color: var(--text);
+  text-align: left;
+  cursor: default;
+=======
   border: 1px solid var(--border);
   border-radius: 8px;
   background: rgba(88, 166, 255, 0.06);
   color: var(--text);
   text-align: left;
   cursor: pointer;
+>>>>>>> github/main
 }
 
 .discipline-group-card:hover,
 .discipline-group-card:focus-visible,
 .discipline-group-card.open {
+<<<<<<< HEAD
+  border-color: var(--group-accent, var(--accent));
+=======
   border-color: var(--accent);
   background: rgba(88, 166, 255, 0.12);
+>>>>>>> github/main
   outline: none;
 }
 
@@ -147,6 +195,10 @@ input:focus, select:focus, textarea:focus {
 }
 
 .discipline-group-title {
+<<<<<<< HEAD
+  color: var(--group-accent, var(--accent));
+=======
+>>>>>>> github/main
   font-weight: 700;
   font-size: 14px;
   line-height: 1.25;
@@ -156,8 +208,13 @@ input:focus, select:focus, textarea:focus {
   width: 24px;
   height: 24px;
   border-radius: 50%;
+<<<<<<< HEAD
+  background: var(--group-accent, var(--accent));
+  color: #0f1117;
+=======
   background: var(--accent);
   color: #fff;
+>>>>>>> github/main
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -175,6 +232,9 @@ input:focus, select:focus, textarea:focus {
 
 .discipline-group-details {
   display: none;
+<<<<<<< HEAD
+  margin-top: 10px;
+=======
   position: absolute;
   left: 8px;
   right: 8px;
@@ -185,6 +245,7 @@ input:focus, select:focus, textarea:focus {
   border-radius: 8px;
   background: var(--bg-card);
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.28);
+>>>>>>> github/main
   flex-wrap: wrap;
   gap: 6px;
 }
@@ -212,9 +273,15 @@ input:focus, select:focus, textarea:focus {
   font-size: 11px;
 }
 
+<<<<<<< HEAD
+.discipline-pill.g5 { background: rgba(63, 185, 80, 0.16); }
+.discipline-pill.g4 { background: rgba(210, 153, 34, 0.17); }
+.discipline-pill.g3 { background: rgba(248, 81, 73, 0.16); }
+=======
 .discipline-pill.g5 { background: rgba(63,185,80,0.16); }
 .discipline-pill.g4 { background: rgba(210,153,34,0.18); }
 .discipline-pill.g3 { background: rgba(248,81,73,0.16); }
+>>>>>>> github/main
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
@@ -402,6 +469,28 @@ th { color: var(--text-muted); font-size: 13px; font-weight: 600; }
   flex-wrap: wrap;
 }
 
+.landing-search {
+  margin: 30px auto 0;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 170px auto;
+  gap: 10px;
+  max-width: 820px;
+  align-items: stretch;
+}
+
+.landing-search input,
+.landing-search select {
+  min-height: 44px;
+}
+
+.landing-search-error {
+  margin: 10px auto 0;
+  max-width: 820px;
+  color: var(--red);
+  font-size: 14px;
+  text-align: left;
+}
+
 .landing-section {
   max-width: 1200px;
   margin: 0 auto;
@@ -460,11 +549,17 @@ th { color: var(--text-muted); font-size: 13px; font-weight: 600; }
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
 }
+<<<<<<< HEAD
+.landing-students-grid::-webkit-scrollbar {
+  height: 8px;
+}
+=======
 
 .landing-students-grid::-webkit-scrollbar {
   height: 8px;
 }
 
+>>>>>>> github/main
 .landing-students-grid::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 4px;
@@ -476,13 +571,75 @@ th { color: var(--text-muted); font-size: 13px; font-weight: 600; }
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
+  flex: 0 0 240px;
   text-align: center;
   padding: 24px;
+  scroll-snap-align: start;
   transition: transform 0.2s, border-color 0.2s;
 }
 .landing-student-card:hover {
   transform: translateY(-4px);
   border-color: var(--accent);
+}
+
+.landing-group-badges {
+  min-height: 128px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.landing-group-pill {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--group-border, var(--border));
+  border-radius: 8px;
+  background: var(--group-bg, rgba(88,166,255,0.08));
+  color: var(--group-accent, var(--accent));
+  text-align: left;
+  cursor: default;
+}
+
+.landing-group-pill:hover,
+.landing-group-pill:focus-visible {
+  border-color: var(--group-accent, var(--accent));
+  outline: none;
+}
+
+.landing-group-pill-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.landing-group-pill-head strong {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--group-accent, var(--accent));
+  color: #0f1117;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.landing-group-pill .landing-group-details {
+  display: none;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.landing-group-pill:hover .landing-group-details,
+.landing-group-pill:focus-visible .landing-group-details {
+  display: flex;
 }
 
 .landing-student-avatar {
@@ -527,6 +684,7 @@ th { color: var(--text-muted); font-size: 13px; font-weight: 600; }
   .landing-hero { padding: 60px 16px 40px; }
   .landing-section { padding: 40px 16px; }
   .landing-cta { padding: 48px 16px; margin: 0 12px; }
+  .landing-search { grid-template-columns: 1fr; }
 }
 
 /* ── Modals ──────────────────────────────────────────────────────────────── */

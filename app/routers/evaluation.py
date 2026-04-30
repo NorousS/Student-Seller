@@ -33,7 +33,11 @@ router = APIRouter(
 @router.post("/{student_id}/evaluate", response_model=EvaluationResponse)
 async def evaluate_student_endpoint(
     student_id: int,
+<<<<<<< HEAD
+    specialty: str = Query("", description="Специальность для оценки"),
+=======
     specialty: str = Query(default="", description="Специальность для оценки (пусто = все вакансии)"),
+>>>>>>> github/main
     experience: ExperienceLevel | None = Query(None, description="Фильтр по опыту работы"),
     top_k: int = Query(default=5, ge=1, le=20, description="Кол-во навыков на дисциплину"),
     excluded_skills: list[str] = Query(default=[], description="Навыки для исключения из расчёта"),

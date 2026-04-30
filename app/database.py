@@ -49,9 +49,19 @@ async def create_tables() -> None:
     """Создаёт все таблицы в БД и применяет safe column migrations."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+<<<<<<< HEAD
+        if engine.dialect.name == "postgresql":
+            await conn.exec_driver_sql(
+                "ALTER TABLE students ADD COLUMN IF NOT EXISTS estimated_salary DOUBLE PRECISION"
+            )
+            await conn.exec_driver_sql(
+                "ALTER TABLE students ADD COLUMN IF NOT EXISTS valuation_updated_at TIMESTAMP"
+            )
+=======
         # Safe idempotent column additions (ADD COLUMN IF NOT EXISTS ignores existing columns)
         for sql in [
             "ALTER TABLE students ADD COLUMN IF NOT EXISTS estimated_salary DOUBLE PRECISION",
             "ALTER TABLE students ADD COLUMN IF NOT EXISTS valuation_updated_at TIMESTAMP",
         ]:
             await conn.execute(text(sql))
+>>>>>>> github/main

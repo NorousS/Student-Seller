@@ -19,6 +19,23 @@ export interface Discipline {
   id: number
   name: string
   grade: number
+<<<<<<< HEAD
+  category?: string | null
+}
+
+export interface DisciplineGroupItem {
+  id: number
+  name: string
+  grade: number
+}
+
+export interface DisciplineGroup {
+  key: string
+  label: string
+  disciplines: DisciplineGroupItem[]
+  avg_grade: number
+  count: number
+=======
   category: string | null
 }
 
@@ -27,6 +44,7 @@ export interface DisciplineGroup {
   disciplines: Discipline[]
   total_count: number
   avg_grade: number
+>>>>>>> github/main
 }
 
 export interface Student {
@@ -71,6 +89,20 @@ export interface SkillMatch {
   grade: number
   grade_coeff: number
   excluded: boolean
+}
+
+export interface EvaluationResponse {
+  student_id: number
+  student_name: string
+  specialty: string
+  experience_filter: string | null
+  top_k: number
+  excluded_skills: string[]
+  estimated_salary: number | null
+  confidence: number
+  total_disciplines: number
+  matched_disciplines: number
+  skill_matches: SkillMatch[]
 }
 
 export interface AnonymizedStudent {
@@ -120,6 +152,7 @@ export interface TopStudentCard {
   photo_url: string | null
   estimated_salary: number | null
   competency_summary: string
+  discipline_groups: DisciplineGroup[]
 }
 
 export interface PaywallOption {

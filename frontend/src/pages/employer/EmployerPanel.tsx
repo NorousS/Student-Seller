@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import api from '../../api/client'
 import { useAuth } from '../../store/AuthContext'
+<<<<<<< HEAD
+import type { AnonymizedStudent, AnonymizedStudentProfile, ContactRequest, ChatMessage, SkillMatch, PaywallOption, EmployerProfile, DisciplineGroup } from '../../api/types'
+=======
 import type { AnonymizedStudent, AnonymizedStudentProfile, ContactRequest, ChatMessage, DisciplineGroup, PaywallOption, EmployerProfile } from '../../api/types'
+>>>>>>> github/main
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -296,14 +300,19 @@ function SearchTab({ partnershipStatus }: { partnershipStatus: EmployerProfile['
           <h3 style={{ marginBottom: 12 }}>Результаты ({results.length})</h3>
           {results.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>Введите должность и нажмите «Найти»</p> : (
             <table>
-              <thead><tr><th>ID</th><th>ЗП</th><th>Уверенность</th><th></th></tr></thead>
+              <thead><tr><th>ID</th><th>ЗП</th><th>Уверенность</th><th>Группы навыков</th><th></th></tr></thead>
               <tbody>
                 {results.map(r => (
                   <tr key={r.student_id} style={{ cursor: 'pointer', background: selectedId === r.student_id ? 'rgba(88,166,255,0.1)' : undefined }} onClick={() => openProfile(r.student_id)}>
                     <td>#{r.student_id}</td>
                     <td style={{ color: 'var(--green)' }}>{r.estimated_salary ? `₽${Math.round(r.estimated_salary).toLocaleString()}` : '—'}</td>
                     <td><span className={`badge ${r.confidence > 0.5 ? 'badge-green' : 'badge-yellow'}`}>{(r.confidence * 100).toFixed(0)}%</span></td>
+<<<<<<< HEAD
+                    <td><GroupBadges groups={r.discipline_groups} /></td>
+                    <td>{r.disciplines.length} дисц.</td>
+=======
                     <td>{r.discipline_groups?.length || 0} групп</td>
+>>>>>>> github/main
                   </tr>
                 ))}
               </tbody>
@@ -337,10 +346,15 @@ function SearchTab({ partnershipStatus }: { partnershipStatus: EmployerProfile['
                 </div>
               </div>
 
+<<<<<<< HEAD
+              <h4 style={{ marginBottom: 8 }}>Группы навыков</h4>
+              <DisciplineGroupsView groups={profile.discipline_groups} fallbackDisciplines={profile.disciplines} />
+=======
               <div style={{ marginBottom: 16 }}>
                 <h4 style={{ marginBottom: 8 }}>Группы навыков</h4>
                 <DisciplineGroupsView groups={profile.discipline_groups} />
               </div>
+>>>>>>> github/main
 
               {profile.about_me && (
                 <div style={{ marginBottom: 16 }}>
@@ -612,6 +626,56 @@ function SearchTab({ partnershipStatus }: { partnershipStatus: EmployerProfile['
       )}
     </>
   )
+}
+
+function GroupBadges({ groups }: { groups?: DisciplineGroup[] }) {
+  if (!groups?.length) return <span style={{ color: 'var(--text-muted)' }}>—</span>
+  return (
+    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+      {groups.slice(0, 4).map(group => (
+        <span key={group.key} className={`badge skill-group-badge ${groupColorClass(group.key)}`} title={`${group.count} дисциплин`}>
+          {group.label}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function DisciplineGroupsView({ groups, fallbackDisciplines }: { groups?: DisciplineGroup[], fallbackDisciplines: AnonymizedStudentProfile['disciplines'] }) {
+  if (!groups?.length) {
+    return (
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+        {fallbackDisciplines.map(d => (
+          <span key={d.id} className={`badge ${d.grade === 5 ? 'badge-green' : d.grade === 4 ? 'badge-yellow' : 'badge-red'}`}>{d.name} ({d.grade})</span>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="discipline-groups" style={{ marginBottom: 16 }}>
+      {groups.map(group => (
+        <div key={group.key} className={`discipline-group-card ${groupColorClass(group.key)}`} tabIndex={0}>
+          <div className="discipline-group-head">
+            <span className="discipline-group-title">{group.label}</span>
+            <span className="discipline-group-count">{group.count}</span>
+          </div>
+          <span className="discipline-group-meta">Средний балл: {group.avg_grade.toFixed(1)}</span>
+          <div className="discipline-group-details">
+            {group.disciplines.map(discipline => (
+              <span key={discipline.id} className={`discipline-pill g${discipline.grade}`}>
+                {discipline.name} <strong>{discipline.grade}</strong>
+              </span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function groupColorClass(key: string) {
+  return `skill-group-${key.toLowerCase().replace(/_/g, '-')}`
 }
 
 function RequestsTab() {
