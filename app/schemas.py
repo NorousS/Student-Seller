@@ -214,6 +214,12 @@ class DisciplineGroupResponse(BaseModel):
     avg_grade: float = Field(..., description="Средний балл по группе")
 
 
+class AdminStudentUpdate(BaseModel):
+    """Частичное обновление студента администратором (ФИО и/или группа)."""
+    full_name: str | None = Field(None, min_length=1, max_length=200, description="ФИО студента")
+    group_name: str | None = Field(None, max_length=50, description="Номер группы")
+
+
 class StudentBase(BaseModel):
     """Базовая схема студента."""
     full_name: str = Field(..., min_length=1, max_length=200, description="ФИО студента")

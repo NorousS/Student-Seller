@@ -15,10 +15,10 @@ async def test_top_students_returns_list(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_top_students_max_five(client: AsyncClient, admin_headers: dict):
-    """Не более 5 студентов."""
+async def test_top_students_max_ten(client: AsyncClient, admin_headers: dict):
+    """Не более 10 студентов."""
     # Create several students
-    for i in range(7):
+    for i in range(12):
         await client.post("/api/v1/students/", json={
             "full_name": f"Student {i}",
             "group_name": "GRP-1",
@@ -28,7 +28,7 @@ async def test_top_students_max_five(client: AsyncClient, admin_headers: dict):
     resp = await client.get("/api/v1/landing/top-students")
     assert resp.status_code == 200
     data = resp.json()
-    assert len(data) <= 5
+    assert len(data) <= 10
 
 
 @pytest.mark.asyncio

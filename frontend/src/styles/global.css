@@ -453,12 +453,26 @@ th { color: var(--text-muted); font-size: 13px; font-weight: 600; }
 }
 
 .landing-students-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  display: flex;
   gap: 20px;
+  overflow-x: auto;
+  padding: 4px 4px 16px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.landing-students-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.landing-students-grid::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
 }
 
 .landing-student-card {
+  flex: 0 0 240px;
+  scroll-snap-align: start;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -513,4 +527,42 @@ th { color: var(--text-muted); font-size: 13px; font-weight: 600; }
   .landing-hero { padding: 60px 16px 40px; }
   .landing-section { padding: 40px 16px; }
   .landing-cta { padding: 48px 16px; margin: 0 12px; }
+}
+
+/* ── Modals ──────────────────────────────────────────────────────────────── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 32px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.alert-error {
+  background: rgba(248, 81, 73, 0.1);
+  border: 1px solid rgba(248, 81, 73, 0.4);
+  color: #f85149;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
 }
