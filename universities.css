@@ -1,0 +1,277 @@
+:root {
+  --page-light: #eef0f7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Rubik", sans-serif;
+  color: #111;
+  background: linear-gradient(120deg, #1d18e7 0%, #090b18 42%, #050612 100%);
+}
+
+.universities-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 10px 28px;
+  background: #fff;
+}
+
+.universities-topbar__logo {
+  display: inline-flex;
+  align-items: center;
+}
+
+.universities-topbar__logo img {
+  display: block;
+  width: 28px;
+  height: 53px;
+}
+
+.universities-topbar__nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(22px, 4vw, 46px);
+  width: 100%;
+}
+
+.universities-topbar__nav a {
+  color: #111;
+  text-decoration: none;
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  font-weight: 500;
+  padding-bottom: 4px;
+  border-bottom: 1px solid transparent;
+}
+
+.universities-topbar__nav a.is-active,
+.universities-topbar__nav a:hover,
+.universities-topbar__nav a:focus-visible {
+  border-color: currentColor;
+}
+
+.universities-topbar__heart {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.universities-topbar__heart::before {
+  content: "\2661";
+  color: #d7d7d7;
+  font-size: 20px;
+}
+
+.universities-shell {
+  width: min(1550px, calc(100% - 20px));
+  margin: 0 auto;
+  padding: 32px 0 40px;
+}
+
+.universities-hero {
+  background: linear-gradient(115deg, #000 10%, #080b2f 48%, #0d1292 100%);
+  border-radius: 0 0 24px 24px;
+  padding: 34px 42px 36px;
+  color: #fff;
+}
+
+.universities-hero__brand,
+.universities-hero__links {
+  display: flex;
+  align-items: center;
+}
+
+.universities-hero__brand {
+  gap: 16px;
+  font-size: clamp(2.2rem, 4vw, 4rem);
+  font-weight: 700;
+}
+
+.universities-hero__brand img {
+  width: 38px;
+  height: 72px;
+}
+
+.universities-hero__links {
+  justify-content: flex-end;
+  gap: 38px;
+  margin-top: -54px;
+}
+
+.universities-hero__links a {
+  color: #fff;
+  text-decoration: none;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+}
+
+.universities-hero__panel {
+  margin-top: 38px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 56px 58px;
+  border-radius: 46px;
+  background: linear-gradient(135deg, #5b5b67, #6f6f7d);
+}
+
+.universities-hero__copy {
+  max-width: 780px;
+}
+
+.universities-hero__copy p {
+  margin: 0 0 44px;
+  color: #111;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.universities-hero__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 580px;
+  min-height: 54px;
+  padding: 10px 28px;
+  border-radius: 14px;
+  background: #000;
+  color: #fff;
+  text-decoration: none;
+  font-size: clamp(1.2rem, 2vw, 1.45rem);
+  font-weight: 500;
+}
+
+.universities-hero__figure {
+  position: relative;
+  width: min(320px, 28vw);
+  min-height: 300px;
+  flex-shrink: 0;
+}
+
+.hero-shape {
+  position: absolute;
+  display: block;
+  border-radius: 24px;
+}
+
+.hero-shape--white-top {
+  width: 146px;
+  height: 144px;
+  right: 84px;
+  top: 26px;
+  background: #fff;
+}
+
+.hero-shape--blue {
+  width: 122px;
+  height: 118px;
+  right: 0;
+  top: 0;
+  background: #241fe8;
+}
+
+.hero-shape--white-bottom {
+  width: 148px;
+  height: 146px;
+  right: 0;
+  bottom: 16px;
+  background: #fff;
+}
+
+.hero-shape--black {
+  width: 120px;
+  height: 122px;
+  left: 22px;
+  bottom: 0;
+  background: #000;
+}
+
+.universities-benefits {
+  margin-top: 42px;
+  padding: 56px 70px 34px;
+  border-radius: 34px 34px 0 0;
+  background: var(--page-light);
+}
+
+.benefit-item {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 36px;
+  margin-bottom: 42px;
+  align-items: start;
+}
+
+.benefit-item__icon {
+  font-family: "Press Start 2P", cursive;
+  font-size: 2.4rem;
+  color: #2827f0;
+  line-height: 1;
+  margin-top: 10px;
+}
+
+.benefit-item h2 {
+  margin: 0 0 10px;
+  font-family: "Press Start 2P", cursive;
+  font-size: clamp(1.4rem, 3vw, 2.3rem);
+  line-height: 1.25;
+}
+
+.benefit-item p {
+  margin: 0;
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  line-height: 1.4;
+}
+
+@media (max-width: 980px) {
+  .universities-topbar {
+    flex-wrap: wrap;
+  }
+
+  .universities-topbar__nav {
+    flex-wrap: wrap;
+  }
+
+  .universities-hero__links {
+    justify-content: flex-start;
+    margin-top: 18px;
+  }
+
+  .universities-hero__panel {
+    flex-direction: column;
+    padding: 28px 22px 32px;
+  }
+
+  .universities-hero__button {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .universities-hero__figure {
+    width: 240px;
+    min-height: 240px;
+    align-self: flex-end;
+  }
+
+  .universities-benefits {
+    padding: 34px 18px 18px;
+  }
+
+  .benefit-item {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}

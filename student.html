@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Студентам | ТрудСтудБаза x СтудНайм</title>
+  <link rel="icon" href="логотип.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="student.css">
+</head>
+<body>
+  <header class="student-topbar">
+    <a class="student-topbar__logo" href="index.html" aria-label="На главную">
+      <img src="логотип.png" alt="Логотип">
+    </a>
+
+    <nav class="student-topbar__nav" aria-label="Разделы">
+      <a class="is-active" href="student.html">Студентам</a>
+      <a href="employers.html">Работодателям</a>
+      <a href="universities.html">Вузам</a>
+    </nav>
+
+    <div class="student-topbar__actions" aria-hidden="true">
+      <span class="topbar-icon topbar-icon--ghost"></span>
+      <span class="topbar-icon topbar-icon--heart"></span>
+      <span class="topbar-icon topbar-icon--menu">
+        <i></i>
+        <i></i>
+        <i></i>
+      </span>
+    </div>
+  </header>
+
+  <main class="student-shell">
+    <div class="student-tabs" role="tablist" aria-label="Разделы профиля">
+      <button class="student-tab is-active" type="button" role="tab" aria-selected="true" data-tab="profile">Профиль</button>
+      <button class="student-tab" type="button" role="tab" aria-selected="false" data-tab="skills">Навыки</button>
+      <button class="student-tab" type="button" role="tab" aria-selected="false" data-tab="score">Оценка</button>
+      <button class="student-tab" type="button" role="tab" aria-selected="false" data-tab="requests">Запросы</button>
+    </div>
+
+    <section class="student-panel">
+      <section class="student-view is-active" data-view="profile">
+        <div class="profile-layout">
+          <aside class="profile-card">
+            <div class="profile-avatar">АВ</div>
+            <h1 class="pixel-title">Анна Воронцова</h1>
+            <p class="profile-role">Frontend-разработчик</p>
+            <dl class="profile-meta">
+              <div>
+                <dt>Вуз</dt>
+                <dd>КАИ (Казанский авиационный институт)</dd>
+              </div>
+              <div>
+                <dt>Группа</dt>
+                <dd>4427</dd>
+              </div>
+              <div>
+                <dt>Курс</dt>
+                <dd>4 курс</dd>
+              </div>
+              <div>
+                <dt>Формат</dt>
+                <dd>Стажировка / Part-time</dd>
+              </div>
+            </dl>
+          </aside>
+
+          <div class="profile-content">
+            <section class="content-card">
+              <h2>О студенте</h2>
+              <p>
+                Развивает веб-интерфейсы, умеет собирать адаптивные страницы и любит работать с
+                визуальной частью продукта. Ищет проектную стажировку с сильной командой и понятным ростом.
+              </p>
+            </section>
+
+            <section class="content-card">
+              <h2>Ключевые сильные стороны</h2>
+              <ul class="pill-list">
+                <li>JavaScript</li>
+                <li>React</li>
+                <li>TypeScript</li>
+                <li>UI-дизайн</li>
+                <li>Командная работа</li>
+              </ul>
+            </section>
+
+            <section class="content-card">
+              <h2>Цель</h2>
+              <p>
+                Получить первую продуктовую роль в команде, где можно расти в направлении frontend и дизайна интерфейсов.
+              </p>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="student-view" data-view="skills">
+        <div class="skills-header">
+          <h1 class="pixel-title">Мои навыки</h1>
+
+          <form class="skills-form" id="skills-form">
+            <input class="skills-input skills-input--name" id="discipline-name" type="text" placeholder="Название дисциплины" required>
+            <input class="skills-input skills-input--score" id="discipline-score" type="number" min="51" max="100" value="100" required>
+            <button class="action-button" type="submit">Добавить</button>
+          </form>
+
+          <p class="skills-hint" id="skills-hint">Оценка должна быть от 51 до 100 включительно.</p>
+        </div>
+
+        <div class="skills-table">
+          <div class="skills-table__head">
+            <span>Дисциплина</span>
+            <span>Балл</span>
+          </div>
+          <div class="skills-table__body" id="skills-list"></div>
+        </div>
+      </section>
+
+      <section class="student-view" data-view="score">
+        <div class="score-grid">
+          <section class="content-card score-card">
+            <h2>Примерная оценка кандидата</h2>
+            <div class="score-hero">
+              <div class="score-value" id="candidate-score">0</div>
+              <div class="score-badge" id="score-badge">Нет данных</div>
+            </div>
+            <p id="score-description">
+              Добавьте навыки и оценки, чтобы получить прогноз по профилю студента.
+            </p>
+            <div class="score-metrics">
+              <article class="metric-card">
+                <span class="metric-card__label">Средний балл</span>
+                <strong class="metric-card__value" id="average-score">0</strong>
+              </article>
+              <article class="metric-card">
+                <span class="metric-card__label">Кол-во дисциплин</span>
+                <strong class="metric-card__value" id="skills-count">0</strong>
+              </article>
+            </div>
+          </section>
+
+          <section class="content-card score-card">
+            <h2>Сравнение с рынком</h2>
+            <p class="score-chart-note">
+              Синий цвет показывает текущий уровень студента, тёмный — средний уровень по рынку.
+            </p>
+            <canvas id="skills-chart" width="480" height="320" aria-label="Сравнение навыков со средним по рынку"></canvas>
+            <div class="score-legend">
+              <span><i class="legend-dot legend-dot--student"></i>Студент</span>
+              <span><i class="legend-dot legend-dot--market"></i>Рынок</span>
+            </div>
+            <div class="score-breakdown" id="score-breakdown"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="student-view" data-view="requests">
+        <div class="requests-list" id="requests-list">
+          <article class="request-card">
+            <div>
+              <h2>Junior Frontend Intern</h2>
+              <p>ООО "НекстСофт"</p>
+            </div>
+            <p>Ищем студента со знанием JavaScript и адаптивной верстки. Формат: удаленно, 20 часов в неделю.</p>
+          </article>
+
+          <article class="request-card">
+            <div>
+              <h2>UI-разработчик в edtech</h2>
+              <p>Платформа "Умный кампус"</p>
+            </div>
+            <p>Нужен кандидат с сильным базовым UI, пониманием React и желанием развивать продукт для студентов.</p>
+          </article>
+
+          <article class="request-card">
+            <div>
+              <h2>Стажер продуктовой команды</h2>
+              <p>АО "Цифровая среда"</p>
+            </div>
+            <p>Запрос на кандидата с высокой учебной успеваемостью, хорошей коммуникацией и аккуратной работой с интерфейсами.</p>
+          </article>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="student.js"></script>
+</body>
+</html>

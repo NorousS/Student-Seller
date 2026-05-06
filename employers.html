@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Работодателям | ТрудСтудБаза</title>
+  <link rel="icon" href="логотип.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="employers.css">
+</head>
+<body>
+  <header class="employers-topbar">
+    <a class="employers-topbar__logo" href="index.html" aria-label="На главную">
+      <img src="логотип.png" alt="Логотип">
+    </a>
+
+    <nav class="employers-topbar__nav" aria-label="Разделы">
+      <a href="student.html">Студентам</a>
+      <a class="is-active" href="employers.html">Работодателям</a>
+      <a href="universities.html">Вузам</a>
+    </nav>
+
+    <div class="employers-topbar__actions" aria-hidden="true">
+      <span class="topbar-heart"></span>
+      <span class="topbar-menu">
+        <i></i>
+        <i></i>
+        <i></i>
+      </span>
+    </div>
+  </header>
+
+  <main class="employers-shell">
+    <section class="search-head">
+      <div class="search-row">
+        <span class="search-icon" aria-hidden="true"></span>
+        <input id="search-query" class="search-input" type="text" placeholder="Введите что-нибудь">
+        <button class="filter-button" type="button" aria-label="Фильтры">
+          <i></i><i></i><i></i>
+        </button>
+        <button class="search-button" type="button" id="search-button">Поиск</button>
+        <div class="search-brand">
+          <span class="search-brand__mark"><img src="логотип 1.png" alt=""></span>
+          <span>ТСБ</span>
+        </div>
+      </div>
+
+      <div class="mode-tabs">
+        <button class="mode-tab is-active" type="button" data-mode="universities">Вузы</button>
+        <button class="mode-tab" type="button" data-mode="students">Студенты</button>
+      </div>
+    </section>
+
+    <section class="employers-panel">
+      <div class="panel-title">
+        <span class="panel-title__icon">⚡</span>
+        <h1>Популярное</h1>
+      </div>
+
+      <div class="mode-view is-active" data-view="universities">
+        <div class="university-list">
+          <article class="university-card">
+            <div class="university-card__logo university-card__logo--kai">КАИ</div>
+            <div class="university-card__content">
+              <h2>КНИТУ-КАИ им. Туполева</h2>
+              <div class="tag-row">
+                <span>Техническая физика</span>
+                <span>Техносферная безопасность</span>
+                <span>Экономика и управление</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="university-card">
+            <div class="university-card__logo university-card__logo--kfu">КФУ</div>
+            <div class="university-card__content">
+              <h2>Казанский федеральный университет</h2>
+              <div class="tag-row">
+                <span>Международные экономические отношения</span>
+                <span>Прикладная математика и информатика</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="mode-view" data-view="students">
+        <div class="student-cards student-cards--single" id="students-mode-list">
+          <article class="candidate-card">
+            <div class="candidate-card__avatar"></div>
+            <button class="candidate-card__favorite" type="button" aria-label="Добавить в избранное">~</button>
+            <h2>Воронцова Анна</h2>
+            <div class="candidate-card__price">120 000 ₽</div>
+            <p>КНИТУ-КАИ им. Туполева</p>
+            <span class="candidate-tag">Знание языков программирования</span>
+          </article>
+        </div>
+      </div>
+
+      <div class="mode-view" data-view="results">
+        <div class="results-stats">
+          <article class="stats-card">
+            <div>
+              <h2>Результатов</h2>
+              <p>С подходящими навыками</p>
+            </div>
+            <strong>107</strong>
+          </article>
+
+          <article class="stats-card">
+            <div>
+              <h2>Запросов</h2>
+              <p>С такими же навыками</p>
+            </div>
+            <strong>59</strong>
+          </article>
+        </div>
+
+        <div class="student-cards">
+          <article class="candidate-card">
+            <div class="candidate-card__avatar"></div>
+            <h2>Воронцова Анна</h2>
+            <div class="candidate-card__price">120 000 ₽</div>
+            <p>КНИТУ-КАИ им. Туполева</p>
+            <span class="candidate-tag">Знание языков программирования</span>
+          </article>
+
+          <article class="candidate-card">
+            <div class="candidate-card__avatar"></div>
+            <h2>Кириллов Артем</h2>
+            <div class="candidate-card__price">105 000 ₽</div>
+            <p>КФУ</p>
+            <span class="candidate-tag">JavaScript и алгоритмы</span>
+          </article>
+
+          <article class="candidate-card">
+            <div class="candidate-card__avatar"></div>
+            <h2>Сафина Диана</h2>
+            <div class="candidate-card__price">98 000 ₽</div>
+            <p>Иннополис</p>
+            <span class="candidate-tag">UI/UX и продуктовый дизайн</span>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="employers.js"></script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ТрудСтудБаза x СтудНайм</title>
+  <link rel="icon" href="логотип.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="auth-topbar">
+    <a class="auth-topbar__home" href="index.html">Главная</a>
+    <nav class="auth-topbar__nav" aria-label="Разделы">
+      <a href="student.html">Студентам</a>
+      <a href="employers.html">Работодателям</a>
+      <a href="universities.html">Вузам</a>
+    </nav>
+  </header>
+  <main class="page-shell">
+    <header class="brand-row" aria-label="Партнёрские бренды">
+      <div class="brand-group">
+        <span class="brand-mark" aria-hidden="true"><img src="логотип 1.png" alt=""></span>
+        <span class="brand-name">ТрудСтудБаза</span>
+      </div>
+      <div class="brand-ampersand" aria-hidden="true">&</div>
+      <div class="brand-group">
+        <span class="brand-mark" aria-hidden="true"><img src="логотип 1.png" alt=""></span>
+        <span class="brand-name">СтудНайм</span>
+      </div>
+    </header>
+
+    <section class="card-stack" aria-live="polite">
+      <form class="auth-card is-active" id="login-screen" data-screen="login">
+        <h1 class="card-title card-title--pixel">Вход</h1>
+
+        <label class="field">
+          <span class="field-label">Email</span>
+          <input class="field-input" type="email" name="loginEmail" autocomplete="email">
+        </label>
+
+        <label class="field">
+          <span class="field-label">Пароль</span>
+          <input class="field-input field-input--muted" type="password" name="loginPassword" autocomplete="current-password">
+        </label>
+
+        <button class="primary-button" type="submit">Войти</button>
+
+        <p class="card-footer">
+          Нет аккаунта?
+          <button class="text-switch" type="button" data-go="register">Зарегистрироваться</button>
+        </p>
+      </form>
+
+      <form class="auth-card" id="register-screen" data-screen="register">
+        <h1 class="card-title card-title--pixel">Регистрация</h1>
+
+        <label class="field">
+          <span class="field-label">Роль</span>
+          <span class="select-wrap">
+            <select class="field-input field-input--select" id="role-select" name="role">
+              <option value="student">Студент</option>
+              <option value="employer">Работодатель</option>
+            </select>
+          </span>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Email</span>
+          <input class="field-input" type="email" name="registerEmail" autocomplete="email">
+        </label>
+
+        <label class="field">
+          <span class="field-label">
+            Пароль
+            <small class="field-note">(мин. 6 символов)</small>
+          </span>
+          <input class="field-input field-input--muted" type="password" name="registerPassword" autocomplete="new-password" minlength="6">
+        </label>
+
+        <div id="role-fields"></div>
+
+        <button class="primary-button" type="submit">Зарегистрироваться</button>
+
+        <p class="card-footer">
+          Уже есть аккаунт?
+          <button class="text-switch" type="button" data-go="login">Войти</button>
+        </p>
+      </form>
+    </section>
+  </main>
+
+  <template id="student-fields-template">
+    <label class="field">
+      <span class="field-label">ФИО</span>
+      <input class="field-input" type="text" name="studentFullName" autocomplete="name">
+    </label>
+
+    <label class="field">
+      <span class="field-label">Группа</span>
+      <input class="field-input" type="text" name="studentGroup">
+    </label>
+  </template>
+
+  <template id="employer-fields-template">
+    <label class="field">
+      <span class="field-label">Название компании</span>
+      <input class="field-input" type="text" name="companyName" autocomplete="organization">
+    </label>
+  </template>
+
+  <script src="script.js"></script>
+</body>
+</html>
